@@ -6,7 +6,9 @@ Open work only. Completed items are deleted rather than checked off; history liv
 
 Moved here from `suphero/onerate`'s `ROADMAP.md` on 2026-07-25 with the landing-repo split
 (ADR-0009). **The item spans two repositories** — resolving it may change the portal rather than
-this page, so it cannot be closed here alone. The monorepo's roadmap keeps a stub pointing back.
+this page, so it cannot be closed here alone. This is the item's only copy: the monorepo's roadmap
+carries no stub (a second copy would be one more thing to keep in sync), so a change landing in
+`suphero/onerate` has to be driven from here.
 
 - [ ] `public/index.html` auto-detects: `navigator.language` starting `tr` → Turkish, English
       otherwise. The portal pins `lng: localStorage.getItem('onerate.lang') ?? 'en'`
