@@ -1,0 +1,39 @@
+name: Deploy
+
+# One static page, no build step. Every push to a deploy branch publishes:
+#   staging -> an onerate-landing Pages preview
+#   main    -> production, onerate.travel
+# `npm test` below is the only gate. It takes under a second — which is the entire reason this
+# page left the monorepo, where it waited on a miniflare suite and a Playwright booking flow.
+on:
+  push:
+    branches: [main, staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      # `public`, never `.` — Cloudflare Pages Direct Upload publishes every file in the directory
+      # it is given, and the repo root holds ROADMAP.md.
+      #
+      # Pages reads `--branch main` as production and any other value as a preview. Since this
+      # workflow only fires on main and staging, github.ref_name is already exactly the right
+      # value, and one job cannot drift from a duplicated twin.
+      - name: Deploy
+        run: npx wrangler pages deploy public --project-name onerate-landing --branch ${{ github.ref_name }}
