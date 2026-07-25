@@ -1,0 +1,20 @@
+{
+  "name": "onerate-landing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The OneRate promo page served at onerate.travel",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "deploy:staging": "wrangler pages deploy public --project-name onerate-landing --branch staging",
+    "deploy:production": "wrangler pages deploy public --project-name onerate-landing --branch main"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "vitest": "^3.2.7",
+    "wrangler": "^4.0.0"
+  }
+}
