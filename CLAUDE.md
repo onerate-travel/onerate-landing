@@ -8,6 +8,16 @@ The OneRate promo page: one static HTML file served at `onerate.travel`. Split o
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
    roadmap on the public internet at `onerate.travel/ROADMAP.md`.
+
+   Do not try to verify that with a status code. This project has no custom `404.html`, so Pages
+   answers *every* unmatched path with `index.html` at **200** — `GET /ROADMAP.md` returning 200 is
+   normal and means the file is absent. Assert on the body instead, and corroborate with the deploy
+   log's manifest size:
+
+   ```bash
+   curl -sS https://onerate.travel/ROADMAP.md | grep -c 'R3.4.4'   # expect 0
+   gh run view <id> --log | grep -i 'already uploaded'             # expect 1 file
+   ```
 2. **The Pages project is Direct Upload and cannot become Git-connected.** Cloudflare: *"If you
    choose Direct Upload, you cannot switch to Git integration later. You will have to create a new
    project."* Converting would mean standing up a second Pages project and migrating a live apex
