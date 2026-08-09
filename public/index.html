@@ -63,8 +63,18 @@
         color: var(--muted);
         font-size: 15px;
       }
-      .cta {
+      /* Two destinations, deliberately unequal. Signing in is what a customer came for; the docs
+         are for the visitor who is not one yet, and a second solid button would make the page ask
+         a question instead of answering one. */
+      .ctas {
         margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+      }
+      .cta {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -78,6 +88,13 @@
         box-shadow: 0 8px 30px rgba(91, 140, 255, 0.35);
       }
       .cta:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(91, 140, 255, 0.45); }
+      .cta.ghost {
+        background: var(--panel);
+        color: var(--fg);
+        border: 1px solid var(--border);
+        box-shadow: none;
+      }
+      .cta.ghost:hover { border-color: var(--accent); transform: translateY(-1px); }
       .foot {
         margin-top: 34px;
         color: var(--muted);
@@ -134,10 +151,17 @@
         </span>
       </p>
 
-      <a class="cta" href="https://app.onerate.travel">
-        <span data-en>Sign in to the portal →</span>
-        <span data-tr>Portala giriş →</span>
-      </a>
+      <div class="ctas">
+        <a class="cta" href="https://app.onerate.travel">
+          <span data-en>Sign in to the portal →</span>
+          <span data-tr>Portala giriş →</span>
+        </a>
+
+        <a class="cta ghost" href="https://docs.onerate.travel">
+          <span data-en>Read the docs</span>
+          <span data-tr>Dokümantasyon</span>
+        </a>
+      </div>
 
       <p class="foot">
         <span data-en>Questions?</span><span data-tr>Sorular için:</span>
