@@ -28,9 +28,20 @@ There is no build step and no dev server. The page is one self-contained file.
 
 Push. `staging` publishes a preview, `main` publishes production. Both run `npm test` first.
 
-Manual deploys, if the workflow is ever unavailable:
+### From a laptop, when Actions cannot run
 
 ```bash
-npm run deploy:staging
-npm run deploy:production
+make help              # every target, with what it does
+make deploy-staging    # a Pages preview
+make deploy-prod       # onerate.travel
+make smoke             # verify what is actually live
 ```
+
+`make` is the path to use, not the raw `npm run deploy:*` scripts. Those are the bare wrangler
+calls; the Makefile runs `npm test` first and refuses on three facts a laptop cannot otherwise
+promise — a clean working tree, the right branch, and that branch pushed.
+
+`make smoke` checks the live page for the portal link, the docs link and the Turkish copy, and then
+checks that `ROADMAP.md` is **not** published. That last one asserts on the response **body**, never
+the status code: this project has no custom `404.html`, so Pages answers every unmatched path with
+`index.html` at 200 and a status code there proves nothing.
