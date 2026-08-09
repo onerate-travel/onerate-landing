@@ -7,49 +7,91 @@ import { describe, expect, it } from 'vitest';
 // The *shipped* page, for the same reason lang.test.js reads it: editing public/index.html is what
 // must make these fail.
 const PAGE = readFileSync(fileURLToPath(new URL('../public/index.html', import.meta.url)), 'utf8');
-const doc = new JSDOM(PAGE).window.document;
 
 /**
- * CLAUDE.md states the rule this file enforces: "A `data-en` span without its `data-tr` sibling
- * ships a half-translated page. Keep them in sync." Until now nothing checked it — the page's only
- * test covered which language is CHOSEN, not whether the chosen one has anything to show.
+ * The page's own `TEXT` dictionary, read out of the running page rather than re-declared here.
  *
- * The failure mode is silent and specific: `[data-tr] { display: none }` plus
- * `html[lang="tr"] [data-en] { display: none }` means an unpaired `data-en` span renders as
- * NOTHING for a Turkish visitor. Not English, not a warning — a gap where a sentence was. That is
- * exactly what a reviewer's eye skips, because the page still looks fine in the language they are
- * reading it in.
+ * The script is an IIFE with nothing exported, so it is executed and the dictionary is recovered by
+ * asking the page to render each language and reading what it put on screen. That is a longer road
+ * than importing a module would be, and it is the road that tests the SHIPPED artifact — the same
+ * choice this repo's CLAUDE.md pins for `lang.test.js`.
  */
-describe('every translatable string is paired', () => {
-  // Pairs live as adjacent spans inside one parent. Checking counts per parent catches both the
-  // missing translation and the orphaned one, without asserting on document order.
-  const parentsOf = (selector) => new Set([...doc.querySelectorAll(selector)].map((el) => el.parentElement));
+function copyFor(locale) {
+  const dom = new JSDOM(PAGE, {
+    runScripts: 'dangerously',
+    beforeParse(window) {
+      Object.defineProperty(window.navigator, 'language', { value: locale, configurable: true });
+    },
+  });
+  const { document } = dom.window;
+  const entries = [...document.querySelectorAll('[data-i18n]')].map((el) => [
+    el.getAttribute('data-i18n'),
+    el.textContent.trim(),
+  ]);
+  const result = { lang: document.documentElement.lang, copy: Object.fromEntries(entries) };
+  dom.window.close();
+  return result;
+}
 
-  it('has at least one pair to check', () => {
-    expect(doc.querySelectorAll('[data-en]').length).toBeGreaterThan(0);
+const STATIC = new JSDOM(PAGE).window.document;
+const KEYS = [...STATIC.querySelectorAll('[data-i18n]')].map((el) => el.getAttribute('data-i18n'));
+const LOCALES = [...STATIC.querySelectorAll('#lang option')].map((option) => option.value);
+
+/**
+ * CLAUDE.md used to state this rule about spans: "A `data-en` span without its `data-tr` sibling
+ * ships a half-translated page." The page no longer has paired spans — the copy moved into one
+ * dictionary keyed by language — but the rule survives the refactor and is what this file enforces,
+ * now across SEVEN languages rather than two.
+ *
+ * The failure mode changed shape and did not go away. An element whose key is missing from a
+ * language keeps whatever text it already had, which is the ENGLISH written into the markup: the
+ * page renders one English sentence in the middle of six Polish ones, looks complete, and passes
+ * every other test. That is exactly what a reviewer's eye skips.
+ */
+describe('every string is translated into every language', () => {
+  it('has keys and locales to check', () => {
+    // Never vacuous: if the markup stopped carrying `data-i18n`, or the switcher stopped carrying
+    // options, every assertion below would pass over an empty set.
+    expect(KEYS.length).toBeGreaterThan(0);
+    expect(LOCALES.length).toBe(7);
+    expect(LOCALES).toContain('en');
   });
 
-  it('gives every data-en span a data-tr sibling, and vice versa', () => {
-    const unpaired = [];
-    for (const parent of new Set([...parentsOf('[data-en]'), ...parentsOf('[data-tr]')])) {
-      const en = parent.querySelectorAll(':scope > [data-en]').length;
-      const tr = parent.querySelectorAll(':scope > [data-tr]').length;
-      if (en !== tr) unpaired.push(`<${parent.tagName.toLowerCase()} class="${parent.className}">: ${en} en, ${tr} tr`);
+  it.each(LOCALES)('%s says every one of them in its own words', (locale) => {
+    const english = copyFor('en-US').copy;
+    const { lang, copy } = copyFor(locale);
+    expect(lang, `the page did not switch to ${locale}`).toBe(locale);
+
+    const missing = KEYS.filter((key) => !copy[key]);
+    expect(missing, `${locale} has no copy for these keys`).toEqual([]);
+
+    if (locale === 'en') return;
+    // Left-behind English is the whole failure this test exists for, so it is asserted rather than
+    // inferred from the key being present.
+    const untranslated = KEYS.filter((key) => copy[key] === english[key]);
+    expect(untranslated, `${locale} still shows the English text for these keys`).toEqual([]);
+  });
+});
+
+describe('the default language is in the markup, not only in the script', () => {
+  /**
+   * A visitor with JavaScript off, and every crawler that does not run it, sees the raw HTML. When
+   * the copy moved into a dictionary the obvious implementation — empty elements filled by the
+   * script — would have shipped a blank page to both. The English text is therefore written into
+   * the markup and the script only ever replaces it.
+   */
+  it('renders real sentences with no script run at all', () => {
+    const noScript = new JSDOM(PAGE).window.document;
+    for (const key of KEYS) {
+      const text = noScript.querySelector(`[data-i18n="${key}"]`)?.textContent.trim();
+      expect(text, `[data-i18n="${key}"] is empty without JavaScript`).toBeTruthy();
     }
-    expect(unpaired).toEqual([]);
-  });
-
-  it('leaves no translatable span empty', () => {
-    // A paired-but-blank span passes the count check above and still ships a gap.
-    const blank = [...doc.querySelectorAll('[data-en], [data-tr]')]
-      .filter((el) => el.textContent.trim() === '')
-      .map((el) => el.outerHTML);
-    expect(blank).toEqual([]);
+    expect(noScript.querySelector('[data-i18n="tagline"]').textContent).toContain('B2B hotel');
   });
 });
 
 describe('the outbound links', () => {
-  const hrefs = () => [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+  const hrefs = () => [...STATIC.querySelectorAll('a')].map((a) => a.getAttribute('href'));
 
   it('offers the portal', () => {
     expect(hrefs()).toContain('https://app.onerate.travel');
@@ -59,5 +101,19 @@ describe('the outbound links', () => {
     // The reader who is not ready to sign in has, until now, had nowhere to go but an email
     // address. docs.onerate.travel is the answer to "what is this and how does it work".
     expect(hrefs()).toContain('https://docs.onerate.travel');
+  });
+
+  it('keeps its links through a language change', () => {
+    // The script writes `textContent`, which would erase a nested <a> if a key ever wrapped one.
+    // The CTAs ARE the anchors, so their href must survive being retranslated.
+    const dom = new JSDOM(PAGE, { runScripts: 'dangerously' });
+    const select = dom.window.document.getElementById('lang');
+    select.value = 'ro';
+    select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    const links = [...dom.window.document.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    expect(links).toContain('https://app.onerate.travel');
+    expect(links).toContain('https://docs.onerate.travel');
+    expect(links).toContain('mailto:hello@onerate.travel');
+    dom.window.close();
   });
 });

@@ -101,90 +101,214 @@
         font-size: 13px;
       }
       .foot a { color: var(--muted); }
+      /* One control, not a row of buttons. Two languages fitted in the corner as EN/TR; seven do
+         not, and seven `aria-pressed` buttons announce themselves as seven independent toggles
+         rather than one question with seven answers. Same reasoning, and the same native <select>,
+         as the portal's own switcher. */
       .langs {
         position: fixed;
         top: 16px;
         right: 18px;
-        display: flex;
-        gap: 4px;
-        font-size: 13px;
       }
-      .langs button {
+      .langs select {
+        appearance: none;
         background: var(--panel);
         color: var(--muted);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 5px 10px;
-        cursor: pointer;
+        padding: 6px 26px 6px 10px;
         font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa4bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 9px center;
+        background-size: 9px 5px;
       }
-      .langs button[aria-pressed="true"] { color: var(--fg); border-color: var(--accent); }
-      [data-tr] { display: none; }
-      html[lang="tr"] [data-en] { display: none; }
-      html[lang="tr"] [data-tr] { display: revert; }
+      .langs select:hover, .langs select:focus-visible { color: var(--fg); border-color: var(--accent); }
+      /* The dropdown list is drawn by the platform, outside this element's inherited color, so the
+         options state their own — otherwise they are pale grey on the OS's white popup. */
+      .langs option { color: #111827; background: #ffffff; }
     </style>
   </head>
   <body>
-    <nav class="langs" aria-label="Language">
-      <button type="button" data-lang="en" aria-pressed="true">EN</button>
-      <button type="button" data-lang="tr" aria-pressed="false">TR</button>
+    <nav class="langs">
+      <!--
+        Labelled by the page's own copy (`langLabel`), and every OPTION is an endonym — a Polish
+        visitor scans this list for "Polski", not for "Polish", and would not recognise the latter
+        on a page otherwise in Bulgarian. The option labels are therefore identical in all seven
+        translations and are written once, here.
+      -->
+      <select id="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="tr">Türkçe</option>
+        <option value="bg">Български</option>
+        <option value="hu">Magyar</option>
+        <option value="it">Italiano</option>
+        <option value="pl">Polski</option>
+        <option value="ro">Română</option>
+      </select>
     </nav>
 
     <main>
       <div class="brand">One<span class="dot">Rate</span></div>
 
-      <p class="tagline">
-        <span data-en>B2B hotel distribution, cheapest-first.</span>
-        <span data-tr>B2B otel dağıtımı, en ucuz önce.</span>
-      </p>
+      <!--
+        THE ENGLISH COPY LIVES IN THE HTML, and the other six live in the script below.
+        This is the whole shape of the page and it is deliberate.
 
-      <p class="desc">
-        <span data-en>
-          Agencies bring their own supplier contracts. OneRate fans out the search across
-          bedbanks, normalizes the rates, ranks comparable rooms cheapest-first, and books —
-          on a flat monthly subscription.
-        </span>
-        <span data-tr>
-          Acenteler kendi tedarikçi kontratlarını getirir. OneRate aramayı tüm bedbank'lara
-          dağıtır, fiyatları normalize eder, karşılaştırılabilir odaları en ucuzdan sıralar ve
-          rezervasyon yapar — sabit aylık abonelikle.
-        </span>
+        The page used to carry paired `data-en`/`data-tr` spans, which was readable at two languages
+        and would be seven spans per sentence at seven — a page where forgetting one language is
+        easy and noticing it is hard. Moving the copy into one dictionary keyed by language fixes
+        that, but the naive form of it (empty elements, filled entirely by JavaScript) trades one
+        silent failure for a worse one: a visitor with JavaScript off, and every crawler that does
+        not run it, would get a blank page. So the default language is written into the markup as
+        real text, and the script only ever REPLACES it.
+
+        Consequence worth knowing: `data-i18n` keys are the contract between this markup and the
+        `TEXT` object. `test/bilingual.test.js` asserts the two agree in both directions.
+      -->
+      <p class="tagline" data-i18n="tagline">B2B hotel distribution, cheapest-first.</p>
+
+      <p class="desc" data-i18n="desc">
+        Agencies bring their own supplier contracts. OneRate fans out the search across bedbanks,
+        normalizes the rates, ranks comparable rooms cheapest-first, and books — on a flat monthly
+        subscription.
       </p>
 
       <div class="ctas">
-        <a class="cta" href="https://app.onerate.travel">
-          <span data-en>Sign in to the portal →</span>
-          <span data-tr>Portala giriş →</span>
-        </a>
-
-        <a class="cta ghost" href="https://docs.onerate.travel">
-          <span data-en>Read the docs</span>
-          <span data-tr>Dokümantasyon</span>
-        </a>
+        <a class="cta" href="https://app.onerate.travel" data-i18n="ctaPortal">Sign in to the portal →</a>
+        <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs">Read the docs</a>
       </div>
 
       <p class="foot">
-        <span data-en>Questions?</span><span data-tr>Sorular için:</span>
+        <span data-i18n="questions">Questions?</span>
         <a href="mailto:hello@onerate.travel">hello@onerate.travel</a>
       </p>
     </main>
 
     <script>
       (function () {
-        var buttons = document.querySelectorAll('.langs button');
+        // Every string the page shows, in every language it shows them in. `en` is here as well as
+        // in the markup so that switching BACK to English works the same way as switching away
+        // from it — a special case for the default would be a second code path nobody exercises.
+        var TEXT = {
+          en: {
+            langLabel: 'Language',
+            tagline: 'B2B hotel distribution, cheapest-first.',
+            desc:
+              'Agencies bring their own supplier contracts. OneRate fans out the search across ' +
+              'bedbanks, normalizes the rates, ranks comparable rooms cheapest-first, and books — ' +
+              'on a flat monthly subscription.',
+            ctaPortal: 'Sign in to the portal →',
+            ctaDocs: 'Read the docs',
+            questions: 'Questions?',
+          },
+          tr: {
+            langLabel: 'Dil',
+            tagline: 'B2B otel dağıtımı, en ucuz önce.',
+            desc:
+              'Acenteler kendi tedarikçi kontratlarını getirir. OneRate aramayı tüm bedbank’lara ' +
+              'dağıtır, fiyatları normalize eder, karşılaştırılabilir odaları en ucuzdan sıralar ve ' +
+              'rezervasyon yapar — sabit aylık abonelikle.',
+            ctaPortal: 'Portala giriş →',
+            ctaDocs: 'Dokümantasyon',
+            questions: 'Sorular için:',
+          },
+          bg: {
+            langLabel: 'Език',
+            tagline: 'B2B хотелска дистрибуция, най-евтиното напред.',
+            desc:
+              'Агенциите носят собствените си договори с доставчици. OneRate разпраща търсенето до ' +
+              'всички bedbank-ове, нормализира цените, подрежда сравнимите стаи от най-евтината и ' +
+              'резервира — срещу фиксиран месечен абонамент.',
+            ctaPortal: 'Вход в портала →',
+            ctaDocs: 'Към документацията',
+            questions: 'Въпроси?',
+          },
+          hu: {
+            langLabel: 'Nyelv',
+            tagline: 'B2B szállodai disztribúció, a legolcsóbb elöl.',
+            desc:
+              'Az irodák a saját beszállítói szerződéseiket hozzák. A OneRate szétküldi a keresést ' +
+              'minden bedbanknak, egységesíti az árakat, az összehasonlítható szobákat a ' +
+              'legolcsóbbtól rangsorolja, és foglal — fix havidíjas előfizetéssel.',
+            ctaPortal: 'Belépés a portálra →',
+            ctaDocs: 'Dokumentáció',
+            questions: 'Kérdésed van?',
+          },
+          it: {
+            langLabel: 'Lingua',
+            tagline: 'Distribuzione alberghiera B2B, il più economico prima.',
+            desc:
+              'Le agenzie portano i propri contratti con i fornitori. OneRate distribuisce la ' +
+              'ricerca su tutti i bedbank, normalizza le tariffe, ordina le camere confrontabili ' +
+              'dalla più economica e prenota — con un abbonamento mensile a prezzo fisso.',
+            ctaPortal: 'Accedi al portale →',
+            ctaDocs: 'Leggi la documentazione',
+            questions: 'Domande?',
+          },
+          pl: {
+            langLabel: 'Język',
+            tagline: 'Dystrybucja hotelowa B2B, najtańsze na początku.',
+            desc:
+              'Agencje przynoszą własne umowy z dostawcami. OneRate rozsyła wyszukiwanie do ' +
+              'wszystkich bedbanków, normalizuje stawki, ustawia porównywalne pokoje od ' +
+              'najtańszego i rezerwuje — w stałym abonamencie miesięcznym.',
+            ctaPortal: 'Zaloguj się do portalu →',
+            ctaDocs: 'Przeczytaj dokumentację',
+            questions: 'Pytania?',
+          },
+          ro: {
+            langLabel: 'Limbă',
+            tagline: 'Distribuție hotelieră B2B, cel mai ieftin întâi.',
+            desc:
+              'Agențiile își aduc propriile contracte cu furnizorii. OneRate distribuie căutarea ' +
+              'către toate bedbank-urile, normalizează tarifele, clasează camerele comparabile de ' +
+              'la cea mai ieftină și rezervă — cu un abonament lunar fix.',
+            ctaPortal: 'Intră în portal →',
+            ctaDocs: 'Citește documentația',
+            questions: 'Întrebări?',
+          },
+        };
+
+        var select = document.getElementById('lang');
+        var STORAGE_KEY = 'onerate.lang';
+
         function setLang(lang) {
+          var copy = TEXT[lang];
+          if (!copy) return;
           document.documentElement.lang = lang;
-          buttons.forEach(function (b) {
-            b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
-          });
+          select.value = lang;
+          select.setAttribute('aria-label', copy.langLabel);
+          var nodes = document.querySelectorAll('[data-i18n]');
+          for (var i = 0; i < nodes.length; i++) {
+            var key = nodes[i].getAttribute('data-i18n');
+            if (copy[key]) nodes[i].textContent = copy[key];
+          }
         }
-        buttons.forEach(function (b) {
-          b.addEventListener('click', function () {
-            setLang(b.dataset.lang);
-          });
+
+        select.addEventListener('change', function () {
+          setLang(select.value);
+          // Remembered, because a seven-language page that resets to the browser's guess on every
+          // visit makes the visitor choose again every time. Wrapped: Safari throws on storage in
+          // private mode, and a page that fails to render because it could not save a preference
+          // would be a worse bug than not saving it.
+          try {
+            localStorage.setItem(STORAGE_KEY, select.value);
+          } catch (ignored) {}
         });
-        // Default to Turkish for tr-* browsers, English otherwise.
-        setLang((navigator.language || 'en').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en');
+
+        // What the visitor chose last, else what their browser asks for, else English. The browser
+        // tag is split on '-' rather than matched by prefix: `ro-MD` is Romanian, and `roa`
+        // (Romance, other) is not — a distinction that could not arise while the page had two
+        // languages and does now.
+        var stored = null;
+        try {
+          stored = localStorage.getItem(STORAGE_KEY);
+        } catch (ignored) {}
+        var fromBrowser = (navigator.language || 'en').toLowerCase().split('-')[0];
+        setLang(TEXT[stored] ? stored : TEXT[fromBrowser] ? fromBrowser : 'en');
       })();
     </script>
   </body>

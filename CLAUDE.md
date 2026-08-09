@@ -36,14 +36,29 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
 Red → Green → Refactor. Every bug fix starts with a failing regression test that reproduces it.
 
-`test/lang.test.js` parses the *shipped* `public/index.html` — never a copy of its script — so
-editing the page's inline JavaScript is exactly what makes it fail. Keep it that way.
+`test/lang.test.js` and `test/bilingual.test.js` parse the *shipped* `public/index.html` — never a
+copy of its script — so editing the page's inline JavaScript is exactly what makes them fail. Keep
+it that way. `bilingual.test.js` goes further and RUNS the page once per language, because the
+`TEXT` dictionary is inside an IIFE with nothing exported: reading what the page actually rendered
+is the only way to check it without keeping a second copy of the copy.
 
 ## Language conventions
 
 - Code, comments, commits, docs, tests: **English**.
-- End-user copy: **English default, Turkish second**, as paired `data-en` / `data-tr` spans.
-- A `data-en` span without its `data-tr` sibling ships a half-translated page. Keep them in sync.
+- End-user copy: **seven languages** — English (default and fallback), Türkçe, Български, Magyar,
+  Italiano, Polski, Română. Same set, same order and same endonym labels as the portal's own
+  `LOCALES` (`packages/core/src/locales.ts` in `suphero/onerate-app`).
+- The copy lives in ONE `TEXT` dictionary in the page's inline script, keyed by language, with the
+  markup carrying `data-i18n` keys. It used to be paired `data-en`/`data-tr` spans; at seven
+  languages that would be seven spans per sentence, and forgetting one would be easy to do and hard
+  to see.
+- **The English copy is written into the MARKUP as well**, and the script only replaces it. A
+  visitor with JavaScript off — and every crawler that does not run it — sees the raw HTML, so
+  empty elements filled entirely by script would ship a blank page. `test/bilingual.test.js`
+  asserts this directly.
+- A key present in the markup and missing from a language ships a half-translated page, and does it
+  invisibly: the element keeps the English it already had. Same rule as the old span pairing, one
+  level up. `test/bilingual.test.js` is what makes it a failure rather than a silent regression.
 
 ## Open work
 
