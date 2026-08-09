@@ -1,7 +1,7 @@
 # onerate-landing — Agent Instructions
 
 The OneRate promo page: one static HTML file served at `onerate.travel`. Split out of
-`suphero/onerate` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
+`suphero/onerate-app` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
 
 ## Three things that look wrong and are not
 
@@ -47,7 +47,7 @@ editing the page's inline JavaScript is exactly what makes it fail. Keep it that
 ## Open work
 
 `ROADMAP.md` — open items only; completed ones are deleted, never checked off. Its single item,
-R3.4.4, spans this repo and `suphero/onerate`. Do not close either half alone.
+R3.4.4, spans this repo and `suphero/onerate-app`. Do not close either half alone.
 
 ## Commits
 

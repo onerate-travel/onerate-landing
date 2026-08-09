@@ -4,7 +4,7 @@
 # from a clean checkout of a named branch, and a laptop cannot promise that. This file is for the
 # day Actions itself is unavailable — as on 2026-08-04, when every job in the monorepo refused to
 # start on an account billing failure — and the choice is between shipping from here and not
-# shipping. It mirrors `suphero/onerate`'s Makefile, target for target, for the same reasons.
+# shipping. It mirrors `suphero/onerate-app`'s Makefile, target for target, for the same reasons.
 #
 # WHAT IT IS NOT. It is not a faster way to deploy. Every target that ships runs the SAME gate the
 # workflow runs, first, and refuses on the same conditions. A deploy path that let you skip the gate
