@@ -1,21 +1,68 @@
 name: Deploy
 
-# One static page, no build step. Every push to a deploy branch publishes:
-#   staging -> an onerate-landing Pages preview
-#   main    -> production, onerate.travel
-# `npm test` below is the only gate. It takes under a second — which is the entire reason this
-# page left the monorepo, where it waited on a miniflare suite and a Playwright booking flow.
+# ENTIRELY on demand, mirroring `suphero/onerate-app`'s ci.yml: there is no push or pull_request
+# trigger, so nothing runs automatically — not the gate, not a deploy. Every run is dispatched
+# explicitly.
+#
+# A dispatched run always runs the gate first, because the deploy step comes after it in the same
+# job: manual does not mean unchecked. `environment` is required, so every dispatch that passes the
+# gate also deploys — there is no gate-only dispatch; run `npm test` locally for that.
+#
+#   gh workflow run deploy.yml --ref staging -f environment=staging
+#   gh workflow run deploy.yml --ref main    -f environment=production
+#
+# Or `make deploy-prod`, which runs the same gate on your laptop and adds the three guards a
+# dispatch cannot check — clean tree, right branch, branch pushed.
 on:
-  push:
-    branches: [main, staging]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Where to publish after the gate passes'
+        type: choice
+        required: true
+        default: staging
+        options: [staging, production]
+
+# Least privilege. Nothing here needs more than a checkout; the deploy authenticates to Cloudflare
+# with its own token, not with GITHUB_TOKEN.
+permissions:
+  contents: read
+
+# Two dispatches must not interleave. Keyed by environment: a staging publish has no reason to
+# queue behind a production one. `cancel-in-progress: false` is the load-bearing half — cancelling
+# a deploy mid-flight is a worse state than waiting.
+#
+# No `|| github.ref` fallback on the key. This workflow has exactly one trigger, so
+# `inputs.environment` is always set — and onerate-app's R11.8 removed the equivalent dead
+# null-guards there for the reason that applies here too: a condition that cannot fail is read as
+# a guard that does something.
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
 
 jobs:
+  # ONE job, parameterised — not a staging twin and a production twin. This file has preferred that
+  # since it was written ("one job cannot drift from a duplicated twin"), and it still applies:
+  # staging and production differ here by a single wrangler argument, so duplicating the job would
+  # duplicate the gate with it and give the two copies somewhere to disagree.
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # A GitHub environment, so the Cloudflare token can be scoped to it rather than repo-wide and a
+    # required reviewer or wait timer can be attached in repo settings WITHOUT another code change.
+    # Declaring it does not itself gate anything; it creates the place a gate can hang.
+    environment: ${{ inputs.environment }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
+      # First, before the checkout: a dispatch from the wrong ref should cost nothing.
+      - name: Production ships from main only
+        if: inputs.environment == 'production' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::production deploys must be dispatched from main (got ${{ github.ref }})"
+          exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -32,8 +79,9 @@ jobs:
       # `public`, never `.` — Cloudflare Pages Direct Upload publishes every file in the directory
       # it is given, and the repo root holds ROADMAP.md.
       #
-      # Pages reads `--branch main` as production and any other value as a preview. Since this
-      # workflow only fires on main and staging, github.ref_name is already exactly the right
-      # value, and one job cannot drift from a duplicated twin.
+      # The branch comes from the ENVIRONMENT INPUT, not from `github.ref_name` as it used to.
+      # That was safe only while the workflow could fire on nothing but main and staging. With a
+      # dispatch, `environment=staging` from main would have passed `--branch main` — which Pages
+      # reads as production — and quietly shipped a staging publish to onerate.travel.
       - name: Deploy
-        run: npx wrangler pages deploy public --project-name onerate-landing --branch ${{ github.ref_name }}
+        run: npx wrangler pages deploy public --project-name onerate-landing --branch ${{ inputs.environment == 'production' && 'main' || 'staging' }}

@@ -26,7 +26,16 @@ There is no build step and no dev server. The page is one self-contained file.
 
 ## Deploying
 
-Push. `staging` publishes a preview, `main` publishes production. Both run `npm test` first.
+**Nothing deploys on a push.** The workflow has no push trigger at all — same shape as
+`suphero/onerate-app`'s `ci.yml`. Every deploy is dispatched by hand, and every dispatch runs
+`npm test` before it publishes.
+
+```bash
+gh workflow run deploy.yml --ref staging -f environment=staging
+gh workflow run deploy.yml --ref main    -f environment=production
+```
+
+Production refuses to run from any ref but `main`, loudly.
 
 ### From a laptop, when Actions cannot run
 

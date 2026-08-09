@@ -18,6 +18,7 @@ The OneRate promo page: one static HTML file served at `onerate.travel`. Split o
    curl -sS https://onerate.travel/ROADMAP.md | grep -c 'R3.4.4'   # expect 0
    gh run view <id> --log | grep -i 'already uploaded'             # expect 1 file
    ```
+
 2. **The Pages project is Direct Upload and cannot become Git-connected.** Cloudflare: *"If you
    choose Direct Upload, you cannot switch to Git integration later. You will have to create a new
    project."* Converting would mean standing up a second Pages project and migrating a live apex
@@ -51,5 +52,8 @@ R3.4.4, spans this repo and `suphero/onerate-app`. Do not close either half alon
 
 ## Commits
 
-Conventional Commits. Run `npm test` before pushing — the workflow runs it too and refuses to
-deploy on red, but finding out locally is faster than finding out in Actions.
+Conventional Commits. Run `npm test` before pushing.
+
+Nothing runs on a push — `.github/workflows/deploy.yml` has no push trigger, mirroring
+`suphero/onerate-app`'s ci.yml. So a push proves nothing about the tests, and the first thing that
+would tell you they are red is a deploy you dispatched on purpose. Run them yourself.
