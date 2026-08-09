@@ -117,6 +117,14 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 	@echo "Deployed. Now run 'make smoke' — the deploy log alone cannot tell you what is live."
 
 # ---- Verifying what shipped -------------------------------------------------------------------
+#
+# Bodies are captured into a variable and then grepped — never `curl … | grep -q`. Under
+# `-o pipefail`, `grep -q` exits the moment it matches, curl takes SIGPIPE on the closed pipe, and
+# the pipeline reports failure *because the assertion succeeded*. The ROADMAP check below hides
+# that bug perfectly while it passes (grep never matches, so it reads the whole stream) and would
+# have sprung it on the one day the check needed to be trusted. Found in onerate-docs, where the
+# same construct claimed /tr/ was not Turkish while it was being served perfectly; fixed here too
+# rather than only where it bit.
 
 .PHONY: smoke
 smoke: ## Check production: the page is live, bilingual, and the roadmap is NOT published
@@ -133,7 +141,8 @@ smoke: ## Check production: the page is live, bilingual, and the roadmap is NOT 
 	echo "  Asserting on the BODY, never the status code: this project has no custom 404.html, so"; \
 	echo "  Pages answers every unmatched path with index.html at 200. A 200 here is normal and"; \
 	echo "  means the file is absent — anyone reading a status code would draw the wrong conclusion."; \
-	if curl -fsS $(PROD_URL)/ROADMAP.md | grep -q 'R3.4.4'; then \
+	roadmap=$$(curl -fsS $(PROD_URL)/ROADMAP.md); \
+	if echo "$$roadmap" | grep -q 'R3.4.4'; then \
 	  echo "FAIL: the roadmap is being served at $(PROD_URL)/ROADMAP.md"; \
 	  echo "The deploy published the repo root instead of $(PUBLISH_DIR)/."; exit 1; fi; \
 	echo "  ok  roadmap is not published"
