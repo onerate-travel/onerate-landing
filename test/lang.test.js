@@ -32,8 +32,12 @@ function render(locale, { stored } = {}) {
     },
   });
   const { document } = dom.window;
+  const description = () =>
+    document.querySelector('meta[name="description"]')?.getAttribute('content');
   const result = {
     lang: document.documentElement.lang,
+    title: document.title,
+    description: description(),
     select: document.querySelector('#lang'),
     text: (key) => document.querySelector(`[data-i18n="${key}"]`)?.textContent.trim(),
     /** Choose a language the way a visitor does, then re-read the page. */
@@ -43,6 +47,8 @@ function render(locale, { stored } = {}) {
       select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
       return {
         lang: document.documentElement.lang,
+        title: document.title,
+        description: description(),
         text: (key) => document.querySelector(`[data-i18n="${key}"]`)?.textContent.trim(),
         stored: store.get('onerate.lang'),
       };
@@ -101,6 +107,19 @@ describe('choosing a language', () => {
     page.close();
   });
 
+  it('retitles the browser tab and the meta description, not only the body', () => {
+    // The tab title and the search snippet are copy like any other string on the page. Before
+    // they joined the TEXT dictionary, a visitor who switched to Turkish kept an English tab —
+    // the one piece of the page still visible after they moved to another one.
+    const page = render('en-US');
+    expect(page.title).toBe('OneRate — B2B Hotel Distribution');
+
+    const after = page.choose('tr');
+    expect(after.title).toBe('OneRate — B2B Otel Dağıtımı');
+    expect(after.description).toContain('otel dağıtımı');
+    page.close();
+  });
+
   it('can go back to English, which is not a special case', () => {
     const page = render('bg-BG');
     expect(page.text('questions')).toBe('Въпроси?');
@@ -122,6 +141,15 @@ describe('choosing a language', () => {
   it('ignores a stored value that is not a language the page has', () => {
     // localStorage is visitor-writable and survives a redeploy that drops a language.
     const page = render('it-IT', { stored: 'xx' });
+    expect(page.lang).toBe('it');
+    page.close();
+  });
+
+  it('ignores a stored value that only exists on Object.prototype', () => {
+    // 'xx' above misses TEXT honestly; 'constructor' does not — every object answers for it
+    // through the prototype chain, so a truthiness check (`TEXT[stored]`) accepts it and ships
+    // <html lang="constructor">. The lookup must ask about OWN keys only.
+    const page = render('it-IT', { stored: 'constructor' });
     expect(page.lang).toBe('it');
     page.close();
   });

@@ -24,9 +24,13 @@ function copyFor(locale) {
     },
   });
   const { document } = dom.window;
+  // A <meta> keeps its copy in `content`, not in text — mirror the page's own loop, which makes
+  // the same distinction, so the meta description is checked as strictly as the visible strings.
+  const copyOf = (el) =>
+    el.tagName === 'META' ? (el.getAttribute('content') ?? '').trim() : el.textContent.trim();
   const entries = [...document.querySelectorAll('[data-i18n]')].map((el) => [
     el.getAttribute('data-i18n'),
-    el.textContent.trim(),
+    copyOf(el),
   ]);
   const result = { lang: document.documentElement.lang, copy: Object.fromEntries(entries) };
   dom.window.close();
@@ -83,10 +87,45 @@ describe('the default language is in the markup, not only in the script', () => 
   it('renders real sentences with no script run at all', () => {
     const noScript = new JSDOM(PAGE).window.document;
     for (const key of KEYS) {
-      const text = noScript.querySelector(`[data-i18n="${key}"]`)?.textContent.trim();
+      const el = noScript.querySelector(`[data-i18n="${key}"]`);
+      const text =
+        el?.tagName === 'META' ? el.getAttribute('content')?.trim() : el?.textContent.trim();
       expect(text, `[data-i18n="${key}"] is empty without JavaScript`).toBeTruthy();
     }
     expect(noScript.querySelector('[data-i18n="tagline"]').textContent).toContain('B2B hotel');
+  });
+});
+
+describe('the head a crawler reads, with no script run', () => {
+  /**
+   * Pages answers every unmatched path with this page at 200 (no custom 404.html — CLAUDE.md,
+   * point 1), so to a crawler /anything is a duplicate of /. The canonical link is what collapses
+   * them back into one URL, which makes it the one head tag this project cannot do without.
+   */
+  it('declares one canonical URL, because every path serves this page', () => {
+    const canonical = STATIC.querySelector('link[rel="canonical"]');
+    expect(canonical?.getAttribute('href')).toBe('https://onerate.travel/');
+  });
+
+  it('carries Open Graph and Twitter card copy for link unfurlers', () => {
+    const og = (prop) => STATIC.querySelector(`meta[property="${prop}"]`)?.getAttribute('content');
+    expect(og('og:title')).toBeTruthy();
+    expect(og('og:description')).toBeTruthy();
+    expect(og('og:type')).toBe('website');
+    expect(og('og:url')).toBe('https://onerate.travel/');
+    expect(STATIC.querySelector('meta[name="twitter:card"]')?.getAttribute('content')).toBe(
+      'summary'
+    );
+  });
+
+  it('ships a robots.txt that allows everything', () => {
+    const robots = readFileSync(
+      fileURLToPath(new URL('../public/robots.txt', import.meta.url)),
+      'utf8'
+    );
+    expect(robots).toMatch(/^User-agent: \*$/m);
+    expect(robots).toMatch(/^Allow: \/$/m);
+    expect(robots).not.toMatch(/^Disallow:/m);
   });
 });
 

@@ -3,18 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OneRate — B2B Hotel Distribution</title>
+    <!--
+      The title and the description carry `data-i18n` keys like any visible copy: the tab title
+      and the search snippet are the two strings a visitor still sees after leaving the page, so
+      the language switcher rewrites them too. English in the markup, as everywhere else — a
+      crawler that runs no JavaScript reads exactly this.
+    -->
+    <title data-i18n="docTitle">OneRate — B2B Hotel Distribution</title>
     <meta
       name="description"
+      data-i18n="metaDescription"
       content="OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books."
     />
+    <!--
+      One canonical URL, and it matters more here than on most sites: this Pages project has no
+      custom 404.html, so Cloudflare answers EVERY unmatched path with this page at 200
+      (CLAUDE.md, point 1). To a crawler, /pricing and /ROADMAP.md are duplicates of / — this tag
+      is what collapses them back into one URL instead of splitting rank across accidental copies.
+    -->
+    <link rel="canonical" href="https://onerate.travel/" />
+    <meta property="og:title" content="OneRate — B2B Hotel Distribution" />
+    <meta
+      property="og:description"
+      content="OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://onerate.travel/" />
+    <!-- `summary`, not `summary_large_image`: there is no og:image — the only artwork this page
+         owns is an emoji favicon, and unfurlers render a missing image as a broken one. -->
+    <meta name="twitter:card" content="summary" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A8%3C/text%3E%3C/svg%3E"
     />
     <style>
       :root {
-        color-scheme: light dark;
+        /* `dark`, not `light dark`: the palette below is the page's ONLY theme. Declaring a
+           light mode that does not exist made the platform draw light form controls on a dark
+           page — the `.langs option` color override this file used to carry existed solely to
+           patch that popup, and left when the false declaration did. */
+        color-scheme: dark;
         --bg: #0b1020;
         --panel: rgba(255, 255, 255, 0.04);
         --fg: #eef2ff;
@@ -126,9 +154,11 @@
         background-size: 9px 5px;
       }
       .langs select:hover, .langs select:focus-visible { color: var(--fg); border-color: var(--accent); }
-      /* The dropdown list is drawn by the platform, outside this element's inherited color, so the
-         options state their own — otherwise they are pale grey on the OS's white popup. */
-      .langs option { color: #111827; background: #ffffff; }
+      /* No `.langs option` color override here any more. The platform draws the dropdown list
+         itself, and under the old `color-scheme: light dark` it could draw a WHITE popup whose
+         options inherited this page's pale grey — hence a forced dark-on-white rule. With the
+         scheme honestly declared `dark` (see :root) the popup is dark and the platform picks its
+         own legible text, so the patch would now be styling a problem that cannot occur. */
     </style>
   </head>
   <body>
@@ -195,6 +225,10 @@
         var TEXT = {
           en: {
             langLabel: 'Language',
+            docTitle: 'OneRate — B2B Hotel Distribution',
+            metaDescription:
+              'OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier ' +
+              'contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books.',
             tagline: 'B2B hotel distribution, cheapest-first.',
             desc:
               'Agencies bring their own supplier contracts. OneRate fans out the search across ' +
@@ -206,6 +240,11 @@
           },
           tr: {
             langLabel: 'Dil',
+            docTitle: 'OneRate — B2B Otel Dağıtımı',
+            metaDescription:
+              'OneRate — çok kiracılı B2B otel dağıtımı. Acenteler kendi tedarikçi kontratlarını ' +
+              'getirir; OneRate aramayı dağıtır, fiyatları normalize eder, en ucuzdan sıralar ve ' +
+              'rezervasyon yapar.',
             tagline: 'B2B otel dağıtımı, en ucuz önce.',
             desc:
               'Acenteler kendi tedarikçi kontratlarını getirir. OneRate aramayı tüm bedbank’lara ' +
@@ -217,6 +256,11 @@
           },
           bg: {
             langLabel: 'Език',
+            docTitle: 'OneRate — B2B хотелска дистрибуция',
+            metaDescription:
+              'OneRate — мултитенант B2B хотелска дистрибуция. Агенциите носят собствените си ' +
+              'договори с доставчици; OneRate разпраща търсенето, нормализира цените, подрежда ' +
+              'от най-евтината и резервира.',
             tagline: 'B2B хотелска дистрибуция, най-евтиното напред.',
             desc:
               'Агенциите носят собствените си договори с доставчици. OneRate разпраща търсенето до ' +
@@ -228,6 +272,11 @@
           },
           hu: {
             langLabel: 'Nyelv',
+            docTitle: 'OneRate — B2B szállodai disztribúció',
+            metaDescription:
+              'OneRate — több bérlős B2B szállodai disztribúció. Az irodák a saját beszállítói ' +
+              'szerződéseiket hozzák; a OneRate szétküldi a keresést, egységesíti az árakat, a ' +
+              'legolcsóbbtól rangsorol és foglal.',
             tagline: 'B2B szállodai disztribúció, a legolcsóbb elöl.',
             desc:
               'Az irodák a saját beszállítói szerződéseiket hozzák. A OneRate szétküldi a keresést ' +
@@ -239,6 +288,11 @@
           },
           it: {
             langLabel: 'Lingua',
+            docTitle: 'OneRate — Distribuzione alberghiera B2B',
+            metaDescription:
+              'OneRate — distribuzione alberghiera B2B multi-tenant. Le agenzie portano i propri ' +
+              'contratti con i fornitori; OneRate distribuisce la ricerca, normalizza le tariffe, ' +
+              'ordina dalla più economica e prenota.',
             tagline: 'Distribuzione alberghiera B2B, il più economico prima.',
             desc:
               'Le agenzie portano i propri contratti con i fornitori. OneRate distribuisce la ' +
@@ -250,6 +304,11 @@
           },
           pl: {
             langLabel: 'Język',
+            docTitle: 'OneRate — Dystrybucja hotelowa B2B',
+            metaDescription:
+              'OneRate — wielodostępna dystrybucja hotelowa B2B. Agencje przynoszą własne umowy ' +
+              'z dostawcami; OneRate rozsyła wyszukiwanie, normalizuje stawki, sortuje od ' +
+              'najtańszego i rezerwuje.',
             tagline: 'Dystrybucja hotelowa B2B, najtańsze na początku.',
             desc:
               'Agencje przynoszą własne umowy z dostawcami. OneRate rozsyła wyszukiwanie do ' +
@@ -261,6 +320,11 @@
           },
           ro: {
             langLabel: 'Limbă',
+            docTitle: 'OneRate — Distribuție hotelieră B2B',
+            metaDescription:
+              'OneRate — distribuție hotelieră B2B multi-tenant. Agențiile își aduc propriile ' +
+              'contracte cu furnizorii; OneRate distribuie căutarea, normalizează tarifele, ' +
+              'clasează de la cel mai ieftin și rezervă.',
             tagline: 'Distribuție hotelieră B2B, cel mai ieftin întâi.',
             desc:
               'Agențiile își aduc propriile contracte cu furnizorii. OneRate distribuie căutarea ' +
@@ -284,7 +348,11 @@
           var nodes = document.querySelectorAll('[data-i18n]');
           for (var i = 0; i < nodes.length; i++) {
             var key = nodes[i].getAttribute('data-i18n');
-            if (copy[key]) nodes[i].textContent = copy[key];
+            if (!copy[key]) continue;
+            // A <meta> carries its copy in `content` — writing its textContent would leave the
+            // attribute a crawler reads untouched and put the string somewhere nothing reads.
+            if (nodes[i].tagName === 'META') nodes[i].setAttribute('content', copy[key]);
+            else nodes[i].textContent = copy[key];
           }
         }
 
@@ -308,7 +376,13 @@
           stored = localStorage.getItem(STORAGE_KEY);
         } catch (ignored) {}
         var fromBrowser = (navigator.language || 'en').toLowerCase().split('-')[0];
-        setLang(TEXT[stored] ? stored : TEXT[fromBrowser] ? fromBrowser : 'en');
+        // `Object.hasOwn`, not truthiness: TEXT — like every object — answers for 'constructor'
+        // and the rest of Object.prototype through the prototype chain, and localStorage is
+        // visitor-writable. `TEXT[stored]` would have taken a stored 'constructor' for a language
+        // and shipped <html lang="constructor">. Own keys are the only languages this page has.
+        setLang(
+          Object.hasOwn(TEXT, stored) ? stored : Object.hasOwn(TEXT, fromBrowser) ? fromBrowser : 'en'
+        );
       })();
     </script>
   </body>

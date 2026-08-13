@@ -1,0 +1,7 @@
+# Everything on this project is meant to be indexed — the page is the product's front door.
+# What must NOT be crawled (ROADMAP.md and friends) is kept out by never being deployed: only
+# public/ is published (see the Makefile's PUBLISH_DIR note), not by a Disallow line here.
+# And because Pages answers every unmatched path with index.html at 200 (CLAUDE.md, point 1),
+# duplicate-URL cleanup is the canonical tag's job in the page itself, not this file's.
+User-agent: *
+Allow: /

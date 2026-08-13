@@ -132,17 +132,26 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 # have sprung it on the one day the check needed to be trusted. Found in onerate-docs, where the
 # same construct claimed /tr/ was not Turkish while it was being served perfectly; fixed here too
 # rather than only where it bit.
+#
+# The translation check greps for TWO things, deliberately: `data-i18n` proves the markup still
+# carries its hooks, and a literal Turkish string ('Portala giriş') proves the TEXT dictionary
+# still carries copy — delete the translations and the second grep fails. It used to grep for
+# `data-tr`, an attribute the page dropped in the seven-language refactor, and kept passing
+# because that string survives in an index.html comment ABOUT the old scheme. A check green on
+# prose about the thing rather than the thing itself is precisely the trap the paragraph above
+# lectures about — written, apparently, while stepping into it.
 
 .PHONY: smoke
-smoke: ## Check production: the page is live, bilingual, and the roadmap is NOT published
+smoke: ## Check production: the page is live, translated, and the roadmap is NOT published
 	@set -euo pipefail; \
 	page=$$(curl -fsS $(PROD_URL)/); \
 	echo "$$page" | grep -q 'app.onerate.travel' || { echo "FAIL: no portal link on the live page"; exit 1; }; \
 	echo "  ok  portal link present"; \
 	echo "$$page" | grep -q 'docs.onerate.travel' || { echo "FAIL: no docs link on the live page"; exit 1; }; \
 	echo "  ok  docs link present"; \
-	echo "$$page" | grep -q 'data-tr' || { echo "FAIL: the Turkish copy is missing from the live page"; exit 1; }; \
-	echo "  ok  bilingual copy present"; \
+	echo "$$page" | grep -q 'data-i18n' || { echo "FAIL: the i18n markup is missing from the live page"; exit 1; }; \
+	echo "$$page" | grep -q 'Portala giriş' || { echo "FAIL: the translated copy is missing from the live page"; exit 1; }; \
+	echo "  ok  translated copy present (data-i18n hooks + a Turkish string)"; \
 	echo; \
 	echo "  ROADMAP.md must not be published (CLAUDE.md, point 1)."; \
 	echo "  Asserting on the BODY, never the status code: this project has no custom 404.html, so"; \
