@@ -69,7 +69,8 @@ R3.4.4, spans this repo and `onerate-travel/onerate-app`. Do not close either ha
 
 Conventional Commits. Run `npm test` before pushing.
 
-A push to `main` runs the gate and publishes `onerate.travel` if it passes, mirroring
-`onerate-travel/onerate-app`'s ci.yml. The `staging` branch is deliberately NOT wired to a trigger —
+A push to `main` runs the gate and publishes `onerate.travel` if it passes. This no longer mirrors
+`onerate-travel/onerate-app`, which went back to `workflow_dispatch` only — its gate is far heavier
+and a red one there blocked shipping entirely. The `staging` branch is deliberately NOT wired to a trigger —
 a rehearsal is `gh workflow run deploy.yml --ref main -f environment=staging`. Run `npm test`
 locally anyway: a red suite on `main` now costs a failed deploy rather than a quiet nothing.
