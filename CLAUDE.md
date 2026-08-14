@@ -1,7 +1,7 @@
 # onerate-landing — Agent Instructions
 
 The OneRate promo page: one static HTML file served at `onerate.travel`. Split out of
-`suphero/onerate-app` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
+`onerate-travel/onerate-app` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
 
 ## Three things that look wrong and are not
 
@@ -47,7 +47,7 @@ is the only way to check it without keeping a second copy of the copy.
 - Code, comments, commits, docs, tests: **English**.
 - End-user copy: **seven languages** — English (default and fallback), Türkçe, Български, Magyar,
   Italiano, Polski, Română. Same set, same order and same endonym labels as the portal's own
-  `LOCALES` (`packages/core/src/locales.ts` in `suphero/onerate-app`).
+  `LOCALES` (`packages/core/src/locales.ts` in `onerate-travel/onerate-app`).
 - The copy lives in ONE `TEXT` dictionary in the page's inline script, keyed by language, with the
   markup carrying `data-i18n` keys. It used to be paired `data-en`/`data-tr` spans; at seven
   languages that would be seven spans per sentence, and forgetting one would be easy to do and hard
@@ -63,12 +63,12 @@ is the only way to check it without keeping a second copy of the copy.
 ## Open work
 
 `ROADMAP.md` — open items only; completed ones are deleted, never checked off. Its single item,
-R3.4.4, spans this repo and `suphero/onerate-app`. Do not close either half alone.
+R3.4.4, spans this repo and `onerate-travel/onerate-app`. Do not close either half alone.
 
 ## Commits
 
 Conventional Commits. Run `npm test` before pushing.
 
 Nothing runs on a push — `.github/workflows/deploy.yml` has no push trigger, mirroring
-`suphero/onerate-app`'s ci.yml. So a push proves nothing about the tests, and the first thing that
+`onerate-travel/onerate-app`'s ci.yml. So a push proves nothing about the tests, and the first thing that
 would tell you they are red is a deploy you dispatched on purpose. Run them yourself.

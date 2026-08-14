@@ -2,7 +2,7 @@
 
 The OneRate promo page — the single static page served at <https://onerate.travel>.
 
-Split out of [`suphero/onerate-app`](https://github.com/suphero/onerate-app) on 2026-07-25 so a copy change
+Split out of [`onerate-travel/onerate-app`](https://github.com/onerate-travel/onerate-app) on 2026-07-25 so a copy change
 does not wait behind the product monorepo's miniflare and Playwright suites. Reasoning:
 `docs/ADR-0009-landing-repo-split.md` in that repo.
 
@@ -27,7 +27,7 @@ There is no build step and no dev server. The page is one self-contained file.
 ## Deploying
 
 **Nothing deploys on a push.** The workflow has no push trigger at all — same shape as
-`suphero/onerate-app`'s `ci.yml`. Every deploy is dispatched by hand, and every dispatch runs
+`onerate-travel/onerate-app`'s `ci.yml`. Every deploy is dispatched by hand, and every dispatch runs
 `npm test` before it publishes.
 
 ```bash

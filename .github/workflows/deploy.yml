@@ -1,6 +1,6 @@
 name: Deploy
 
-# ENTIRELY on demand, mirroring `suphero/onerate-app`'s ci.yml: there is no push or pull_request
+# ENTIRELY on demand, mirroring `onerate-travel/onerate-app`'s ci.yml: there is no push or pull_request
 # trigger, so nothing runs automatically — not the gate, not a deploy. Every run is dispatched
 # explicitly.
 #

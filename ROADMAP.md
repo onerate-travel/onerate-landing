@@ -4,16 +4,16 @@ Open work only. Completed items are deleted rather than checked off; history liv
 
 ## R3.4.4 the landing page and the portal disagree on the default language — P3
 
-Moved here from `suphero/onerate-app`'s `ROADMAP.md` on 2026-07-25 with the landing-repo split
+Moved here from `onerate-travel/onerate-app`'s `ROADMAP.md` on 2026-07-25 with the landing-repo split
 (ADR-0009). **The item spans two repositories** — resolving it may change the portal rather than
 this page, so it cannot be closed here alone. This is the item's only copy: the monorepo's roadmap
 carries no stub (a second copy would be one more thing to keep in sync), so a change landing in
-`suphero/onerate-app` has to be driven from here.
+`onerate-travel/onerate-app` has to be driven from here.
 
 - [ ] `public/index.html` auto-detects from `navigator.language` across all SEVEN languages, and
       remembers an explicit choice in this origin's `localStorage`. The portal pins
       `lng: localStorage.getItem('onerate.lang') ?? DEFAULT_LOCALE` (`apps/web/src/i18n.ts` in
-      `suphero/onerate-app`) — a hard `en` default with no browser detection. So a Turkish-locale
+      `onerate-travel/onerate-app`) — a hard `en` default with no browser detection. So a Turkish-locale
       visitor reads this page in Turkish and lands in an English portal one click later, and the
       seven-language rollout WIDENED the gap rather than closing it: the same now happens to a
       Bulgarian, Hungarian, Italian, Polish or Romanian visitor.
