@@ -1,19 +1,24 @@
 name: Deploy
 
-# ENTIRELY on demand, mirroring `onerate-travel/onerate-app`'s ci.yml: there is no push or pull_request
-# trigger, so nothing runs automatically — not the gate, not a deploy. Every run is dispatched
-# explicitly.
+# A push to `main` publishes onerate.travel, after the full gate. That is the only automatic path.
+# The `staging` branch is NOT wired to a trigger even though it exists: onerate-app is the one repo
+# where staging and main are worked in parallel, and a promo page with one live surface does not
+# need a standing second environment — staging here is a rehearsal you ask for, not a branch you
+# live on.
 #
-# A dispatched run always runs the gate first, because the deploy step comes after it in the same
-# job: manual does not mean unchecked. `environment` is required, so every dispatch that passes the
-# gate also deploys — there is no gate-only dispatch; run `npm test` locally for that.
+# `inputs.environment || 'production'` is how the two triggers meet, and it is written that way
+# rather than tested against `github.event_name`: on a push the `inputs` context is empty, so the
+# fallback fires; on a dispatch the input is required and always set.
 #
-#   gh workflow run deploy.yml --ref staging -f environment=staging
-#   gh workflow run deploy.yml --ref main    -f environment=production
+# The gate runs either way, because the deploy step comes after it in the same job: automatic does
+# not mean unchecked, exactly as manual did not. To rehearse, or to re-run after a flake:
+#   gh workflow run deploy.yml --ref main -f environment=staging
 #
-# Or `make deploy-prod`, which runs the same gate on your laptop and adds the three guards a
-# dispatch cannot check — clean tree, right branch, branch pushed.
+# Or `make deploy-prod`, which runs the same gate on your laptop and adds the guards a trigger
+# cannot check — clean tree, right branch, branch pushed.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -28,16 +33,16 @@ on:
 permissions:
   contents: read
 
-# Two dispatches must not interleave. Keyed by environment: a staging publish has no reason to
-# queue behind a production one. `cancel-in-progress: false` is the load-bearing half — cancelling
-# a deploy mid-flight is a worse state than waiting.
+# Two runs must not interleave. Keyed by environment: a staging publish has no reason to queue
+# behind a production one. `cancel-in-progress: false` is the load-bearing half — cancelling a
+# deploy mid-flight is a worse state than waiting.
 #
-# No `|| github.ref` fallback on the key. This workflow has exactly one trigger, so
-# `inputs.environment` is always set — and onerate-app's R11.8 removed the equivalent dead
-# null-guards there for the reason that applies here too: a condition that cannot fail is read as
-# a guard that does something.
+# The key carried no fallback while this workflow had exactly one trigger, on R11.8's rule that a
+# condition which cannot fail reads as a guard that does something. It has two triggers now and a
+# push leaves the input empty, so the fallback stopped being dead the moment the trigger landed —
+# without it every pushed run would share one nameless group with every dispatched one.
 concurrency:
-  group: deploy-${{ inputs.environment }}
+  group: deploy-${{ inputs.environment || 'production' }}
   cancel-in-progress: false
 
 jobs:
@@ -46,19 +51,19 @@ jobs:
   # staging and production differ here by a single wrangler argument, so duplicating the job would
   # duplicate the gate with it and give the two copies somewhere to disagree.
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 10
     # A GitHub environment, so the Cloudflare token can be scoped to it rather than repo-wide and a
     # required reviewer or wait timer can be attached in repo settings WITHOUT another code change.
     # Declaring it does not itself gate anything; it creates the place a gate can hang.
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'production' }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       # First, before the checkout: a dispatch from the wrong ref should cost nothing.
       - name: Production ships from main only
-        if: inputs.environment == 'production' && github.ref != 'refs/heads/main'
+        if: (inputs.environment || 'production') == 'production' && github.ref != 'refs/heads/main'
         run: |
           echo "::error::production deploys must be dispatched from main (got ${{ github.ref }})"
           exit 1
@@ -79,9 +84,16 @@ jobs:
       # `public`, never `.` — Cloudflare Pages Direct Upload publishes every file in the directory
       # it is given, and the repo root holds ROADMAP.md.
       #
-      # The branch comes from the ENVIRONMENT INPUT, not from `github.ref_name` as it used to.
-      # That was safe only while the workflow could fire on nothing but main and staging. With a
-      # dispatch, `environment=staging` from main would have passed `--branch main` — which Pages
-      # reads as production — and quietly shipped a staging publish to onerate.travel.
+      # The branch comes from the RESOLVED ENVIRONMENT, not from `github.ref_name` as it once did.
+      # `github.ref_name` was safe only while the workflow could fire on nothing but main and
+      # staging; a dispatch broke that, because `environment=staging` from main would have passed
+      # `--branch main` — which Pages reads as production — and quietly shipped a rehearsal to
+      # onerate.travel.
+      #
+      # The `|| 'production'` is what keeps that true now that a push can fire this too, and it
+      # fails in the OTHER direction if dropped: on a push `inputs.environment` is empty, so a bare
+      # `== 'production'` is false and every push to main would publish `--branch staging` — the
+      # live site silently never updating, which is worse than a loud failure because the run stays
+      # green. The two halves of this expression each guard one trigger.
       - name: Deploy
-        run: npx wrangler pages deploy public --project-name onerate-landing --branch ${{ inputs.environment == 'production' && 'main' || 'staging' }}
+        run: npx wrangler pages deploy public --project-name onerate-landing --branch ${{ (inputs.environment || 'production') == 'production' && 'main' || 'staging' }}

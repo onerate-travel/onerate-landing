@@ -26,9 +26,9 @@ There is no build step and no dev server. The page is one self-contained file.
 
 ## Deploying
 
-**Nothing deploys on a push.** The workflow has no push trigger at all — same shape as
-`onerate-travel/onerate-app`'s `ci.yml`. Every deploy is dispatched by hand, and every dispatch runs
-`npm test` before it publishes.
+**A push to `main` deploys** `onerate.travel`, after `npm test` — same shape as
+`onerate-travel/onerate-app`'s `ci.yml`. The `staging` branch has no trigger; a preview is dispatched
+by hand. Either way the gate runs before anything publishes.
 
 ```bash
 gh workflow run deploy.yml --ref staging -f environment=staging
