@@ -70,10 +70,15 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # No `cache: npm`. That option exists to carry ~/.npm between EPHEMERAL runners; on a
+      # persistent self-hosted one the directory is already there, and it is the machine owner's
+      # own npm cache rather than a job-sized one. Measured on the runner this now uses: 26 GB and
+      # 34,031 files, which the post step spent four minutes packing to upload into a 10 GB
+      # per-repository quota before it was cancelled. The step reports as a job that will not
+      # finish, which is a poor way to learn it.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm ci
