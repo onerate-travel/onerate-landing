@@ -51,7 +51,7 @@ jobs:
   # staging and production differ here by a single wrangler argument, so duplicating the job would
   # duplicate the gate with it and give the two copies somewhere to disagree.
   deploy:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: self-hosted
     timeout-minutes: 10
     # A GitHub environment, so the Cloudflare token can be scoped to it rather than repo-wide and a
     # required reviewer or wait timer can be attached in repo settings WITHOUT another code change.
