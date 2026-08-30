@@ -3,7 +3,7 @@
 The OneRate promo page: one static HTML file served at `onerate.travel`. Split out of
 `onerate-travel/onerate-app` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
 
-## Three things that look wrong and are not
+## Four things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
@@ -27,6 +27,14 @@ The OneRate promo page: one static HTML file served at `onerate.travel`. Split o
    devDependencies and no workspaces; pnpm would add a `corepack enable` CI step and a lockfile
    format `actions/setup-node` does not cache out of the box. Likewise there is no TypeScript: the
    only source file is an HTML page, so there is nothing for `tsc` to check.
+4. **`public/fonts/` holds four `.woff2` files, and they are checked in.** The two applications
+   get Inter and Space Grotesk from `@fontsource-variable/*` and a bundler
+   (`onerate-ui/src/styles.css:1-4`); with no build step this page cannot, and a font CDN would
+   hand every visitor's IP to a third party across six EU markets. So the four subsets the seven
+   languages actually need are copied in verbatim, with both SIL OFL licences beside them.
+   `test/design.test.js` refuses a `@font-face` whose file is missing and a family named in
+   `--font-ui` that nothing ships — a page that CLAIMS the product's typeface and renders in
+   system-ui would otherwise pass every other test.
 
 ## TDD — the Iron Law
 
@@ -36,11 +44,34 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
 Red → Green → Refactor. Every bug fix starts with a failing regression test that reproduces it.
 
-`test/lang.test.js` and `test/bilingual.test.js` parse the *shipped* `public/index.html` — never a
-copy of its script — so editing the page's inline JavaScript is exactly what makes them fail. Keep
-it that way. `bilingual.test.js` goes further and RUNS the page once per language, because the
+`test/lang.test.js`, `test/bilingual.test.js` and `test/design.test.js` parse the *shipped*
+`public/index.html` — never a copy of its script or its stylesheet — so editing the page is exactly
+what makes them fail. Keep it that way. `bilingual.test.js` goes further and RUNS the page once per language, because the
 `TEXT` dictionary is inside an IIFE with nothing exported: reading what the page actually rendered
 is the only way to check it without keeping a second copy of the copy.
+
+## The design system, and why the values are copied
+
+The page carries `@onerate/ui`'s brand values — `--teal`, `--teal-on-ink`, `--focus`, the type
+stack, the spacing scale, `--touch` — under `@onerate/ui`'s own names, copied by hand. It cannot
+import `tokens.css`: there is no build step (point 3 above), and adding one to publish a static
+page would be the tail wagging the dog.
+
+**A copy with nothing watching it is how this page came to be blue in front of a teal product.** So
+the copy lives in `test/design-system.js` as well as in the page, and `test/design.test.js` checks
+it in two directions:
+
+- `index.html` against `design-system.js` — always, including CI. This catches a hex edited by
+  hand here.
+- `design-system.js` against `onerate-ui/src/tokens.css` — only when that repo is checked out
+  beside this one, and it reports itself **skipped** otherwise rather than passing over nothing.
+  This catches drift, and drift starts upstream.
+
+Changing a brand value means changing it in **both** files. If the second test is skipped in your
+run, check out `onerate-ui` beside this repo and run again before pushing.
+
+The page's own ground — `--bg`, `--panel`, `--fg`, `--muted`, `--border` — is NOT from the design
+system and is not meant to be. A poster is not a portal.
 
 ## Language conventions
 

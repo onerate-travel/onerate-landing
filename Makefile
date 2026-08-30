@@ -161,7 +161,20 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	if echo "$$roadmap" | grep -q 'R3.4.4'; then \
 	  echo "FAIL: the roadmap is being served at $(PROD_URL)/ROADMAP.md"; \
 	  echo "The deploy published the repo root instead of $(PUBLISH_DIR)/."; exit 1; fi; \
-	echo "  ok  roadmap is not published"
+	echo "  ok  roadmap is not published"; \
+	echo; \
+	echo "  The favicon and the fonts must be reachable, and for the SAME reason as above: a"; \
+	echo "  missing asset answers 200 with index.html, and a browser handed HTML where it asked"; \
+	echo "  for a woff2 falls back to a system font. The page would look subtly wrong while"; \
+	echo "  every status code stayed green."; \
+	svg=$$(curl -fsS $(PROD_URL)/favicon.svg); \
+	echo "$$svg" | grep -q "<circle" || { echo "FAIL: /favicon.svg is not published"; exit 1; }; \
+	echo "  ok  favicon is published"; \
+	for f in space-grotesk-latin-wght-normal inter-latin-wght-normal inter-latin-ext-wght-normal inter-cyrillic-wght-normal; do \
+	  magic=$$(curl -fsS -r 0-3 $(PROD_URL)/fonts/$$f.woff2); \
+	  [ "$$magic" = "wOF2" ] || { echo "FAIL: /fonts/$$f.woff2 is not published (got \"$$magic\")"; exit 1; }; \
+	done; \
+	echo "  ok  all four font subsets are published"
 
 # ---- Keeping this honest ----------------------------------------------------------------------
 

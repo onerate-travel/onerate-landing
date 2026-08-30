@@ -11,7 +11,10 @@ does not wait behind the product monorepo's miniflare and Playwright suites. Rea
 | Path | What it is |
 | --- | --- |
 | `public/` | **the deployed site** — everything here is published, nothing outside it is |
+| `public/fonts/` | the four webfont subsets the page needs, self-hosted; both are SIL OFL |
 | `test/lang.test.js` | pins the page's language default against the shipped HTML |
+| `test/design.test.js` | pins its brand, layout, motion and document structure |
+| `test/design-system.js` | the `@onerate/ui` values the page copies, and the reader that checks them |
 | `.github/workflows/deploy.yml` | `staging` → Pages preview, `main` → `onerate.travel` |
 
 ## Working on it
@@ -22,7 +25,12 @@ npm test
 open public/index.html
 ```
 
-There is no build step and no dev server. The page is one self-contained file.
+There is no build step and no dev server. The page is one self-contained file, and the only other
+things in `public/` are a favicon and the fonts it references.
+
+`test/design.test.js` has one half that reads `../onerate-ui/src/tokens.css` and reports itself
+**skipped** when that repo is not checked out beside this one — which is what happens in CI. A
+skipped line there is expected; a failed one means the page and the design system have parted ways.
 
 ## Deploying
 

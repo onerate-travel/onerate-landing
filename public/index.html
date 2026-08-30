@@ -32,128 +32,289 @@
     <!-- `summary`, not `summary_large_image`: there is no og:image — the only artwork this page
          owns is an emoji favicon, and unfurlers render a missing image as a broken one. -->
     <meta name="twitter:card" content="summary" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A8%3C/text%3E%3C/svg%3E"
-    />
+    <!-- The product's own mark, not an emoji. `public/favicon.svg` carries the reasoning: the ring
+         is the shape all three OneRate surfaces share, and the colours are what tell them apart. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
+      /* ---- the two faces the product is drawn in, self-hosted ----
+
+         `@onerate/ui` gets these from `@fontsource-variable/*` and an `@import`
+         (`onerate-ui/src/styles.css:1-4`). This repo has no build step, so the four subsets the
+         page actually needs are checked into `public/fonts/` — the same files, the same
+         `unicode-range`s, taken from `@fontsource-variable/inter@5.3.0` and
+         `@fontsource-variable/space-grotesk@5.3.0`. Both are SIL OFL and the licences ship beside
+         them.
+
+         Self-hosted rather than pulled from a font CDN, and that is a decision rather than a
+         preference: this page speaks seven languages into six EU markets and Türkiye, and a
+         stylesheet fetched from a third party hands it every visitor's IP address.
+
+         FOUR subsets, and which four is a question about the COPY, not about typography. Body text
+         is Inter and needs `latin` (English, Italian), `latin-ext` (Turkish ğ/ş, Hungarian ő/ű,
+         Polish ł/ż, Romanian ș/ț) and `cyrillic` (Bulgarian). The wordmark is Space Grotesk and is
+         the string "OneRate" in all seven, so `latin` is the whole of it — and because
+         `unicode-range` is declared, a Cyrillic heading never requests a file Space Grotesk has no
+         glyphs for. It falls back to Inter, which is what the portal's own headings do.
+
+         One glyph is outside every subset here: the `→` (U+2192) in the portal CTA. It renders
+         from the platform's fallback, which is what a fallback is for — worth knowing rather than
+         worth fixing, since adding a subset for one arrow costs more than the arrow.
+
+         `font-display: swap`, as fontsource ships it. The copy is readable before the fonts land,
+         which is the only behaviour worth having on a page whose whole job is one paragraph. */
+      @font-face {
+        font-family: 'Space Grotesk Variable';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 300 700;
+        src: url(/fonts/space-grotesk-latin-wght-normal.woff2) format('woff2-variations');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+          U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+          U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter Variable';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 100 900;
+        src: url(/fonts/inter-latin-wght-normal.woff2) format('woff2-variations');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+          U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+          U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter Variable';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 100 900;
+        src: url(/fonts/inter-latin-ext-wght-normal.woff2) format('woff2-variations');
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+          U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+          U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      @font-face {
+        font-family: 'Inter Variable';
+        font-style: normal;
+        font-display: swap;
+        font-weight: 100 900;
+        src: url(/fonts/inter-cyrillic-wght-normal.woff2) format('woff2-variations');
+        unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+
       :root {
         /* `dark`, not `light dark`: the palette below is the page's ONLY theme. Declaring a
            light mode that does not exist made the platform draw light form controls on a dark
            page — the `.langs option` color override this file used to carry existed solely to
            patch that popup, and left when the false declaration did. */
         color-scheme: dark;
+
+        /* ---- the page's own ground: four values, and they are landing's ----
+           NOT taken from the design system, deliberately. `@onerate/ui`'s dark palette is the
+           chrome an agent sits inside for eight hours; this is a poster read for eight seconds.
+           What has to match the product is the BRAND, not the furniture. */
         --bg: #0b1020;
         --panel: rgba(255, 255, 255, 0.04);
         --fg: #eef2ff;
         --muted: #9aa4bf;
-        --accent: #5b8cff;
-        --accent-fg: #06122e;
         --border: rgba(255, 255, 255, 0.1);
+
+        /* ---- the design system, copied by hand ----
+           Every value below is `@onerate/ui`'s, under `@onerate/ui`'s own NAME. This repo has no
+           build step and cannot import `tokens.css` (CLAUDE.md, point 3), so the values are copied
+           and `test/design.test.js` is what keeps the copy honest: it reads
+           `onerate-ui/src/tokens.css` when that repo is checked out beside this one and fails if a
+           single value has moved. Copying without that test is how the page ended up two years of
+           brand behind in the first place.
+
+           ROLES, not shades — the same rule `tokens.css:13-17` states, and the reason `--accent`
+           is not a name on this page any more. It used to mean `#5b8cff` here, a blue, while in
+           the product the same word had already caused one incident by being read undefined.
+
+           `--teal` is the FILL (the CTA). `--teal-on-ink` is the brand read as TEXT on dark, and
+           the two are not interchangeable: `--teal` as text on `--bg` measures 3.61:1 and would
+           fail the 4.5 floor the moment the wordmark used it. `--teal-on-ink` measures 10.5:1. */
+        --teal: #127a68;
+        --teal-on-ink: #7fd0be;
+        --on-accent: #ffffff;
+        --focus: #5b9bff;
+        --font-display: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
+        --font-ui: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        --text-md: 13px;
+        /* The spacing scale, same steps and same names as `tokens.css`. The page carried nine
+           unrelated raw values (6, 8, 10, 12, 13, 14, 18, 24, 30, 34) — the exact condition U1.1
+           describes in the product, one page smaller. Only the steps this page uses are declared;
+           a token nothing reads is a second place to look. */
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 24px;
+        --space-6: 32px;
+        --touch: 40px;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; }
       body {
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background:
-          radial-gradient(1200px 600px at 50% -10%, rgba(91, 140, 255, 0.25), transparent 60%),
-          var(--bg);
+        font-family: var(--font-ui);
+        /* `background-color` and `background-image` apart, not one `background` shorthand, and the
+           reason is the `color-mix()` below: an unsupported function invalidates its DECLARATION,
+           and in the shorthand that declaration was also the flat navy. Split, an old browser
+           loses the glow and keeps the page. */
+        background-color: var(--bg);
+        background-image: radial-gradient(
+          1200px 600px at 50% -10%,
+          color-mix(in srgb, var(--teal) 25%, transparent),
+          transparent 60%
+        );
         color: var(--fg);
-        min-height: 100%;
-        display: grid;
-        place-items: center;
-        padding: 24px;
+        /* `min-height`, never `height`. `html, body { height: 100% }` pinned the body to the
+           viewport and `place-items: center` centred the content inside that pinned box, so
+           content taller than the viewport overflowed in BOTH directions — and the half above the
+           top is not reachable by scrolling. The trigger was already on the page: the Polish and
+           Romanian paragraphs are the longest of the seven, and a phone held sideways is 375px
+           tall. `dvh` over `vh` for the mobile browser bar; the `vh` line before it is what a
+           browser without `dvh` reads. */
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-5);
         line-height: 1.5;
+        text-align: center;
         -webkit-font-smoothing: antialiased;
       }
+      /* The page's one focus ring, mirroring `@onerate/ui/styles.css:21-24`. The CTAs had none of
+         their own and fell back to whatever the platform drew on a colour it knows nothing about. */
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
       main {
+        /* `margin: auto`, NOT `justify-content: center`. Both centre while there is free space;
+           they part company when there is not. An auto margin resolves to 0 under overflow, so the
+           first line stays at the scroll origin — centring keeps trying and pushes it above. This
+           is the whole of the height fix, and it is what lets the page grow a form later. */
+        margin: auto;
         width: 100%;
         max-width: 640px;
-        text-align: center;
       }
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: var(--space-2);
+        font-family: var(--font-display);
         font-weight: 700;
         letter-spacing: -0.02em;
         font-size: clamp(28px, 6vw, 44px);
       }
-      .brand .dot { color: var(--accent); }
+      .brand .dot { color: var(--teal-on-ink); }
       .tagline {
-        margin-top: 18px;
+        margin-top: var(--space-4);
+        /* An <h1> now, so the weight has to be said: the element's default bold would put the
+           tagline at the same weight as the wordmark above it and flatten the two into one block. */
+        font-weight: 400;
         font-size: clamp(16px, 2.6vw, 20px);
         color: var(--fg);
       }
       .desc {
-        margin: 14px auto 0;
+        margin: var(--space-3) auto 0;
         max-width: 520px;
         color: var(--muted);
+        /* Raw, and correctly so: `tokens.css` tokenises only the SMALL end of the scale
+           (`--text-xs/sm/md`, 11–13px) because that is where the product's crowding was. 15px is
+           body copy on a poster and has no token to read. */
         font-size: 15px;
       }
       /* Two destinations, deliberately unequal. Signing in is what a customer came for; the docs
          are for the visitor who is not one yet, and a second solid button would make the page ask
          a question instead of answering one. */
       .ctas {
-        margin-top: 30px;
+        margin-top: var(--space-6);
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 12px;
+        gap: var(--space-3);
       }
       .cta {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        background: var(--accent);
-        color: var(--accent-fg);
+        gap: var(--space-2);
+        background: var(--teal);
+        color: var(--on-accent);
         text-decoration: none;
         font-weight: 650;
-        padding: 13px 22px;
+        /* 12px + line + 12px ≈ 46px, which is what `.kv-btn` measures in the product
+           (`onerate-ui/src/styles.css:144-157`) and comfortably over the 40px `--touch` floor. */
+        padding: var(--space-3) var(--space-5);
         border-radius: 12px;
         transition: transform 0.12s ease, box-shadow 0.12s ease;
-        box-shadow: 0 8px 30px rgba(91, 140, 255, 0.35);
+        box-shadow: 0 8px 30px color-mix(in srgb, var(--teal) 35%, transparent);
       }
-      .cta:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(91, 140, 255, 0.45); }
+      .cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 36px color-mix(in srgb, var(--teal) 45%, transparent);
+      }
       .cta.ghost {
         background: var(--panel);
         color: var(--fg);
         border: 1px solid var(--border);
         box-shadow: none;
       }
-      .cta.ghost:hover { border-color: var(--accent); transform: translateY(-1px); }
-      .foot {
-        margin-top: 34px;
-        color: var(--muted);
-        font-size: 13px;
+      .cta.ghost:hover { border-color: var(--teal-on-ink); transform: translateY(-1px); }
+      /* Reduced motion. `@onerate/ui/styles.css:25-32` collapses durations globally and the first
+         two rules here are that block, copied; the third goes further on purpose. A `transform`
+         with a 0.01ms duration still MOVES — instantly, which is the jump the preference asks not
+         to see. Killing the duration is not the same as killing the movement. */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+        .cta:hover,
+        .cta.ghost:hover { transform: none; }
       }
+      footer { margin-top: var(--space-6); }
+      .foot {
+        color: var(--muted);
+        font-size: var(--text-md);
+      }
+      .foot + .foot { margin-top: var(--space-5); }
       .foot a { color: var(--muted); }
       /* One control, not a row of buttons. Two languages fitted in the corner as EN/TR; seven do
          not, and seven `aria-pressed` buttons announce themselves as seven independent toggles
          rather than one question with seven answers. Same reasoning, and the same native <select>,
-         as the portal's own switcher. */
-      .langs {
-        position: fixed;
-        top: 16px;
-        right: 18px;
-      }
+         as the portal's own switcher.
+
+         IN THE FLOW, not `position: fixed`. Fixed gave it a layer of its own above a vertically
+         centred <main>; on a short viewport the two drew on top of each other. As the first child
+         of the column it takes its own 40px and pushes nothing off the screen. */
+      .langs { align-self: flex-end; }
       .langs select {
         appearance: none;
-        background: var(--panel);
+        background-color: var(--panel);
         color: var(--muted);
         border: 1px solid var(--border);
         border-radius: 8px;
-        padding: 6px 26px 6px 10px;
+        /* 40px, which is `--touch`. It was 6px of padding around 13px type — about 27px, two
+           thirds of the floor the same control is held to in the product
+           (`onerate-ui/src/rhythm.test.tsx:98`). */
+        min-height: var(--touch);
+        padding: 0 var(--space-6) 0 var(--space-3);
         font: inherit;
-        font-size: 13px;
+        font-size: var(--text-md);
         cursor: pointer;
+        /* The one colour literal outside `:root` on this page, and it cannot be anything else: a
+           data URI is a separate document and `var()` does not cross into it. `%239aa4bf` is
+           `--muted`; `test/design.test.js` asserts the two are still the same value, which turns
+           an unavoidable duplicate into a pinned one. */
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa4bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 9px center;
+        background-position: right var(--space-3) center;
         background-size: 9px 5px;
       }
-      .langs select:hover, .langs select:focus-visible { color: var(--fg); border-color: var(--accent); }
+      .langs select:hover,
+      .langs select:focus-visible { color: var(--fg); border-color: var(--teal-on-ink); }
       /* No `.langs option` color override here any more. The platform draws the dropdown list
          itself, and under the old `color-scheme: light dark` it could draw a WHITE popup whose
          options inherited this page's pale grey — hence a forced dark-on-white rule. With the
@@ -168,15 +329,21 @@
         visitor scans this list for "Polski", not for "Polish", and would not recognise the latter
         on a page otherwise in Bulgarian. The option labels are therefore identical in all seven
         translations and are written once, here.
+
+        Each option also carries its own `lang`. The endonyms are the point and they are the
+        problem: "Български" and "Magyar" under `<html lang="en">` are handed to a screen reader
+        with an English phoneme table, which pronounces neither (WCAG 3.1.2). One attribute per
+        option is the whole fix, and it is the only place on the page where the language of an
+        element differs from the language of the document.
       -->
       <select id="lang" aria-label="Language">
-        <option value="en">English</option>
-        <option value="tr">Türkçe</option>
-        <option value="bg">Български</option>
-        <option value="hu">Magyar</option>
-        <option value="it">Italiano</option>
-        <option value="pl">Polski</option>
-        <option value="ro">Română</option>
+        <option value="en" lang="en">English</option>
+        <option value="tr" lang="tr">Türkçe</option>
+        <option value="bg" lang="bg">Български</option>
+        <option value="hu" lang="hu">Magyar</option>
+        <option value="it" lang="it">Italiano</option>
+        <option value="pl" lang="pl">Polski</option>
+        <option value="ro" lang="ro">Română</option>
       </select>
     </nav>
 
@@ -198,7 +365,16 @@
         Consequence worth knowing: `data-i18n` keys are the contract between this markup and the
         `TEXT` object. `test/bilingual.test.js` asserts the two agree in both directions.
       -->
-      <p class="tagline" data-i18n="tagline">B2B hotel distribution, cheapest-first.</p>
+
+      <!--
+        The <h1> is the TAGLINE, not the wordmark. The page had no heading element at all: its
+        hierarchy existed in 44px type and in nothing a screen reader could navigate by
+        (WCAG 1.3.1). A heading says what the page is ABOUT; "OneRate" says whose it is, which the
+        <title>, the wordmark above and the favicon already say three times over. And when the
+        access-request form arrives it wants an <h2> — which is only writable once there is an
+        <h1> for it to sit under.
+      -->
+      <h1 class="tagline" data-i18n="tagline">B2B hotel distribution, cheapest-first.</h1>
 
       <p class="desc" data-i18n="desc">
         Agencies bring their own supplier contracts. OneRate fans out the search across bedbanks,
@@ -210,7 +386,15 @@
         <a class="cta" href="https://app.onerate.travel" data-i18n="ctaPortal">Sign in to the portal →</a>
         <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs">Read the docs</a>
       </div>
+    </main>
 
+    <!--
+      Outside <main>, and that placement is the whole reason this element exists. A <footer> nested
+      inside <main> is the footer OF main and carries no landmark; only a top-level one is
+      `contentinfo`. The two lines were bare <p>s before, so the page had two landmarks for its
+      entire contents.
+    -->
+    <footer>
       <p class="foot">
         <span data-i18n="questions">Questions?</span>
         <a href="mailto:hello@onerate.travel">hello@onerate.travel</a>
@@ -225,7 +409,7 @@
         <span data-i18n="customerQuestions">Already using OneRate?</span>
         <a href="https://support.onerate.travel" data-i18n="ctaSupport">Get support in the portal</a>
       </p>
-    </main>
+    </footer>
 
     <script>
       (function () {
