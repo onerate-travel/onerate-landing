@@ -915,6 +915,19 @@
         background: var(--bg);
         border-top: 1px solid var(--border);
       }
+      /* `display: flex` above is an AUTHOR rule and `[hidden] { display: none }` is the user
+         agent's, so without this line the bar is marked hidden and drawn anyway — the `hidden`
+         property flips, the consent is stored, `consent update` is queued, and the visitor sees a
+         button that does nothing. Reported exactly that way.
+
+         It has to be repeated per element rather than fixed once: a global `[hidden] { display:
+         none !important }` would be a second, invisible rule governing anything this page ever
+         hides, and `!important` in a page with no build step is a thing nobody can override later.
+         `test/analytics.test.js` asks the CASCADE, not the property, which is the only way the
+         difference is visible outside a browser. */
+      .consent[hidden] {
+        display: none;
+      }
       .consent p {
         margin: 0;
         max-width: 62ch;

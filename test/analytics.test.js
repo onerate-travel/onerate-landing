@@ -55,6 +55,11 @@ function render({ stored, locale = 'en-US' } = {}) {
     commands,
     click,
     banner: () => document.getElementById('consent'),
+    /**
+     * What the cascade makes of the banner, as opposed to what its `hidden` property claims.
+     * jsdom resolves `display` through the stylesheet, and reports the same value Chrome does.
+     */
+    displayOf: (el) => dom.window.getComputedStyle(el).display,
     /** Every `gtag('event', …)` name, in the order the page queued them. */
     events: () => commands().filter(([kind]) => kind === 'event').map(([, name]) => name),
     /** The parameters of the last event of that name. */
@@ -164,6 +169,38 @@ describe('the banner', () => {
     // With no script there is no gtag, nothing is collected, and there is nothing to consent to.
     // A banner that renders anyway would ask a question its own answer cannot change.
     expect(STATIC.getElementById('consent').hasAttribute('hidden')).toBe(true);
+  });
+
+  it('is actually taken out of the layout by `hidden`, not merely marked', () => {
+    /**
+     * The bug this test was written for, reported as "clicking Allow does nothing".
+     *
+     * `[hidden] { display: none }` comes from the USER AGENT stylesheet, and any author rule that
+     * sets `display` on the same element outranks it — `.consent { display: flex }` is one. So the
+     * property flipped, the consent was stored, `consent update` went into the queue, and the bar
+     * stayed on screen looking like a dead button.
+     *
+     * Every assertion around this one passed while it was broken: they ask the `hidden` PROPERTY,
+     * and the property was always right. Only the cascade knew. jsdom resolves `display` through
+     * the stylesheet, which is why this can be asked here rather than only in a browser.
+     */
+    const page = render({ stored: 'granted' });
+    const banner = page.banner();
+    expect(banner.hidden).toBe(true);
+    expect(
+      page.displayOf(banner),
+      'the banner is `hidden` and still drawn — an author `display` is outranking the UA rule'
+    ).toBe('none');
+    page.close();
+  });
+
+  it('leaves the layout when the visitor answers', () => {
+    // The same failure one step later: whatever hides it on load must also hide it on click.
+    const page = render();
+    expect(page.displayOf(page.banner())).not.toBe('none');
+    page.click(page.document.getElementById('consent-accept'));
+    expect(page.displayOf(page.banner()), 'the bar stayed on screen after Allow').toBe('none');
+    page.close();
   });
 
   it('grants and remembers when the visitor allows', () => {
