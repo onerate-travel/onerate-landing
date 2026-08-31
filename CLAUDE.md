@@ -11,7 +11,7 @@ access request — because the product team's own finding was that the page was 
 funnel and carried a `mailto:` (`teams/urun.md`, B24). Sections are cheap; the SEVEN TRANSLATIONS
 of each new sentence are not. Weigh a new paragraph accordingly.
 
-## Seven things that look wrong and are not
+## Eight things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
@@ -81,6 +81,36 @@ of each new sentence are not. Weigh a new paragraph accordingly.
    `test/design.test.js` refuses a `@font-face` whose file is missing and a family named in
    `--font-ui` that nothing ships — a page that CLAIMS the product's typeface and renders in
    system-ui would otherwise pass every other test.
+
+8. **The analytics snippet is not Google's copy-paste snippet, and putting it back would be a
+   regression.** Google's own block puts the `async` loader FIRST and has no consent block at all.
+   This page's `<head>` inverts that: an inline script that queues `gtag('consent', 'default', …)`
+   with all four Consent Mode v2 signals denied, then `config`, and only then the loader.
+
+   Reverse those two lines and GA treats the first hit as fully consented and writes `_ga` before
+   the visitor has been asked anything. **Both orders render an identical page**, both pass every
+   other test in this repo, and the difference is invisible in a status code, in the deploy log and
+   on screen. `test/analytics.test.js` runs the page and asserts the ORDER of the queued commands,
+   which is the only place that difference is visible at all — `make smoke` can only ask whether
+   both lines are present, and says so in its own comment.
+
+   Three more things there that read as omissions and are decisions:
+
+   - **All four signals are named**, not just `analytics_storage`. `ad_user_data` and
+     `ad_personalization` arrived with v2 and an unnamed signal defaults to **granted**.
+   - **Accepting grants `analytics_storage` alone.** The bar asks to count visits and says nothing
+     about advertising; granting the ad signals would take more than was asked for.
+   - **A refusal is stored, exactly like a grant.** A bar that returns on every visit until the
+     visitor gives in is a dark pattern, and storing only the grant builds one by accident.
+
+   The banner is `hidden` in the markup and shown by script: with no JavaScript there is no gtag,
+   nothing is measured, and a bar asking permission for nothing would be theatre.
+
+   **Why analytics are a third party here when the fonts next door deliberately are not** (point 7):
+   a font can be copied into `public/` and served from this origin. A measurement property cannot.
+   The trade this page accepts is that Google sees a request's IP; what it refuses is that anyone
+   learns who the visitor is before they say yes. There is no privacy notice behind the bar yet —
+   `ROADMAP.md`, R4.2.
 
 ## TDD — the Iron Law
 

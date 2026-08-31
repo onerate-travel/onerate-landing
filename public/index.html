@@ -53,6 +53,68 @@
         } catch (ignored) {}
       })();
     </script>
+    <!--
+      ---- Google Analytics 4, under Consent Mode v2 ----
+
+      Two scripts, and the ORDER of what is inside the first one is the whole of the compliance
+      story. `gtag('consent', 'default', …)` is queued before `config`, so the first hit GA ever
+      sends is already cookieless; reverse those two lines and GA writes `_ga` before the visitor
+      has been asked anything. Both orders render an identical page and pass every other test in
+      this repo, which is why `test/analytics.test.js` asserts the order rather than the presence.
+
+      All FOUR v2 signals are named. `ad_user_data` and `ad_personalization` were added in v2 and
+      an unnamed signal defaults to GRANTED — so listing only `analytics_storage` would deny the
+      one thing this page uses and grant the two it does not.
+
+      Denied is not off. GA keeps sending pings without cookies or an identifier, which is what
+      still gives the owner traffic and referrer counts from the visitors who refuse. That is the
+      trade this page accepts: no third party learns who a visitor is, and Google still sees the
+      request's IP. It is why the fonts next door are self-hosted (CLAUDE.md, point 7) and why the
+      analytics are not — a font can be copied into `public/`, a measurement property cannot.
+
+      The loader carries `async` and comes SECOND. An inline script is parsed and run before an
+      async one can execute regardless of order, but writing it in the order it runs is what stops
+      the next reader from "fixing" it back to Google's copy-paste snippet, which puts the loader
+      first and has no consent block at all.
+    -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+      });
+
+      // A returning visitor's answer, restored BEFORE `config` so that their first page view of
+      // this visit is counted under the consent they already gave. Applied a moment later — from
+      // the script at the end of the body — the page view is already gone out cookieless and the
+      // same person is a brand new visitor on every single visit.
+      //
+      // Wrapped for the same reason the theme read above it is: Safari throws on storage in
+      // private mode, and analytics are not worth a blank page.
+      (function () {
+        var held = null;
+        try {
+          held = localStorage.getItem('onerate.consent');
+        } catch (ignored) {}
+        if (held === 'granted') {
+          gtag('consent', 'update', {
+            ad_user_data: 'granted',
+            ad_personalization: 'granted',
+            analytics_storage: 'granted',
+          });
+        }
+      })();
+
+      gtag('js', new Date());
+      gtag('config', 'G-SZWZR8FV08');
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SZWZR8FV08"></script>
     <style>
       /* ---- the product's typefaces, self-hosted ----
          `@onerate/ui` gets these from `@fontsource-variable/*` and an `@import`
@@ -172,6 +234,12 @@
         --space-7: 48px;
         --touch: 40px;
 
+        /* The room the consent banner takes at the bottom of the viewport, measured by the script
+           and written back here. It is 0 whenever the banner is not up — which is every visit
+           after the first, and every visit with JavaScript off. A hard-coded reserve cannot work:
+           the bar is one line on a desk and three on a phone in Bulgarian. */
+        --consent-height: 0px;
+
         /* ---- the illustrated portal screen: BOTH product themes, at once ----
            These do NOT follow the page's theme, and that is the point: the section shows what the
            product looks like light beside dark, so its two palettes are fixed whichever one the
@@ -247,6 +315,9 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         font-family: var(--font-ui);
+        /* Keeps the footer reachable while the banner is up: the two addresses down there are the
+           only way to reach a human WITHOUT answering the question the banner is asking. */
+        padding-bottom: var(--consent-height);
         /* `background-color` and `background-image` apart, not one `background` shorthand, and the
            reason is the `color-mix()` below: an unsupported function invalidates its DECLARATION,
            and in the shorthand that declaration was also the flat navy. Split, an old browser
@@ -822,6 +893,55 @@
          are that block, copied; the third goes further on purpose. A `transform` with a 0.01ms
          duration still MOVES — instantly, which is the jump the preference asks not to see.
          Killing the duration is not the same as killing the movement. */
+      /* ---- the consent banner ----------------------------------------------------------------
+         Page furniture, so it is drawn in the page's own ground — `--bg`, `--border`, `--muted` —
+         and not in the brand. Its buttons reuse `.cta` and `.cta.ghost` rather than growing a
+         second pair, which is also why nothing new appears in the reduced-motion block below:
+         the only thing that moves here is a hover already stopped there. */
+      .consent {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        /* Above the content and below nothing. The page has no other stacking context of its own
+           — `.prefs` was deliberately taken OUT of one (design.test.js, "off the content's
+           layer") — so 10 is simply "in front", not a number in a race. */
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-5);
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+      }
+      .consent p {
+        margin: 0;
+        max-width: 62ch;
+        text-align: left;
+        font-size: var(--text-md);
+        color: var(--muted);
+      }
+      .consent-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+      }
+      /* `.cta` was written for an <a>; these are <button>s, because they perform an action rather
+         than go somewhere. That difference is exactly the four declarations below — a button
+         brings its own border, font and cursor from the user agent, and an anchor does not. */
+      .consent .cta {
+        border: 0;
+        font-family: inherit;
+        font-size: var(--text-md);
+        cursor: pointer;
+        padding: var(--space-2) var(--space-5);
+        min-height: var(--touch);
+      }
+      .consent .cta.ghost {
+        border: 1px solid var(--border);
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -1584,6 +1704,39 @@
       </p>
     </footer>
 
+    <!--
+      The consent banner. A <div role="region">, not a <section>: every <section> on this page is
+      named by its own <h2> (design.test.js), and a bar that grew a heading would put a ninth entry
+      in the document outline for a control that is gone after one click.
+
+      `hidden` in the MARKUP, and shown by the script. With no JavaScript there is no gtag, nothing
+      is measured, and nothing is stored — so the question has no answer that would change
+      anything, and asking it anyway would be theatre. The English copy is written out in full here
+      like every other string on the page: the script only ever replaces it.
+    -->
+    <div
+      class="consent"
+      id="consent"
+      role="region"
+      data-i18n-label="consentRegion"
+      aria-label="Analytics consent"
+      hidden
+    >
+      <p data-i18n="consentBody">
+        We would like to count visits to this page with Google Analytics, so we can see which of
+        the seven languages and which sections are worth keeping. Nothing is stored on your device
+        unless you allow it.
+      </p>
+      <div class="consent-actions">
+        <button type="button" class="cta" id="consent-accept" data-i18n="consentAccept">
+          Allow
+        </button>
+        <button type="button" class="cta ghost" id="consent-decline" data-i18n="consentDecline">
+          No thanks
+        </button>
+      </div>
+    </div>
+
     <script>
       (function () {
         // Every string the page shows, in every language it shows them in. `en` is here as well as
@@ -1729,7 +1882,14 @@
               'bookings a month:\nName and role:\n',
             questions: 'Questions?',
             customerQuestions: 'Already using OneRate?',
-            ctaSupport: 'Get support in the portal'
+            ctaSupport: 'Get support in the portal',
+            consentRegion: 'Analytics consent',
+            consentBody:
+              'We would like to count visits to this page with Google Analytics, so we can see which of ' +
+              'the seven languages and which sections are worth keeping. Nothing is stored on your ' +
+              'device unless you allow it.',
+            consentAccept: 'Allow',
+            consentDecline: 'No thanks'
           },
           tr: {
             langLabel: 'Dil',
@@ -1862,7 +2022,14 @@
               'otel rezervasyonu sayısı:\nAd ve görev:\n',
             questions: 'Sorular için:',
             customerQuestions: 'OneRate kullanıyor musunuz?',
-            ctaSupport: 'Portaldan destek alın'
+            ctaSupport: 'Portaldan destek alın',
+            consentRegion: 'Analitik izni',
+            consentBody:
+              'Bu sayfanın ziyaretlerini Google Analytics ile saymak istiyoruz; böylece yedi dilden ' +
+              'hangilerinin ve hangi bölümlerin işe yaradığını görebiliyoruz. Siz izin vermedikçe ' +
+              'cihazınızda hiçbir şey saklanmaz.',
+            consentAccept: 'İzin ver',
+            consentDecline: 'Hayır, teşekkürler'
           },
           bg: {
             langLabel: 'Език',
@@ -1996,7 +2163,14 @@
               'колко хотелски резервации на месец:\nИме и длъжност:\n',
             questions: 'Въпроси?',
             customerQuestions: 'Вече използвате OneRate?',
-            ctaSupport: 'Получете поддръжка в портала'
+            ctaSupport: 'Получете поддръжка в портала',
+            consentRegion: 'Съгласие за анализ',
+            consentBody:
+              'Бихме искали да броим посещенията на тази страница с Google Analytics, за да виждаме кои ' +
+              'от седемте езика и кои раздели си струват. Нищо не се съхранява на вашето устройство, ' +
+              'освен ако не разрешите.',
+            consentAccept: 'Разрешавам',
+            consentDecline: 'Не, благодаря'
           },
           hu: {
             langLabel: 'Nyelv',
@@ -2130,7 +2304,14 @@
               'nagyjából hány szállodai foglalás:\nNév és beosztás:\n',
             questions: 'Kérdésed van?',
             customerQuestions: 'Már használja a OneRate-et?',
-            ctaSupport: 'Kérjen támogatást a portálon'
+            ctaSupport: 'Kérjen támogatást a portálon',
+            consentRegion: 'Analitikai hozzájárulás',
+            consentBody:
+              'Szeretnénk megszámolni az oldal látogatásait a Google Analytics segítségével, hogy ' +
+              'lássuk, a hét nyelv és az egyes szakaszok közül melyik éri meg. Az eszközén semmi nem ' +
+              'tárolódik, amíg nem engedélyezi.',
+            consentAccept: 'Engedélyezem',
+            consentDecline: 'Köszönöm, nem'
           },
           it: {
             langLabel: 'Lingua',
@@ -2272,7 +2453,14 @@
               'alberghiere al mese, all’incirca:\nNome e ruolo:\n',
             questions: 'Domande?',
             customerQuestions: 'Usi già OneRate?',
-            ctaSupport: 'Ottieni assistenza nel portale'
+            ctaSupport: 'Ottieni assistenza nel portale',
+            consentRegion: 'Consenso alle statistiche',
+            consentBody:
+              'Vorremmo contare le visite a questa pagina con Google Analytics, per capire quali delle ' +
+              'sette lingue e quali sezioni valgono la pena. Nulla viene memorizzato sul tuo ' +
+              'dispositivo se non lo consenti.',
+            consentAccept: 'Consenti',
+            consentDecline: 'No, grazie'
           },
           pl: {
             langLabel: 'Język',
@@ -2407,7 +2595,14 @@
               'rezerwacji hotelowych miesięcznie:\nImię, nazwisko i stanowisko:\n',
             questions: 'Pytania?',
             customerQuestions: 'Korzystają już Państwo z OneRate?',
-            ctaSupport: 'Uzyskaj wsparcie w portalu'
+            ctaSupport: 'Uzyskaj wsparcie w portalu',
+            consentRegion: 'Zgoda na analitykę',
+            consentBody:
+              'Chcielibyśmy liczyć wizyty na tej stronie za pomocą Google Analytics, aby zobaczyć, ' +
+              'które z siedmiu języków i które sekcje są tego warte. Nic nie zostanie zapisane na Twoim ' +
+              'urządzeniu, dopóki nie wyrazisz zgody.',
+            consentAccept: 'Zezwalam',
+            consentDecline: 'Nie, dziękuję'
           },
           ro: {
             langLabel: 'Limbă',
@@ -2548,7 +2743,14 @@
               'rezervări hoteliere pe lună:\nNume și rol:\n',
             questions: 'Întrebări?',
             customerQuestions: 'Folosiți deja OneRate?',
-            ctaSupport: 'Obțineți asistență în portal'
+            ctaSupport: 'Obțineți asistență în portal',
+            consentRegion: 'Consimțământ pentru analize',
+            consentBody:
+              'Am dori să numărăm vizitele pe această pagină cu Google Analytics, ca să vedem care ' +
+              'dintre cele șapte limbi și care secțiuni merită. Nimic nu este stocat pe dispozitivul ' +
+              'dumneavoastră dacă nu permiteți.',
+            consentAccept: 'Permite',
+            consentDecline: 'Nu, mulțumesc'
           },
         };
 
@@ -2566,6 +2768,8 @@
         var shot = document.getElementById('shot');
         var STORAGE_KEY = 'onerate.lang';
         var THEME_KEY = 'onerate.theme';
+        // Read once in the head as a literal, before this script exists — see the GA block there.
+        var CONSENT_KEY = 'onerate.consent';
 
         function setLang(lang) {
           var copy = TEXT[lang];
@@ -2605,8 +2809,52 @@
           for (var k = 0; k < mails.length; k++) mails[k].setAttribute('href', mail);
         }
 
+        // ---- what gets counted ----------------------------------------------------------------
+        //
+        // Four events, and the shortness of the list is the decision. This page IS the demand
+        // funnel (CLAUDE.md), and a page view alone cannot say which end of it leaks:
+        //
+        //   generate_lead    the access mail was opened — the only conversion this page has
+        //   portal_click     a customer passing through, which is NOT a lead and must not be
+        //                    counted as one
+        //   docs_click       the reader who wanted to understand before writing
+        //   language_select  which of the seven translations earn their keep, at seven each
+        //
+        // The theme toggle and the comparison slider are deliberately absent. No decision hangs on
+        // either, and an event nobody will act on is a column nobody reads.
+        //
+        // `language` rides along on all four because GA's own language dimension reports the
+        // BROWSER's setting: this page is one URL in seven languages, so without the parameter
+        // "is Hungarian worth keeping?" has no answer anywhere in the property.
+        //
+        // Under a refused consent these still go out — cookieless, with no identifier. That is
+        // what Consent Mode's denied state is FOR, and dropping them here as well would throw the
+        // aggregate away silently.
+        function track(name, params) {
+          if (typeof gtag === 'function') gtag('event', name, params || {});
+        }
+
+        // Delegated, for two reasons that both bite a direct listener: `setLang` rewrites the mail
+        // href on every language change, and Cloudflare's Email Obfuscation rewrites it again in
+        // flight (CLAUDE.md, point 6). So the lead is recognized by the `data-mail-template` HOOK,
+        // which survives both, and never by what the href says.
+        document.addEventListener('click', function (event) {
+          var link = event.target && event.target.closest ? event.target.closest('a') : null;
+          if (!link) return;
+          var href = link.getAttribute('href') || '';
+          var language = document.documentElement.lang;
+          if (link.hasAttribute('data-mail-template')) {
+            track('generate_lead', { method: 'mailto', language: language });
+          } else if (href.indexOf('https://app.onerate.travel') === 0) {
+            track('portal_click', { language: language });
+          } else if (href.indexOf('https://docs.onerate.travel') === 0) {
+            track('docs_click', { language: language });
+          }
+        });
+
         select.addEventListener('change', function () {
           setLang(select.value);
+          track('language_select', { language: select.value });
           // Remembered, because a seven-language page that resets to the browser's guess on every
           // visit makes the visitor choose again every time. Wrapped: Safari throws on storage in
           // private mode, and a page that fails to render because it could not save a preference
@@ -2673,6 +2921,55 @@
         setLang(
           Object.hasOwn(TEXT, stored) ? stored : Object.hasOwn(TEXT, fromBrowser) ? fromBrowser : 'en'
         );
+
+        // ---- the consent banner ----------------------------------------------------------------
+        //
+        // Last, and after `setLang`, because the bar is measured below and a bar measured before
+        // its copy arrives is measured in English — a line taller in Bulgarian, and the reserve
+        // short by exactly that line.
+        //
+        // The head has already denied all four signals and, for a returning visitor who allowed,
+        // restored the grant before `config` ran. What is left here is the first visit: ask, and
+        // remember EITHER answer. Remembering the refusal is not politeness — a bar that comes
+        // back on every visit until the visitor gives in is the pattern this one is trying not to
+        // be, and storing only the grant would build it by accident.
+        var banner = document.getElementById('consent');
+        if (banner) {
+          var answered = null;
+          try {
+            answered = localStorage.getItem(CONSENT_KEY);
+          } catch (ignored) {}
+
+          var closeBanner = function (answer) {
+            try {
+              localStorage.setItem(CONSENT_KEY, answer);
+            } catch (ignored) {}
+            banner.hidden = true;
+            document.documentElement.style.setProperty('--consent-height', '0px');
+          };
+
+          document.getElementById('consent-accept').addEventListener('click', function () {
+            // `analytics_storage` alone. The bar asks to count visits, in seven languages, and
+            // says nothing about advertising — granting `ad_user_data` and `ad_personalization`
+            // here would take more than was asked for.
+            gtag('consent', 'update', { analytics_storage: 'granted' });
+            closeBanner('granted');
+          });
+          document.getElementById('consent-decline').addEventListener('click', function () {
+            closeBanner('denied');
+          });
+
+          if (answered !== 'granted' && answered !== 'denied') {
+            banner.hidden = false;
+            // Measured, never guessed: this bar is one line on a desk and three on a phone in
+            // Bulgarian, and `--consent-height` is what keeps the footer's two addresses reachable
+            // by someone who has not answered — the only way to reach a human without doing so.
+            document.documentElement.style.setProperty(
+              '--consent-height',
+              banner.offsetHeight + 'px'
+            );
+          }
+        }
       })();
     </script>
   </body>

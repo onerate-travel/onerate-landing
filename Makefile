@@ -150,6 +150,20 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 # three and the button opens an empty mail — which is what the check exists to refuse, and which
 # looks identical in a status code.
 #
+# The consent grep ends in `, {` and the trailing brace is not decoration. The comment ABOVE the
+# snippet in index.html also spells out `gtag('consent', 'default', …)`, so the shorter pattern
+# matches the prose explaining the check as happily as the code being checked — delete the snippet,
+# keep the comment, and this check stays green through the exact regression it exists to catch. The
+# same trap the `data-tr` paragraph below describes, stepped into again while writing the paragraph
+# about it. The brace is what only the code has.
+#
+# The analytics check asks production for PRESENCE only, never for order. The order — consent
+# default before config — is the whole of what makes the tag lawful, and it is asserted where it can
+# be: `test/analytics.test.js` runs the page and reads the command queue. A grep can see both lines
+# in the file and cannot see which one gtag executed first. What the greps here do catch is the
+# failure a unit test cannot: a deploy that published an older `index.html`, or a zone feature that
+# rewrote the snippet the way Email Obfuscation rewrites the mailto.
+#
 # The translation check greps for TWO things, deliberately: `data-i18n` proves the markup still
 # carries its hooks, and a literal Turkish string ('Portala giriş') proves the TEXT dictionary
 # still carries copy — delete the translations and the second grep fails. It used to grep for
@@ -173,6 +187,10 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	grep -q "requestSubject: 'OneRate access request'" <<<"$$page" || { echo "FAIL: the access mail template is missing from the live page"; exit 1; }; \
 	grep -q 'encodeURIComponent(copy.requestSubject)' <<<"$$page" || { echo "FAIL: nothing on the live page composes the access mail"; exit 1; }; \
 	echo "  ok  access-request mail present, and its template ships"; \
+	grep -q 'G-SZWZR8FV08' <<<"$$page" || { echo "FAIL: the GA tag is missing from the live page"; exit 1; }; \
+	grep -q "gtag('consent', 'default', {" <<<"$$page" || { echo "FAIL: the live page measures with no consent default"; exit 1; }; \
+	grep -q "analytics_storage: 'denied'" <<<"$$page" || { echo "FAIL: the live page grants analytics storage by default"; exit 1; }; \
+	echo "  ok  analytics present, and denied until asked"; \
 	echo; \
 	echo "  ROADMAP.md must not be published (CLAUDE.md, point 1)."; \
 	echo "  Asserting on the BODY, never the status code: this project has no custom 404.html, so"; \

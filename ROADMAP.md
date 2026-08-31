@@ -107,3 +107,39 @@ rehearsal deploy to settle; it does not.
       (`CLAUDE.md`, "Language conventions")
 - [ ] scenario: an empty or invalid field produces an in-page error, not a browser bubble, and the
       page keeps its scroll position on a successful submit
+
+## R4.2 the consent banner names Google Analytics and links to no privacy notice — P2
+
+Opened 2026-08-31 with the analytics work. GA4 ships behind Consent Mode v2 with all four signals
+denied by default and a seven-language bar (`CLAUDE.md`, point 8), which is the mechanism. The
+DOCUMENT that mechanism is supposed to point at does not exist.
+
+What the bar can honestly say today is what it does say: that visits are counted with Google
+Analytics and that nothing is stored until the visitor allows it. What it cannot say — because
+nobody has written it down — is who the controller is, how long GA retains an event, that the
+processor is outside the EEA, or how a visitor withdraws a consent they have already given. Right
+now withdrawing means clearing this origin's `localStorage`, which is not an instruction anyone
+can be expected to follow.
+
+This is not a blocker for the analytics themselves: denied-by-default with no identifier is the
+conservative state, and a visitor who never answers is never measured beyond a cookieless ping.
+It is a blocker for the page CLAIMING to have asked properly.
+
+**It overlaps a fleet item and should not be answered twice.** `teams/yonetim.md:62` carries KVKK
+*veri sorumlusu / VERBİS / açık rıza metni* (R2.2.3 in `onerate-travel/onerate-app`) as open and
+as a signing blocker for enterprise contracts. The controller identity and the retention wording
+that item has to produce are the same two facts this page needs. Take them from there when it
+lands rather than inventing a second set here — two privacy texts that disagree is worse than one
+that is late.
+
+- [ ] Decide where the notice lives. A second HTML file in `public/` is the cheap answer and costs
+      a seven-language translation of a legal text; a page in `onerate-docs` is already
+      multilingual and already has a URL scheme, but is written for customers who have signed in
+      rather than for a visitor who has not.
+- [ ] A way to change an answer that is not "clear your browser storage" — at minimum a footer
+      link that reopens the bar. The bar already stores both answers, so this is a control, not a
+      mechanism.
+- [ ] scenario: the banner links to a notice that names the controller and the retention period,
+      in the language the visitor is reading the page in
+- [ ] scenario: a visitor who allowed can withdraw from the page itself, and the withdrawal
+      survives a reload
