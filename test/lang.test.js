@@ -98,11 +98,11 @@ describe('landing language default', () => {
 describe('choosing a language', () => {
   it('rewrites the copy on the page, not just the lang attribute', () => {
     const page = render('en-US');
-    expect(page.text('tagline')).toBe('B2B hotel distribution, cheapest-first.');
+    expect(page.text('tagline')).toBe('One search across every supplier contract you already hold.');
 
     const after = page.choose('pl');
     expect(after.lang).toBe('pl');
-    expect(after.text('tagline')).toBe('Dystrybucja hotelowa B2B, najtańsze na początku.');
+    expect(after.text('tagline')).toBe('Jedno wyszukiwanie po wszystkich umowach, które już macie.');
     expect(after.text('ctaDocs')).toBe('Przeczytaj dokumentację');
     page.close();
   });
@@ -116,7 +116,7 @@ describe('choosing a language', () => {
 
     const after = page.choose('tr');
     expect(after.title).toBe('OneRate — B2B Otel Dağıtımı');
-    expect(after.description).toContain('otel dağıtımı');
+    expect(after.description).toContain('kendi bedbank kontratlarını');
     page.close();
   });
 

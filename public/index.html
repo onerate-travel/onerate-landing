@@ -13,7 +13,7 @@
     <meta
       name="description"
       data-i18n="metaDescription"
-      content="OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books."
+      content="OneRate connects a travel agency's own bedbank contracts into one search: rates normalized, comparable rooms ranked cheapest-first, booked on the agency's own contract. A flat monthly fee, and no cut of a booking."
     />
     <!--
       One canonical URL, and it matters more here than on most sites: this Pages project has no
@@ -25,19 +25,16 @@
     <meta property="og:title" content="OneRate — B2B Hotel Distribution" />
     <meta
       property="og:description"
-      content="OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books."
+      content="One search across every supplier contract your agency already holds. Rates normalized, comparable rooms cheapest-first, booked on your own contract — for a flat monthly fee."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://onerate.travel/" />
     <!-- `summary`, not `summary_large_image`: there is no og:image — the only artwork this page
-         owns is an emoji favicon, and unfurlers render a missing image as a broken one. -->
+         owns is its favicon, and unfurlers render a missing image as a broken one. -->
     <meta name="twitter:card" content="summary" />
-    <!-- The product's own mark, not an emoji. `public/favicon.svg` carries the reasoning: the ring
-         is the shape all three OneRate surfaces share, and the colours are what tell them apart. -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
-      /* ---- the two faces the product is drawn in, self-hosted ----
-
+      /* ---- the product's typefaces, self-hosted ----
          `@onerate/ui` gets these from `@fontsource-variable/*` and an `@import`
          (`onerate-ui/src/styles.css:1-4`). This repo has no build step, so the four subsets the
          page actually needs are checked into `public/fonts/` — the same files, the same
@@ -56,12 +53,12 @@
          `unicode-range` is declared, a Cyrillic heading never requests a file Space Grotesk has no
          glyphs for. It falls back to Inter, which is what the portal's own headings do.
 
-         One glyph is outside every subset here: the `→` (U+2192) in the portal CTA. It renders
-         from the platform's fallback, which is what a fallback is for — worth knowing rather than
-         worth fixing, since adding a subset for one arrow costs more than the arrow.
+         Two glyphs are outside every subset here: the `→` (U+2192) in the portal CTA and the `·`
+         separators in the illustrated screen. Both render from the platform's fallback, which is
+         what a fallback is for — worth knowing rather than worth fixing, since adding a subset for
+         two marks costs more than the marks.
 
-         `font-display: swap`, as fontsource ships it. The copy is readable before the fonts land,
-         which is the only behaviour worth having on a page whose whole job is one paragraph. */
+         `font-display: swap`, as fontsource ships it. The copy is readable before the fonts land. */
       @font-face {
         font-family: 'Space Grotesk Variable';
         font-style: normal;
@@ -104,19 +101,23 @@
       :root {
         /* `dark`, not `light dark`: the palette below is the page's ONLY theme. Declaring a
            light mode that does not exist made the platform draw light form controls on a dark
-           page — the `.langs option` color override this file used to carry existed solely to
-           patch that popup, and left when the false declaration did. */
+           page. Note that the illustrated portal screen further down is drawn in BOTH of the
+           product's themes — that is a picture of a themed application, not a theme for this
+           document, and the distinction is why its palette carries its own names. */
         color-scheme: dark;
 
-        /* ---- the page's own ground: four values, and they are landing's ----
+        /* ---- the page's own ground ----
            NOT taken from the design system, deliberately. `@onerate/ui`'s dark palette is the
-           chrome an agent sits inside for eight hours; this is a poster read for eight seconds.
-           What has to match the product is the BRAND, not the furniture. */
+           chrome an agent sits inside for eight hours; this is a page read once, by someone
+           deciding whether to reply. What has to match the product is the BRAND, not the
+           furniture. */
         --bg: #0b1020;
         --panel: rgba(255, 255, 255, 0.04);
+        --panel-lift: rgba(255, 255, 255, 0.07);
         --fg: #eef2ff;
         --muted: #9aa4bf;
         --border: rgba(255, 255, 255, 0.1);
+        --border-soft: rgba(255, 255, 255, 0.06);
 
         /* ---- the design system, copied by hand ----
            Every value below is `@onerate/ui`'s, under `@onerate/ui`'s own NAME. This repo has no
@@ -126,30 +127,57 @@
            single value has moved. Copying without that test is how the page ended up two years of
            brand behind in the first place.
 
-           ROLES, not shades — the same rule `tokens.css:13-17` states, and the reason `--accent`
-           is not a name on this page any more. It used to mean `#5b8cff` here, a blue, while in
-           the product the same word had already caused one incident by being read undefined.
-
-           `--teal` is the FILL (the CTA). `--teal-on-ink` is the brand read as TEXT on dark, and
-           the two are not interchangeable: `--teal` as text on `--bg` measures 3.61:1 and would
-           fail the 4.5 floor the moment the wordmark used it. `--teal-on-ink` measures 10.5:1. */
+           ROLES, not shades — the same rule `tokens.css:13-17` states. `--teal` is the FILL (the
+           CTA). `--teal-on-ink` is the brand read as TEXT on dark, and the two are not
+           interchangeable: `--teal` as text on `--bg` measures 3.61:1 and would fail the 4.5 floor
+           the moment the wordmark used it. `--teal-on-ink` measures 10.5:1. */
         --teal: #127a68;
         --teal-on-ink: #7fd0be;
         --on-accent: #ffffff;
         --focus: #5b9bff;
         --font-display: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
         --font-ui: 'Inter Variable', 'Inter', system-ui, sans-serif;
+        --text-sm: 12px;
         --text-md: 13px;
-        /* The spacing scale, same steps and same names as `tokens.css`. The page carried nine
-           unrelated raw values (6, 8, 10, 12, 13, 14, 18, 24, 30, 34) — the exact condition U1.1
-           describes in the product, one page smaller. Only the steps this page uses are declared;
-           a token nothing reads is a second place to look. */
+        --radius: 10px;
         --space-2: 8px;
         --space-3: 12px;
         --space-4: 16px;
         --space-5: 24px;
         --space-6: 32px;
+        --space-7: 48px;
         --touch: 40px;
+
+        /* ---- the illustrated portal screen: BOTH product themes, at once ----
+           The one place on this page where `@onerate/ui`'s two palettes have to be true
+           simultaneously. A role name can mean only one colour per document, so the page cannot
+           say `--paper` twice — it says it once per theme, and `test/design-system.js` records
+           which theme and which ROLE each of these fourteen was copied from so `design.test.js`
+           can resolve them against `tokens.css` exactly the way it resolves the brand above.
+
+           Without that map this illustration would be fourteen hand-typed hexes claiming to be the
+           product, which is the failure this whole file is arranged against. */
+        --shot-light-paper: #f7f6f2;
+        --shot-light-card: #ffffff;
+        --shot-light-line: #e4e1d8;
+        --shot-light-text: #1b2333;
+        --shot-light-text-soft: #5b6478;
+        --shot-light-teal: #0e6b5c;
+        --shot-light-teal-tint: #e3f1ec;
+        --shot-light-sunken: #edeae1;
+        --shot-dark-paper: #0f1521;
+        --shot-dark-card: #161d2b;
+        --shot-dark-line: #273044;
+        --shot-dark-text: #e4e8f0;
+        --shot-dark-text-soft: #aab3c4;
+        --shot-dark-teal: #127a68;
+        --shot-dark-teal-tint: #12302a;
+        --shot-dark-sunken: #1e2637;
+
+        /* How much of the light theme the comparison shows. The slider writes it on `.shot`;
+           declaring it here is what stops the clip from rendering off a fallback nobody looks at
+           before the script runs. */
+        --reveal: 42%;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
@@ -160,29 +188,26 @@
            loses the glow and keeps the page. */
         background-color: var(--bg);
         background-image: radial-gradient(
-          1200px 600px at 50% -10%,
-          color-mix(in srgb, var(--teal) 25%, transparent),
-          transparent 60%
+          1100px 620px at 50% -8%,
+          color-mix(in srgb, var(--teal) 30%, transparent),
+          transparent 62%
         );
         color: var(--fg);
         /* `min-height`, never `height`. `html, body { height: 100% }` pinned the body to the
            viewport and `place-items: center` centred the content inside that pinned box, so
            content taller than the viewport overflowed in BOTH directions — and the half above the
-           top is not reachable by scrolling. The trigger was already on the page: the Polish and
-           Romanian paragraphs are the longest of the seven, and a phone held sideways is 375px
-           tall. `dvh` over `vh` for the mobile browser bar; the `vh` line before it is what a
-           browser without `dvh` reads. */
+           top is not reachable by scrolling. That was already wrong when the page was one
+           paragraph; at eight sections it would make the page unreadable. `dvh` over `vh` for the
+           mobile browser bar; the `vh` line before it is what a browser without `dvh` reads. */
         min-height: 100vh;
         min-height: 100dvh;
         display: flex;
         flex-direction: column;
         padding: var(--space-5);
-        line-height: 1.5;
-        text-align: center;
+        line-height: 1.55;
         -webkit-font-smoothing: antialiased;
       }
-      /* The page's one focus ring, mirroring `@onerate/ui/styles.css:21-24`. The CTAs had none of
-         their own and fell back to whatever the platform drew on a colour it knows nothing about. */
+      /* The page's one focus ring, mirroring `@onerate/ui/styles.css:21-24`. */
       :focus-visible {
         outline: 2px solid var(--focus);
         outline-offset: 2px;
@@ -190,11 +215,51 @@
       main {
         /* `margin: auto`, NOT `justify-content: center`. Both centre while there is free space;
            they part company when there is not. An auto margin resolves to 0 under overflow, so the
-           first line stays at the scroll origin — centring keeps trying and pushes it above. This
-           is the whole of the height fix, and it is what lets the page grow a form later. */
+           first line stays at the scroll origin — centring keeps trying and pushes it above. On a
+           page this tall the margin is almost always 0, and that is precisely the behaviour that
+           has to hold. */
         margin: auto;
         width: 100%;
-        max-width: 640px;
+        max-width: 1040px;
+      }
+
+      /* ---- rhythm ------------------------------------------------------------------------- */
+      /* One vertical step between sections, derived rather than typed, so the page has a rhythm
+         instead of nine opinions. */
+      section { margin-top: calc(var(--space-7) * 2); }
+      .eyebrow {
+        font-family: var(--font-display);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--teal-on-ink);
+      }
+      h2 {
+        margin-top: var(--space-3);
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        font-size: clamp(22px, 3.4vw, 30px);
+        line-height: 1.2;
+      }
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        margin-top: var(--space-4);
+        max-width: 62ch;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      /* ---- hero --------------------------------------------------------------------------- */
+      .hero {
+        text-align: center;
+        padding-top: var(--space-7);
       }
       .brand {
         display: inline-flex;
@@ -203,29 +268,28 @@
         font-family: var(--font-display);
         font-weight: 700;
         letter-spacing: -0.02em;
-        font-size: clamp(28px, 6vw, 44px);
+        font-size: clamp(26px, 5vw, 38px);
       }
       .brand .dot { color: var(--teal-on-ink); }
       .tagline {
-        margin-top: var(--space-4);
-        /* An <h1> now, so the weight has to be said: the element's default bold would put the
-           tagline at the same weight as the wordmark above it and flatten the two into one block. */
-        font-weight: 400;
-        font-size: clamp(16px, 2.6vw, 20px);
-        color: var(--fg);
+        margin: var(--space-5) auto 0;
+        max-width: 20ch;
+        /* The weight has to be said out loud: an <h1>'s default bold would put the tagline at the
+           same weight as the wordmark above it and flatten the two into one block. */
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.12;
+        font-size: clamp(30px, 6.4vw, 54px);
       }
-      .desc {
-        margin: var(--space-3) auto 0;
-        max-width: 520px;
-        color: var(--muted);
-        /* Raw, and correctly so: `tokens.css` tokenises only the SMALL end of the scale
-           (`--text-xs/sm/md`, 11–13px) because that is where the product's crowding was. 15px is
-           body copy on a poster and has no token to read. */
-        font-size: 15px;
+      .hero .lede {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 56ch;
       }
-      /* Two destinations, deliberately unequal. Signing in is what a customer came for; the docs
-         are for the visitor who is not one yet, and a second solid button would make the page ask
-         a question instead of answering one. */
+      /* Two destinations, deliberately unequal. Requesting access is the page's whole job; signing
+         in is for someone who is already a customer and knows where they are going. A second solid
+         button would make the page ask a question instead of answering one. */
       .ctas {
         margin-top: var(--space-6);
         display: flex;
@@ -260,10 +324,439 @@
         box-shadow: none;
       }
       .cta.ghost:hover { border-color: var(--teal-on-ink); transform: translateY(-1px); }
-      /* Reduced motion. `@onerate/ui/styles.css:25-32` collapses durations globally and the first
-         two rules here are that block, copied; the third goes further on purpose. A `transform`
-         with a 0.01ms duration still MOVES — instantly, which is the jump the preference asks not
-         to see. Killing the duration is not the same as killing the movement. */
+      /* The business model, given the weight of a quotation rather than a bullet — it is the one
+         sentence on the page a competitor cannot copy without changing what they are. */
+      .model-line {
+        margin: var(--space-6) auto 0;
+        max-width: 58ch;
+        padding: var(--space-4) var(--space-5);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--teal-on-ink);
+        border-radius: var(--radius);
+        background: var(--panel);
+        color: var(--fg);
+        text-align: left;
+        font-size: 15px;
+      }
+
+      /* ---- numbered steps ----------------------------------------------------------------- */
+      .steps {
+        margin-top: var(--space-6);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: var(--space-5);
+        list-style: none;
+      }
+      .step {
+        padding-top: var(--space-4);
+        border-top: 1px solid var(--border);
+      }
+      .step-n {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        color: var(--teal-on-ink);
+      }
+      .step h3 { margin-top: var(--space-3); }
+      .step p {
+        margin-top: var(--space-2);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* ---- suppliers ---------------------------------------------------------------------- */
+      .supplier-names {
+        margin-top: var(--space-6);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        list-style: none;
+      }
+      .supplier-names li {
+        padding: var(--space-3) var(--space-5);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-lift);
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 18px;
+      }
+      .supplier-status {
+        margin-top: var(--space-4);
+        color: var(--fg);
+        font-size: 14px;
+      }
+      .supplier-more {
+        margin-top: var(--space-5);
+        color: var(--muted);
+        font-size: 14px;
+        max-width: 62ch;
+      }
+
+      /* ---- the illustrated portal screen --------------------------------------------------- */
+      /* Two copies of the same screen, one per product theme, stacked and revealed by a slider.
+         Drawn rather than photographed on purpose: a screenshot of a portal seeded with placeholder
+         imagery would be a picture of the demo data, and the demo's photographs are still
+         placeholders. What is honest to show is the LAYOUT and the PALETTE, both of which are the
+         product's own. The caption says so rather than leaving the reader to assume. */
+      .shot {
+        position: relative;
+        margin-top: var(--space-6);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        /* An aspect ratio rather than a height, so the two panes stay registered with each other
+           at every width without either of them being told how tall it is. */
+        aspect-ratio: 16 / 9;
+        min-height: 260px;
+        /* Capped, because the panel is width-driven and a wide window made it tall enough that a
+           results list ran out of rows and left a stripe of empty paper under them. Past this the
+           screen simply gets wider, which is what a real one does on a wide monitor. */
+        max-height: 560px;
+      }
+      .shot-pane {
+        position: absolute;
+        inset: 0;
+      }
+      /* The light pane sits ON TOP and is clipped from the right. `inset()` rather than a width:
+         clipping does not reflow the pane underneath it, so the two screens stay pixel-aligned
+         while the handle moves — a width would relayout the top one and the comparison would be
+         between two different layouts. */
+      .shot-pane.light {
+        clip-path: inset(0 calc(100% - var(--reveal)) 0 0);
+      }
+      .shot-seam {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: var(--reveal);
+        width: 1px;
+        background: var(--teal-on-ink);
+        pointer-events: none;
+      }
+      .shot-toggle {
+        margin-top: var(--space-4);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+      }
+      .shot-toggle span {
+        color: var(--muted);
+        font-size: var(--text-md);
+        font-weight: 650;
+      }
+      .shot-toggle input {
+        flex: 1;
+        /* The same 40px floor the language switcher is held to. A range input's default height is
+           well under it, and a control this page's whole illustration depends on being dragged is
+           the last one that should be hard to hit. */
+        min-height: var(--touch);
+        accent-color: var(--teal-on-ink);
+        cursor: ew-resize;
+      }
+      .shot-caption {
+        margin-top: var(--space-3);
+        color: var(--muted);
+        font-size: var(--text-md);
+      }
+
+      /* The screen itself. Every colour below is a `--shot-*` token, which is what lets the same
+         markup be drawn twice in two palettes without a single value being invented here. */
+      .ui {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        font-size: 11px;
+      }
+      .ui-bar {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border-bottom: 1px solid;
+      }
+      .ui-brand {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 12px;
+      }
+      .ui-field {
+        flex: 1;
+        max-width: 260px;
+        padding: 5px var(--space-3);
+        border: 1px solid;
+        border-radius: 7px;
+      }
+      .ui-count {
+        margin-left: auto;
+        font-weight: 650;
+      }
+      .ui-body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        min-height: 0;
+      }
+      .ui-list {
+        padding: var(--space-3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        border-right: 1px solid;
+      }
+      .ui-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border: 1px solid;
+        border-radius: 8px;
+      }
+      .ui-name {
+        font-weight: 650;
+        font-size: 12px;
+      }
+      /* One dot per supplier that answered for this hotel — the product's own supplier marks,
+         reduced to the only thing that reads at this size: how many there were. */
+      .ui-marks {
+        display: flex;
+        gap: 3px;
+        margin-top: 5px;
+      }
+      .ui-marks i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .ui-price {
+        margin-left: auto;
+        text-align: right;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .ui-best {
+        display: block;
+        font-family: var(--font-ui);
+        font-weight: 650;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .ui-map {
+        position: relative;
+        overflow: hidden;
+      }
+      /* A map, drawn. It began as four full-width hairlines and a rectangle, which at this size
+         read as a spreadsheet rather than a city — a grid is the one thing a street network is
+         not. So it is an SVG: blocks between streets that bend, and a park that is not a
+         rectangle. No text in it, which is what keeps it out of the seven translations. */
+      .ui-map-art {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .map-block { opacity: 0.6; }
+      .map-street {
+        fill: none;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ui-pin {
+        position: absolute;
+        padding: 3px 7px;
+        border-radius: 999px;
+        border: 1px solid;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+      .ui-pin.p1 { left: 18%; top: 22%; }
+      .ui-pin.p2 { left: 52%; top: 52%; }
+      .ui-pin.p3 { left: 30%; top: 76%; }
+
+      /* Light pane */
+      .light .ui { background: var(--shot-light-paper); color: var(--shot-light-text); }
+      .light .ui-bar { background: var(--shot-light-card); border-color: var(--shot-light-line); }
+      .light .ui-field {
+        background: var(--shot-light-paper);
+        border-color: var(--shot-light-line);
+        color: var(--shot-light-text-soft);
+      }
+      .light .ui-count { color: var(--shot-light-text-soft); }
+      .light .ui-list { border-color: var(--shot-light-line); }
+      .light .ui-row { background: var(--shot-light-card); border-color: var(--shot-light-line); }
+      .light .ui-row.best {
+        border-color: var(--shot-light-teal);
+        background: var(--shot-light-teal-tint);
+      }
+      .light .ui-marks i { background: var(--shot-light-text-soft); }
+      .light .ui-best { color: var(--shot-light-teal); }
+      .light .ui-map { background: var(--shot-light-sunken); }
+      .light .map-block { fill: var(--shot-light-card); }
+      .light .map-street { stroke: var(--shot-light-line); }
+      .light .map-park { fill: var(--shot-light-teal-tint); }
+      .light .ui-pin {
+        background: var(--shot-light-card);
+        border-color: var(--shot-light-line);
+        color: var(--shot-light-text);
+      }
+      .light .ui-pin.p1 {
+        background: var(--shot-light-teal);
+        border-color: var(--shot-light-teal);
+        color: var(--on-accent);
+      }
+
+      /* Dark pane */
+      .dark .ui { background: var(--shot-dark-paper); color: var(--shot-dark-text); }
+      .dark .ui-bar { background: var(--shot-dark-card); border-color: var(--shot-dark-line); }
+      .dark .ui-field {
+        background: var(--shot-dark-paper);
+        border-color: var(--shot-dark-line);
+        color: var(--shot-dark-text-soft);
+      }
+      .dark .ui-count { color: var(--shot-dark-text-soft); }
+      .dark .ui-list { border-color: var(--shot-dark-line); }
+      .dark .ui-row { background: var(--shot-dark-card); border-color: var(--shot-dark-line); }
+      .dark .ui-row.best {
+        border-color: var(--shot-dark-teal);
+        background: var(--shot-dark-teal-tint);
+      }
+      .dark .ui-marks i { background: var(--shot-dark-text-soft); }
+      .dark .ui-best { color: var(--teal-on-ink); }
+      .dark .ui-map { background: var(--shot-dark-sunken); }
+      .dark .map-block { fill: var(--shot-dark-card); }
+      .dark .map-street { stroke: var(--shot-dark-line); }
+      .dark .map-park { fill: var(--shot-dark-teal-tint); }
+      .dark .ui-pin {
+        background: var(--shot-dark-card);
+        border-color: var(--shot-dark-line);
+        color: var(--shot-dark-text);
+      }
+      .dark .ui-pin.p1 {
+        background: var(--shot-dark-teal);
+        border-color: var(--shot-dark-teal);
+        color: var(--on-accent);
+      }
+
+      /* ---- seven languages ----------------------------------------------------------------- */
+      .endonyms {
+        margin-top: var(--space-4);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        list-style: none;
+      }
+      .endonyms li {
+        padding: 6px var(--space-3);
+        border: 1px solid var(--border-soft);
+        border-radius: 999px;
+        background: var(--panel);
+        color: var(--fg);
+        font-size: var(--text-md);
+      }
+
+      /* ---- the model, side by side ---------------------------------------------------------- */
+      /* A real table element, because that is what this is: four rows of the same question asked
+         of two answers. A grid of divs would read to a screen reader as twelve unrelated cells. */
+      .compare {
+        margin-top: var(--space-6);
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+      }
+      .compare th, .compare td {
+        padding: var(--space-4);
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      .compare thead th {
+        font-family: var(--font-display);
+        font-size: var(--text-md);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border-bottom-color: var(--border);
+      }
+      .compare thead th.ours { color: var(--teal-on-ink); }
+      .compare tbody th {
+        width: 22%;
+        font-weight: 650;
+        color: var(--fg);
+      }
+      .compare td.ours {
+        color: var(--fg);
+        background: var(--panel);
+      }
+      .compare td.theirs { color: var(--muted); }
+      /* Shown only once the table stacks — see the narrow-viewport block. */
+      .col-tag { display: none; }
+
+      /* ---- feature cards -------------------------------------------------------------------- */
+      .cards {
+        margin-top: var(--space-6);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+      }
+      .card {
+        padding: var(--space-5);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+      }
+      .card ul {
+        margin-top: var(--space-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        list-style: none;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      /* A hairline rule per item rather than a bullet glyph: bullets at this size are noise, and a
+         rule says "another one of these" without adding a character to seven translations. */
+      .card li { padding-left: var(--space-4); border-left: 1px solid var(--border); }
+
+      /* ---- security --------------------------------------------------------------------------- */
+      .facts {
+        margin-top: var(--space-6);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-5);
+        list-style: none;
+      }
+      .facts li {
+        padding-top: var(--space-4);
+        border-top: 1px solid var(--teal-on-ink);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      /* ---- access ----------------------------------------------------------------------------- */
+      .access {
+        margin-top: calc(var(--space-7) * 2);
+        padding: var(--space-7) var(--space-5);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--panel);
+        text-align: center;
+      }
+      .access h2 { font-size: clamp(24px, 4vw, 34px); }
+      .access .lede { margin-left: auto; margin-right: auto; }
+
+      /* ---- reduced motion ---------------------------------------------------------------------- */
+      /* `@onerate/ui/styles.css:25-32` collapses durations globally and the first two rules here
+         are that block, copied; the third goes further on purpose. A `transform` with a 0.01ms
+         duration still MOVES — instantly, which is the jump the preference asks not to see.
+         Killing the duration is not the same as killing the movement. */
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -274,21 +767,49 @@
         .cta:hover,
         .cta.ghost:hover { transform: none; }
       }
-      footer { margin-top: var(--space-6); }
-      .foot {
-        color: var(--muted);
-        font-size: var(--text-md);
+
+      /* ---- narrow viewports ------------------------------------------------------------------- */
+      @media (max-width: 760px) {
+        .cards, .facts { grid-template-columns: minmax(0, 1fr); }
       }
-      .foot + .foot { margin-top: var(--space-5); }
-      .foot a { color: var(--muted); }
+      @media (max-width: 620px) {
+        body { padding: var(--space-4); }
+        section { margin-top: var(--space-7); }
+        /* The screen stops being two columns before its columns stop being readable; the map is
+           what goes, because a 140px-wide map is a texture rather than a map. */
+        .ui-body { grid-template-columns: minmax(0, 1fr); }
+        .ui-map { display: none; }
+        .shot { aspect-ratio: 4 / 3; }
+        /* A four-row table with a 22% label column becomes unreadable long before it becomes
+           narrow, so each row stacks into its own block instead. */
+        .compare, .compare tbody, .compare tr, .compare th, .compare td { display: block; }
+        .compare thead { display: none; }
+        .compare tr { border-bottom: 1px solid var(--border); padding: var(--space-3) 0; }
+        .compare th, .compare td { border-bottom: 0; padding: var(--space-2) 0; }
+        /* `tbody th`, not `th`: the desktop rule that gives the label column 22% is
+           `.compare tbody th`, and a plain `.compare th` here loses to it on specificity — which
+           is how the row labels kept breaking across three lines in a full-width block. */
+        .compare tbody th { width: auto; }
+        .col-tag {
+          display: block;
+          font-family: var(--font-display);
+          font-size: var(--text-sm);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .compare td.ours .col-tag { color: var(--teal-on-ink); }
+        /* The `ours` cell keeps its fill, and stacked it needs the padding back to sit on it. */
+        .compare td.ours { padding: var(--space-3); border-radius: 8px; }
+      }
+
       /* One control, not a row of buttons. Two languages fitted in the corner as EN/TR; seven do
          not, and seven `aria-pressed` buttons announce themselves as seven independent toggles
-         rather than one question with seven answers. Same reasoning, and the same native <select>,
-         as the portal's own switcher.
+         rather than one question with seven answers. Same reasoning, and the same native select
+         element, as the portal's own switcher.
 
-         IN THE FLOW, not `position: fixed`. Fixed gave it a layer of its own above a vertically
-         centred <main>; on a short viewport the two drew on top of each other. As the first child
-         of the column it takes its own 40px and pushes nothing off the screen. */
+         IN THE FLOW, not `position: fixed`. Fixed gave it a layer of its own above the content; on
+         a short viewport the two drew on top of each other. */
       .langs { align-self: flex-end; }
       .langs select {
         appearance: none;
@@ -315,28 +836,33 @@
       }
       .langs select:hover,
       .langs select:focus-visible { color: var(--fg); border-color: var(--teal-on-ink); }
-      /* No `.langs option` color override here any more. The platform draws the dropdown list
-         itself, and under the old `color-scheme: light dark` it could draw a WHITE popup whose
-         options inherited this page's pale grey — hence a forced dark-on-white rule. With the
-         scheme honestly declared `dark` (see :root) the popup is dark and the platform picks its
-         own legible text, so the patch would now be styling a problem that cannot occur. */
+
+      footer { margin-top: calc(var(--space-7) * 2); text-align: center; }
+      .foot {
+        color: var(--muted);
+        font-size: var(--text-md);
+      }
+      .foot + .foot { margin-top: var(--space-4); }
+      .foot a { color: var(--muted); }
     </style>
   </head>
   <body>
     <nav class="langs">
       <!--
-        Labelled by the page's own copy (`langLabel`), and every OPTION is an endonym — a Polish
-        visitor scans this list for "Polski", not for "Polish", and would not recognise the latter
-        on a page otherwise in Bulgarian. The option labels are therefore identical in all seven
-        translations and are written once, here.
+        Labelled by the page's own copy, and every OPTION is an endonym — a Polish visitor scans
+        this list for "Polski", not for "Polish", and would not recognise the latter on a page
+        otherwise in Bulgarian. The option labels are therefore identical in all seven translations
+        and are written once, here.
 
         Each option also carries its own `lang`. The endonyms are the point and they are the
         problem: "Български" and "Magyar" under `<html lang="en">` are handed to a screen reader
-        with an English phoneme table, which pronounces neither (WCAG 3.1.2). One attribute per
-        option is the whole fix, and it is the only place on the page where the language of an
-        element differs from the language of the document.
+        with an English phoneme table, which pronounces neither (WCAG 3.1.2).
+
+        The control's accessible name is translated through `data-i18n-label`, the same hook the
+        comparison slider uses. It used to be a special case inside `setLang`; making it one more
+        row of the attribute map is what puts it under `bilingual.test.js`'s parity check.
       -->
-      <select id="lang" aria-label="Language">
+      <select id="lang" aria-label="Language" data-i18n-label="langLabel">
         <option value="en" lang="en">English</option>
         <option value="tr" lang="tr">Türkçe</option>
         <option value="bg" lang="bg">Български</option>
@@ -348,51 +874,611 @@
     </nav>
 
     <main>
-      <div class="brand">One<span class="dot">Rate</span></div>
-
       <!--
         THE ENGLISH COPY LIVES IN THE HTML, and the other six live in the script below.
         This is the whole shape of the page and it is deliberate.
 
-        The page used to carry paired `data-en`/`data-tr` spans, which was readable at two languages
-        and would be seven spans per sentence at seven — a page where forgetting one language is
-        easy and noticing it is hard. Moving the copy into one dictionary keyed by language fixes
-        that, but the naive form of it (empty elements, filled entirely by JavaScript) trades one
-        silent failure for a worse one: a visitor with JavaScript off, and every crawler that does
-        not run it, would get a blank page. So the default language is written into the markup as
-        real text, and the script only ever REPLACES it.
+        The naive form of a dictionary-driven page — empty elements, filled entirely by JavaScript —
+        ships a blank page to a visitor with JavaScript off and to every crawler that does not run
+        it. So the default language is written into the markup as real text, and the script only
+        ever REPLACES it. At eight sections that matters more than it did at one paragraph: this
+        page is now the product's only indexable description.
 
-        Consequence worth knowing: `data-i18n` keys are the contract between this markup and the
-        `TEXT` object. `test/bilingual.test.js` asserts the two agree in both directions.
+        `data-i18n` keys are the contract between this markup and the `TEXT` object;
+        `test/bilingual.test.js` asserts the two agree in both directions, in all seven languages.
       -->
+      <header class="hero">
+        <div class="brand">One<span class="dot">Rate</span></div>
 
-      <!--
-        The <h1> is the TAGLINE, not the wordmark. The page had no heading element at all: its
-        hierarchy existed in 44px type and in nothing a screen reader could navigate by
-        (WCAG 1.3.1). A heading says what the page is ABOUT; "OneRate" says whose it is, which the
-        <title>, the wordmark above and the favicon already say three times over. And when the
-        access-request form arrives it wants an <h2> — which is only writable once there is an
-        <h1> for it to sit under.
-      -->
-      <h1 class="tagline" data-i18n="tagline">B2B hotel distribution, cheapest-first.</h1>
+        <!--
+          The <h1> is the TAGLINE, not the wordmark. A heading says what the page is ABOUT;
+          "OneRate" says whose it is, which the <title>, the wordmark above and the favicon already
+          say three times over.
+        -->
+        <h1 class="tagline" data-i18n="tagline">
+          One search across every supplier contract you already hold.
+        </h1>
 
-      <p class="desc" data-i18n="desc">
-        Agencies bring their own supplier contracts. OneRate fans out the search across bedbanks,
-        normalizes the rates, ranks comparable rooms cheapest-first, and books — on a flat monthly
-        subscription.
-      </p>
+        <p class="lede" data-i18n="lede">
+          OneRate fans your search out to all of your bedbanks at once, normalizes what comes back,
+          groups the rooms that are genuinely comparable and puts the cheapest first. You book on
+          your own contract, at your own rates.
+        </p>
 
-      <div class="ctas">
-        <a class="cta" href="https://app.onerate.travel" data-i18n="ctaPortal">Sign in to the portal →</a>
-        <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs">Read the docs</a>
-      </div>
+        <div class="ctas">
+          <a
+            class="cta"
+            data-mail-template
+            href="mailto:hello@onerate.travel?subject=OneRate%20access%20request&body=Agency%3A%0ACountry%3A%0ASupplier%20API%20contracts%20we%20already%20hold%3A%0ARoughly%20how%20many%20hotel%20bookings%20a%20month%3A%0AName%20and%20role%3A%0A"
+            data-i18n="ctaRequest"
+            >Request access</a
+          >
+          <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs"
+            >Read the docs</a
+          >
+          <a class="cta ghost" href="https://app.onerate.travel" data-i18n="ctaPortal"
+            >Sign in to the portal →</a
+          >
+        </div>
+
+        <p class="model-line" data-i18n="heroModel">
+          Your contracts stay yours and your money goes straight to the supplier. OneRate charges a
+          flat monthly fee and takes no cut of a booking.
+        </p>
+      </header>
+
+      <section aria-labelledby="how-title">
+        <p class="eyebrow" data-i18n="howEyebrow">How it works</p>
+        <h2 id="how-title" data-i18n="howTitle">From one search to a booking</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-n">01</span>
+            <h3 data-i18n="step1Title">Your credentials, encrypted</h3>
+            <p data-i18n="step1Body">
+              Add each bedbank you hold a contract with and enter its API credentials. They are
+              encrypted before they are stored, and secret fields are never echoed back to a screen.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-n">02</span>
+            <h3 data-i18n="step2Title">One search, every supplier</h3>
+            <p data-i18n="step2Body">
+              A single search goes out to all of them in parallel, and results stream in as each one
+              answers rather than waiting for the slowest.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-n">03</span>
+            <h3 data-i18n="step3Title">Rates made comparable</h3>
+            <p data-i18n="step3Body">
+              Board, cancellation terms, taxes and currency are normalized, and rooms that are
+              genuinely the same room are grouped — so a price difference is a real difference.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-n">04</span>
+            <h3 data-i18n="step4Title">Cheapest first, then booked</h3>
+            <p data-i18n="step4Body">
+              Comparable rooms are ranked cheapest first. Your markup and your preference rules
+              apply, and the booking goes out on your own contract.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="suppliers-title">
+        <p class="eyebrow" data-i18n="suppliersEyebrow">Suppliers</p>
+        <h2 id="suppliers-title" data-i18n="suppliersTitle">Bring the contracts you already have</h2>
+        <p class="lede" data-i18n="suppliersLede">
+          OneRate holds no supplier contracts of its own and never will. It speaks to the bedbanks
+          you have already signed with, using your credentials.
+        </p>
+        <!--
+          `data-supplier` and `data-supplier-state` are not decoration, and they are deliberately
+          INVISIBLE. `test/design.test.js` reads them and asks the two repositories that decide the
+          answer: a name marked `live` must be in `SUPPLIER_CATALOG` — the only source of addable
+          suppliers — and a name marked `integrating` must at least have adapter code in the
+          gateway. Promising an agency a supplier the product cannot take is the one lie this page
+          can tell that no language test would catch.
+
+          They used to drive a two-column status board — "Connected" beside "Adapter written", with
+          a hollow dot for the second. It was honest and it read as a gap chart: a visitor's first
+          impression was of a platform with nothing plugged in yet, which is a worse distortion than
+          the one the board was built to prevent. The honesty now lives in one sentence and in the
+          guard; the names carry equal visual weight because to the agency reading them they ARE
+          equal — the question is which contract the agency holds, not which one we finished first.
+        -->
+        <ul class="supplier-names">
+          <li data-supplier="ratehawk" data-supplier-state="live">RateHawk</li>
+          <li data-supplier="goglobal" data-supplier-state="integrating">GoGlobal</li>
+          <li data-supplier="tbo" data-supplier-state="integrating">TBO</li>
+        </ul>
+        <p class="supplier-status" data-i18n="suppliersStatus">
+          RateHawk runs in production today; GoGlobal and TBO follow.
+        </p>
+        <p class="supplier-more" data-i18n="suppliersMore">
+          Working with a bedbank that is not on this list? Tell us which one — for OneRate a new
+          supplier is an adapter, not a change of platform.
+        </p>
+      </section>
+
+      <section aria-labelledby="portal-title">
+        <p class="eyebrow" data-i18n="portalEyebrow">The portal</p>
+        <h2 id="portal-title" data-i18n="portalTitle">The screen your agents work in</h2>
+        <p class="lede" data-i18n="portalLede">
+          Search, map, rate comparison and booking on one screen — in the theme and the language
+          each of your agents prefers. Drag the handle to move between them.
+        </p>
+
+        <div class="shot" id="shot">
+          <!-- Dark underneath, light clipped over it. Both panes carry the same markup, generated
+               from one row list, so the comparison is between two palettes rather than two
+               layouts — and a row edited into one pane and not the other cannot happen quietly. -->
+          <div class="shot-pane dark">
+            <div class="ui">
+              <div class="ui-bar">
+                <span class="ui-brand">OneRate</span>
+                <span class="ui-field">Roma · 12–15.10 · 2</span>
+                <span class="ui-count">128</span>
+              </div>
+              <div class="ui-body">
+                <div class="ui-list">
+                  <div class="ui-row best">
+                    <div>
+                      <span class="ui-name">Hotel Aurora</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">
+                      <span class="ui-best" data-i18n="shotCheapest">cheapest</span>€214</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Palazzo Verdi</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€228</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Casa Trastevere</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€241</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Albergo Nomentana</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€256</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Villa Borghese Suites</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€263</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Hotel Quirinale</span>
+                      <span class="ui-marks"><i></i></span>
+                    </div>
+                    <div class="ui-price">€271</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Residenza Aventino</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€288</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Hotel Barberini</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€294</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Domus Pantheon</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€311</div>
+                  </div>
+                </div>
+                <div class="ui-map">
+                  <svg class="ui-map-art" viewBox="0 0 160 100"
+                       preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+                    <g class="map-block">
+                      <rect x="3" y="3" width="20" height="16" rx="2" />
+                      <rect x="35" y="3" width="34" height="16" rx="2" />
+                      <rect x="83" y="3" width="32" height="16" rx="2" />
+                      <rect x="129" y="3" width="28" height="16" rx="2" />
+                      <rect x="3" y="30" width="20" height="27" rx="2" />
+                      <rect x="35" y="30" width="34" height="27" rx="2" />
+                      <rect x="83" y="30" width="32" height="27" rx="2" />
+                      <rect x="129" y="30" width="28" height="27" rx="2" />
+                      <rect x="3" y="69" width="20" height="12" rx="2" />
+                      <rect x="35" y="69" width="34" height="12" rx="2" />
+                      <rect x="83" y="69" width="32" height="12" rx="2" />
+                      <rect x="3" y="93" width="20" height="7" rx="2" />
+                      <rect x="35" y="93" width="34" height="7" rx="2" />
+                      <rect x="83" y="93" width="32" height="7" rx="2" />
+                    </g>
+                    <polygon class="map-park" points="127,67 153,63 159,81 141,93 126,85" />
+                    <g class="map-street">
+                      <path d="M0 26 L62 22 L110 27 L160 21" />
+                      <path d="M0 62 L54 66 L112 60 L160 65" />
+                      <path d="M0 88 L70 84 L160 90" />
+                      <path d="M30 0 L26 44 L32 100" />
+                      <path d="M74 0 L80 52 L72 100" />
+                      <path d="M124 0 L118 40 L126 100" />
+                      <path d="M8 100 L58 0" />
+                      <path d="M96 100 L160 46" />
+                    </g>
+                  </svg>
+                  <span class="ui-pin p1">€214</span>
+                  <span class="ui-pin p2">€228</span>
+                  <span class="ui-pin p3">€241</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="shot-pane light">
+            <div class="ui">
+              <div class="ui-bar">
+                <span class="ui-brand">OneRate</span>
+                <span class="ui-field">Roma · 12–15.10 · 2</span>
+                <span class="ui-count">128</span>
+              </div>
+              <div class="ui-body">
+                <div class="ui-list">
+                  <div class="ui-row best">
+                    <div>
+                      <span class="ui-name">Hotel Aurora</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">
+                      <span class="ui-best" data-i18n="shotCheapest">cheapest</span>€214</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Palazzo Verdi</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€228</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Casa Trastevere</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€241</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Albergo Nomentana</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€256</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Villa Borghese Suites</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€263</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Hotel Quirinale</span>
+                      <span class="ui-marks"><i></i></span>
+                    </div>
+                    <div class="ui-price">€271</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Residenza Aventino</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€288</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Hotel Barberini</span>
+                      <span class="ui-marks"><i></i><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€294</div>
+                  </div>
+                  <div class="ui-row">
+                    <div>
+                      <span class="ui-name">Domus Pantheon</span>
+                      <span class="ui-marks"><i></i><i></i></span>
+                    </div>
+                    <div class="ui-price">€311</div>
+                  </div>
+                </div>
+                <div class="ui-map">
+                  <svg class="ui-map-art" viewBox="0 0 160 100"
+                       preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+                    <g class="map-block">
+                      <rect x="3" y="3" width="20" height="16" rx="2" />
+                      <rect x="35" y="3" width="34" height="16" rx="2" />
+                      <rect x="83" y="3" width="32" height="16" rx="2" />
+                      <rect x="129" y="3" width="28" height="16" rx="2" />
+                      <rect x="3" y="30" width="20" height="27" rx="2" />
+                      <rect x="35" y="30" width="34" height="27" rx="2" />
+                      <rect x="83" y="30" width="32" height="27" rx="2" />
+                      <rect x="129" y="30" width="28" height="27" rx="2" />
+                      <rect x="3" y="69" width="20" height="12" rx="2" />
+                      <rect x="35" y="69" width="34" height="12" rx="2" />
+                      <rect x="83" y="69" width="32" height="12" rx="2" />
+                      <rect x="3" y="93" width="20" height="7" rx="2" />
+                      <rect x="35" y="93" width="34" height="7" rx="2" />
+                      <rect x="83" y="93" width="32" height="7" rx="2" />
+                    </g>
+                    <polygon class="map-park" points="127,67 153,63 159,81 141,93 126,85" />
+                    <g class="map-street">
+                      <path d="M0 26 L62 22 L110 27 L160 21" />
+                      <path d="M0 62 L54 66 L112 60 L160 65" />
+                      <path d="M0 88 L70 84 L160 90" />
+                      <path d="M30 0 L26 44 L32 100" />
+                      <path d="M74 0 L80 52 L72 100" />
+                      <path d="M124 0 L118 40 L126 100" />
+                      <path d="M8 100 L58 0" />
+                      <path d="M96 100 L160 46" />
+                    </g>
+                  </svg>
+                  <span class="ui-pin p1">€214</span>
+                  <span class="ui-pin p2">€228</span>
+                  <span class="ui-pin p3">€241</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="shot-seam"></span>
+        </div>
+
+        <!--
+          A real <input type="range">, not a draggable <div>. The comparison is the section's whole
+          argument, and a pointer-only handle would put it out of reach of a keyboard entirely.
+          Its accessible name is translated through the same attribute hook the language switcher
+          uses.
+        -->
+        <div class="shot-toggle">
+          <span data-i18n="shotDark">Dark</span>
+          <input
+            id="reveal"
+            type="range"
+            min="0"
+            max="100"
+            value="42"
+            aria-label="Reveal the light theme"
+            data-i18n-label="shotSlider"
+          />
+          <span data-i18n="shotLight">Light</span>
+        </div>
+        <p class="shot-caption" data-i18n="shotCaption">
+          An illustration of the search screen, drawn in the product's own palette — not a
+          screenshot.
+        </p>
+
+        <p class="lede" data-i18n="portalLangs">
+          The portal, the documentation and your offer PDFs are in seven languages:
+        </p>
+        <!-- Endonyms, and untranslated on purpose: this list is the same in all seven languages,
+             which is exactly what it is claiming. -->
+        <ul class="endonyms">
+          <li lang="en">English</li>
+          <li lang="tr">Türkçe</li>
+          <li lang="bg">Български</li>
+          <li lang="hu">Magyar</li>
+          <li lang="it">Italiano</li>
+          <li lang="pl">Polski</li>
+          <li lang="ro">Română</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="model-title">
+        <p class="eyebrow" data-i18n="modelEyebrow">The model</p>
+        <h2 id="model-title" data-i18n="modelTitle">Not a consolidator</h2>
+        <p class="lede" data-i18n="modelLede">
+          Most platforms in this market sell you their inventory and keep a margin on it. OneRate
+          sells you the software and nothing else, which is why nothing in the left-hand column
+          moves as you grow.
+        </p>
+        <table class="compare">
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col" class="ours" data-i18n="modelColOne">With OneRate</th>
+              <th scope="col" data-i18n="modelColTwo">With a consolidator</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" data-i18n="modelRow1">The supplier contract</th>
+              <td class="ours">
+                <b class="col-tag" data-i18n="modelColOne">With OneRate</b>
+                <span data-i18n="modelRow1One"
+                  >Yours. You keep the terms you negotiated.</span
+                >
+              </td>
+              <td class="theirs">
+                <b class="col-tag" data-i18n="modelColTwo">With a consolidator</b>
+                <span data-i18n="modelRow1Two"
+                  >Theirs. You resell their inventory at their price.</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="modelRow2">The booking money</th>
+              <td class="ours">
+                <b class="col-tag" data-i18n="modelColOne">With OneRate</b>
+                <span data-i18n="modelRow2One"
+                  >Straight from your agency to the supplier.</span
+                >
+              </td>
+              <td class="theirs">
+                <b class="col-tag" data-i18n="modelColTwo">With a consolidator</b>
+                <span data-i18n="modelRow2Two"
+                  >Through their account, on their terms.</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="modelRow3">What it costs you</th>
+              <td class="ours">
+                <b class="col-tag" data-i18n="modelColOne">With OneRate</b>
+                <span data-i18n="modelRow3One"
+                  >A flat monthly fee, whatever you sell.</span
+                >
+              </td>
+              <td class="theirs">
+                <b class="col-tag" data-i18n="modelColTwo">With a consolidator</b>
+                <span data-i18n="modelRow3Two"
+                  >A margin on every rate, for as long as you stay.</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="modelRow4">What you carry</th>
+              <td class="ours">
+                <b class="col-tag" data-i18n="modelColOne">With OneRate</b>
+                <span data-i18n="modelRow4One"
+                  >No card handling, no PCI scope, no credit line to keep open.</span
+                >
+              </td>
+              <td class="theirs">
+                <b class="col-tag" data-i18n="modelColTwo">With a consolidator</b>
+                <span data-i18n="modelRow4Two"
+                  >Deposits, credit limits and a current account to manage.</span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="features-title">
+        <p class="eyebrow" data-i18n="featuresEyebrow">Inside</p>
+        <h2 id="features-title" data-i18n="featuresTitle">Built for how an agency actually runs</h2>
+        <div class="cards">
+          <div class="card">
+            <h3 data-i18n="f1Title">Branches and people</h3>
+            <ul>
+              <li data-i18n="f1a">
+                Branches and teams as first-class entities, with every booking stamped to the agent
+                and the branch that made it.
+              </li>
+              <li data-i18n="f1b">
+                Scoped roles, so a branch manager sees their branch rather than the whole agency.
+              </li>
+              <li data-i18n="f1c">
+                Booking limits per user and per branch, with an approval step above the ceiling.
+              </li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 data-i18n="f2Title">Your prices, your rules</h3>
+            <ul>
+              <li data-i18n="f2a">Markup rules, applied before an agent ever sees a rate.</li>
+              <li data-i18n="f2b">
+                Preference rules, so a customer who should be quoted a preferred supplier is not
+                simply quoted the cheapest.
+              </li>
+              <li data-i18n="f2c">
+                Tiered price lists for the sub-agencies in your own network.
+              </li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 data-i18n="f3Title">Your brand, not ours</h3>
+            <ul>
+              <li data-i18n="f3a">
+                Logo, colours, sender identity and your own address for the portal.
+              </li>
+              <li data-i18n="f3b">
+                Branded offer PDFs in seven languages, built in the background and downloaded from
+                the portal.
+              </li>
+              <li data-i18n="f3c">
+                Your own customers inside your agency, with their bookings kept under them.
+              </li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 data-i18n="f4Title">Reporting and integration</h3>
+            <ul>
+              <li data-i18n="f4a">
+                Reports broken down by branch, by agent and by customer, exportable as CSV.
+              </li>
+              <li data-i18n="f4b">
+                An audit log your agency reads and exports itself, without asking us.
+              </li>
+              <li data-i18n="f4c">
+                API keys, a read API and webhooks for the back office you already run.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="security-title">
+        <p class="eyebrow" data-i18n="securityEyebrow">Credentials</p>
+        <h2 id="security-title" data-i18n="securityTitle">What happens to what you hand us</h2>
+        <p class="lede" data-i18n="securityLede">
+          Your bedbank credentials are the most valuable thing you give any platform. Here is
+          exactly what OneRate does with them.
+        </p>
+        <ul class="facts">
+          <li data-i18n="sec1">
+            They are encrypted with a master key before they are written, and secret fields are
+            never echoed back to a screen — not to your agents, and not to us.
+          </li>
+          <li data-i18n="sec2">
+            Every query carries your organization id at every layer, so one agency's data cannot be
+            reached from another agency's session.
+          </li>
+          <li data-i18n="sec3">
+            Two-factor authentication is mandatory for agency owners, and a revoked session stops
+            working immediately rather than at expiry.
+          </li>
+          <li data-i18n="sec4">
+            OneRate is not a merchant of record and handles no card data, so your payment scope
+            stays exactly where it is today.
+          </li>
+        </ul>
+      </section>
+
+      <section class="access" aria-labelledby="access-title">
+        <h2 id="access-title" data-i18n="accessTitle">Request access</h2>
+        <p class="lede" data-i18n="accessBody">
+          Agencies are opened one at a time, and the first question is always the same: which
+          supplier API contracts do you already hold? Tell us that and we can say straight away
+          whether we can serve you. The button below opens a mail with the questions already in it.
+        </p>
+        <div class="ctas">
+          <a
+            class="cta"
+            data-mail-template
+            href="mailto:hello@onerate.travel?subject=OneRate%20access%20request&body=Agency%3A%0ACountry%3A%0ASupplier%20API%20contracts%20we%20already%20hold%3A%0ARoughly%20how%20many%20hotel%20bookings%20a%20month%3A%0AName%20and%20role%3A%0A"
+            data-i18n="ctaRequest"
+            >Request access</a
+          >
+          <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs"
+            >Read the docs</a
+          >
+        </div>
+      </section>
     </main>
 
     <!--
       Outside <main>, and that placement is the whole reason this element exists. A <footer> nested
       inside <main> is the footer OF main and carries no landmark; only a top-level one is
-      `contentinfo`. The two lines were bare <p>s before, so the page had two landmarks for its
-      entire contents.
+      `contentinfo`.
     -->
     <footer>
       <p class="foot">
@@ -400,10 +1486,11 @@
         <a href="mailto:hello@onerate.travel">hello@onerate.travel</a>
       </p>
       <!--
-        The mailto above is NOT replaced by this, and that is the whole point of two lines: support
-        is behind a sign-in (ADR-0019), so a prospect who followed this page from a search has no
-        way through it. They keep the address; a customer gets the door that opens onto their own
-        thread and their agency's history.
+        The bare address above is NOT replaced by the prefilled template in the access section, and
+        it is not a duplicate of it either. It is the fallback for a reader whose browser has no
+        mail handler registered for a `mailto:` with a query string — and, separately, support is
+        behind a sign-in (ADR-0019), so a prospect who arrived from a search has no way through the
+        line below. A customer does.
       -->
       <p class="foot">
         <span data-i18n="customerQuestions">Already using OneRate?</span>
@@ -416,20 +1503,142 @@
         // Every string the page shows, in every language it shows them in. `en` is here as well as
         // in the markup so that switching BACK to English works the same way as switching away
         // from it — a special case for the default would be a second code path nobody exercises.
+        //
+        // `requestSubject` and `requestBody` are the two keys that are never written into an
+        // element. They are assembled into the access `mailto:` below, because a url is not a
+        // translated string: encoding it here by hand would put seven percent-encoded blobs in the
+        // dictionary and make a typo in one of them invisible.
         var TEXT = {
           en: {
             langLabel: 'Language',
             docTitle: 'OneRate — B2B Hotel Distribution',
             metaDescription:
-              'OneRate — multi-tenant B2B hotel distribution. Agencies bring their own supplier ' +
-              'contracts; OneRate fans out search, normalizes rates, ranks cheapest-first, and books.',
-            tagline: 'B2B hotel distribution, cheapest-first.',
-            desc:
-              'Agencies bring their own supplier contracts. OneRate fans out the search across ' +
-              'bedbanks, normalizes the rates, ranks comparable rooms cheapest-first, and books — ' +
-              'on a flat monthly subscription.',
+              "OneRate connects a travel agency's own bedbank contracts into one search: rates " +
+              'normalized, comparable rooms ranked cheapest-first, booked on the agency’s own ' +
+              'contract. A flat monthly fee, and no cut of a booking.',
+            tagline: 'One search across every supplier contract you already hold.',
+            lede:
+              'OneRate fans your search out to all of your bedbanks at once, normalizes what comes ' +
+              'back, groups the rooms that are genuinely comparable and puts the cheapest first. ' +
+              'You book on your own contract, at your own rates.',
+            ctaRequest: 'Request access',
             ctaPortal: 'Sign in to the portal →',
+            heroModel:
+              'Your contracts stay yours and your money goes straight to the supplier. OneRate ' +
+              'charges a flat monthly fee and takes no cut of a booking.',
+            howEyebrow: 'How it works',
+            howTitle: 'From one search to a booking',
+            step1Title: 'Your credentials, encrypted',
+            step1Body:
+              'Add each bedbank you hold a contract with and enter its API credentials. They are ' +
+              'encrypted before they are stored, and secret fields are never echoed back to a screen.',
+            step2Title: 'One search, every supplier',
+            step2Body:
+              'A single search goes out to all of them in parallel, and results stream in as each ' +
+              'one answers rather than waiting for the slowest.',
+            step3Title: 'Rates made comparable',
+            step3Body:
+              'Board, cancellation terms, taxes and currency are normalized, and rooms that are ' +
+              'genuinely the same room are grouped — so a price difference is a real difference.',
+            step4Title: 'Cheapest first, then booked',
+            step4Body:
+              'Comparable rooms are ranked cheapest first. Your markup and your preference rules ' +
+              'apply, and the booking goes out on your own contract.',
+            suppliersEyebrow: 'Suppliers',
+            suppliersTitle: 'Bring the contracts you already have',
+            suppliersLede:
+              'OneRate holds no supplier contracts of its own and never will. It speaks to the ' +
+              'bedbanks you have already signed with, using your credentials.',
+            suppliersStatus: 'RateHawk runs in production today; GoGlobal and TBO follow.',
+            suppliersMore:
+              'Working with a bedbank that is not on this list? Tell us which one — for OneRate a ' +
+              'new supplier is an adapter, not a change of platform.',
+            portalEyebrow: 'The portal',
+            portalTitle: 'The screen your agents work in',
+            portalLede:
+              'Search, map, rate comparison and booking on one screen — in the theme and the ' +
+              'language each of your agents prefers. Drag the handle to move between them.',
+            shotDark: 'Dark',
+            shotLight: 'Light',
+            shotSlider: 'Reveal the light theme',
+            shotCheapest: 'cheapest',
+            shotCaption:
+              "An illustration of the search screen, drawn in the product's own palette — not a " +
+              'screenshot.',
+            portalLangs:
+              'The portal, the documentation and your offer PDFs are in seven languages:',
+            modelEyebrow: 'The model',
+            modelTitle: 'Not a consolidator',
+            modelLede:
+              'Most platforms in this market sell you their inventory and keep a margin on it. ' +
+              'OneRate sells you the software and nothing else, which is why nothing in the ' +
+              'left-hand column moves as you grow.',
+            modelColOne: 'With OneRate',
+            modelColTwo: 'With a consolidator',
+            modelRow1: 'The supplier contract',
+            modelRow1One: 'Yours. You keep the terms you negotiated.',
+            modelRow1Two: 'Theirs. You resell their inventory at their price.',
+            modelRow2: 'The booking money',
+            modelRow2One: 'Straight from your agency to the supplier.',
+            modelRow2Two: 'Through their account, on their terms.',
+            modelRow3: 'What it costs you',
+            modelRow3One: 'A flat monthly fee, whatever you sell.',
+            modelRow3Two: 'A margin on every rate, for as long as you stay.',
+            modelRow4: 'What you carry',
+            modelRow4One: 'No card handling, no PCI scope, no credit line to keep open.',
+            modelRow4Two: 'Deposits, credit limits and a current account to manage.',
+            featuresEyebrow: 'Inside',
+            featuresTitle: 'Built for how an agency actually runs',
+            f1Title: 'Branches and people',
+            f1a:
+              'Branches and teams as first-class entities, with every booking stamped to the agent ' +
+              'and the branch that made it.',
+            f1b: 'Scoped roles, so a branch manager sees their branch rather than the whole agency.',
+            f1c: 'Booking limits per user and per branch, with an approval step above the ceiling.',
+            f2Title: 'Your prices, your rules',
+            f2a: 'Markup rules, applied before an agent ever sees a rate.',
+            f2b:
+              'Preference rules, so a customer who should be quoted a preferred supplier is not ' +
+              'simply quoted the cheapest.',
+            f2c: 'Tiered price lists for the sub-agencies in your own network.',
+            f3Title: 'Your brand, not ours',
+            f3a: 'Logo, colours, sender identity and your own address for the portal.',
+            f3b:
+              'Branded offer PDFs in seven languages, built in the background and downloaded from ' +
+              'the portal.',
+            f3c: 'Your own customers inside your agency, with their bookings kept under them.',
+            f4Title: 'Reporting and integration',
+            f4a: 'Reports broken down by branch, by agent and by customer, exportable as CSV.',
+            f4b: 'An audit log your agency reads and exports itself, without asking us.',
+            f4c: 'API keys, a read API and webhooks for the back office you already run.',
+            securityEyebrow: 'Credentials',
+            securityTitle: 'What happens to what you hand us',
+            securityLede:
+              'Your bedbank credentials are the most valuable thing you give any platform. Here is ' +
+              'exactly what OneRate does with them.',
+            sec1:
+              'They are encrypted with a master key before they are written, and secret fields are ' +
+              'never echoed back to a screen — not to your agents, and not to us.',
+            sec2:
+              "Every query carries your organization id at every layer, so one agency's data cannot " +
+              "be reached from another agency's session.",
+            sec3:
+              'Two-factor authentication is mandatory for agency owners, and a revoked session ' +
+              'stops working immediately rather than at expiry.',
+            sec4:
+              'OneRate is not a merchant of record and handles no card data, so your payment scope ' +
+              'stays exactly where it is today.',
+            accessTitle: 'Request access',
+            accessBody:
+              'Agencies are opened one at a time, and the first question is always the same: which ' +
+              'supplier API contracts do you already hold? Tell us that and we can say straight ' +
+              'away whether we can serve you. The button below opens a mail with the questions ' +
+              'already in it.',
             ctaDocs: 'Read the docs',
+            requestSubject: 'OneRate access request',
+            requestBody:
+              'Agency:\nCountry:\nSupplier API contracts we already hold:\nRoughly how many hotel ' +
+              'bookings a month:\nName and role:\n',
             questions: 'Questions?',
             customerQuestions: 'Already using OneRate?',
             ctaSupport: 'Get support in the portal'
@@ -438,16 +1647,129 @@
             langLabel: 'Dil',
             docTitle: 'OneRate — B2B Otel Dağıtımı',
             metaDescription:
-              'OneRate — çok kiracılı B2B otel dağıtımı. Acenteler kendi tedarikçi kontratlarını ' +
-              'getirir; OneRate aramayı dağıtır, fiyatları normalize eder, en ucuzdan sıralar ve ' +
-              'rezervasyon yapar.',
-            tagline: 'B2B otel dağıtımı, en ucuz önce.',
-            desc:
-              'Acenteler kendi tedarikçi kontratlarını getirir. OneRate aramayı tüm bedbank’lara ' +
-              'dağıtır, fiyatları normalize eder, karşılaştırılabilir odaları en ucuzdan sıralar ve ' +
-              'rezervasyon yapar — sabit aylık abonelikle.',
+              'OneRate acentenin kendi bedbank kontratlarını tek aramada birleştirir: fiyatlar ' +
+              'normalize edilir, karşılaştırılabilir odalar en ucuzdan sıralanır, rezervasyon ' +
+              'acentenin kendi kontratıyla yapılır. Sabit aylık ücret, rezervasyondan pay yok.',
+            tagline: 'Elinizdeki tüm tedarikçi kontratları, tek aramada.',
+            lede:
+              'OneRate aramanızı tüm bedbank’larınıza aynı anda dağıtır, dönen fiyatları normalize ' +
+              'eder, gerçekten karşılaştırılabilir odaları gruplar ve en ucuzu öne alır. ' +
+              'Rezervasyonu kendi kontratınızla, kendi fiyatınızdan yaparsınız.',
+            ctaRequest: 'Erişim talep edin',
             ctaPortal: 'Portala giriş →',
+            heroModel:
+              'Kontratlarınız sizde kalır, paranız doğrudan tedarikçiye gider. OneRate sabit aylık ' +
+              'ücret alır ve rezervasyondan pay almaz.',
+            howEyebrow: 'Nasıl çalışır',
+            howTitle: 'Tek aramadan rezervasyona',
+            step1Title: 'Kimlik bilgileriniz, şifreli',
+            step1Body:
+              'Kontratınız olan her bedbank’ı ekleyin ve API kimlik bilgilerini girin. Bilgiler ' +
+              'saklanmadan önce şifrelenir; gizli alanlar hiçbir ekrana geri yazılmaz.',
+            step2Title: 'Tek arama, bütün tedarikçiler',
+            step2Body:
+              'Tek bir arama hepsine paralel gider ve sonuçlar en yavaş olan beklenmeden, her ' +
+              'tedarikçi cevap verdikçe akmaya başlar.',
+            step3Title: 'Karşılaştırılabilir hâle getirilmiş fiyatlar',
+            step3Body:
+              'Pansiyon tipi, iptal koşulları, vergiler ve para birimi normalize edilir; gerçekten ' +
+              'aynı olan odalar gruplanır — böylece fiyat farkı gerçek bir farktır.',
+            step4Title: 'Önce en ucuz, sonra rezervasyon',
+            step4Body:
+              'Karşılaştırılabilir odalar en ucuzdan sıralanır. Kâr marjınız ve tercih kurallarınız ' +
+              'uygulanır, rezervasyon kendi kontratınız üzerinden çıkar.',
+            suppliersEyebrow: 'Tedarikçiler',
+            suppliersTitle: 'Hâlihazırdaki kontratlarınızı getirin',
+            suppliersLede:
+              'OneRate’in kendi tedarikçi kontratı yoktur ve olmayacaktır. Zaten imzaladığınız ' +
+              'bedbank’larla, sizin kimlik bilgilerinizle konuşur.',
+            suppliersStatus: 'RateHawk bugün üretimde çalışıyor; GoGlobal ve TBO sırada.',
+            suppliersMore:
+              'Bu listede olmayan bir bedbank ile mi çalışıyorsunuz? Hangisi olduğunu yazın — ' +
+              'OneRate için yeni bir tedarikçi bir adaptördür, platform değişikliği değil.',
+            portalEyebrow: 'Portal',
+            portalTitle: 'Danışmanlarınızın çalıştığı ekran',
+            portalLede:
+              'Arama, harita, fiyat karşılaştırma ve rezervasyon tek ekranda — her danışmanın ' +
+              'tercih ettiği tema ve dilde. Aradaki tutamağı sürükleyerek geçiş yapın.',
+            shotDark: 'Koyu',
+            shotLight: 'Açık',
+            shotSlider: 'Açık temayı göster',
+            shotCheapest: 'en ucuz',
+            shotCaption:
+              'Arama ekranının, ürünün kendi paletiyle çizilmiş bir temsili — ekran görüntüsü değil.',
+            portalLangs: 'Portal, dokümantasyon ve teklif PDF’leriniz yedi dilde:',
+            modelEyebrow: 'Model',
+            modelTitle: 'Konsolidatör değiliz',
+            modelLede:
+              'Bu pazardaki platformların çoğu size kendi stoklarını satar ve üzerinden marj alır. ' +
+              'OneRate size yalnızca yazılımı satar; soldaki sütunun büyüdükçe değişmemesinin ' +
+              'sebebi budur.',
+            modelColOne: 'OneRate ile',
+            modelColTwo: 'Konsolidatörle',
+            modelRow1: 'Tedarikçi kontratı',
+            modelRow1One: 'Sizin. Pazarlık ettiğiniz koşullar sizde kalır.',
+            modelRow1Two: 'Onların. Onların stoklarını, onların fiyatından satarsınız.',
+            modelRow2: 'Rezervasyon parası',
+            modelRow2One: 'Acentenizden doğrudan tedarikçiye.',
+            modelRow2Two: 'Onların hesabı üzerinden, onların koşullarıyla.',
+            modelRow3: 'Size maliyeti',
+            modelRow3One: 'Ne satarsanız satın, sabit aylık ücret.',
+            modelRow3Two: 'Her fiyatın üzerinde, kaldığınız sürece marj.',
+            modelRow4: 'Üstlendikleriniz',
+            modelRow4One: 'Kart işleme yok, PCI kapsamı yok, açık tutulacak kredi limiti yok.',
+            modelRow4Two: 'Depozito, kredi limiti ve yönetilecek bir cari hesap.',
+            featuresEyebrow: 'İçeride',
+            featuresTitle: 'Bir acentenin gerçekten nasıl işlediğine göre kurulmuş',
+            f1Title: 'Şubeler ve insanlar',
+            f1a:
+              'Şubeler ve ekipler birinci sınıf varlıklar; her rezervasyon onu yapan danışman ve ' +
+              'şube damgasını taşır.',
+            f1b: 'Kapsamlı roller: şube müdürü acentenin tamamını değil, kendi şubesini görür.',
+            f1c: 'Kullanıcı ve şube bazında rezervasyon limiti, tavanın üstünde onay adımı.',
+            f2Title: 'Sizin fiyatlarınız, sizin kurallarınız',
+            f2a: 'Kâr marjı kuralları, bir danışman fiyatı görmeden önce uygulanır.',
+            f2b:
+              'Tercih kuralları: tercih edilen tedarikçiden fiyat verilmesi gereken müşteriye ' +
+              'yalnızca en ucuzu teklif edilmez.',
+            f2c: 'Kendi ağınızdaki alt acenteler için kademeli fiyat listeleri.',
+            f3Title: 'Sizin markanız, bizimki değil',
+            f3a: 'Logo, renkler, gönderen kimliği ve portal için kendi adresiniz.',
+            f3b:
+              'Yedi dilde markalı teklif PDF’leri, arka planda üretilir ve portaldan indirilir.',
+            f3c: 'Acentenizin içinde kendi müşterileriniz; rezervasyonları onların altında durur.',
+            f4Title: 'Raporlama ve entegrasyon',
+            f4a: 'Şube, danışman ve müşteri kırılımında raporlar, CSV olarak dışa aktarılabilir.',
+            f4b: 'Acentenizin bize sormadan okuduğu ve dışa aktardığı bir denetim kaydı.',
+            f4c: 'Zaten kullandığınız arka ofis için API anahtarı, okuma API’si ve webhook’lar.',
+            securityEyebrow: 'Kimlik bilgileri',
+            securityTitle: 'Bize verdiğiniz şeye ne oluyor',
+            securityLede:
+              'Bedbank kimlik bilgileriniz, herhangi bir platforma verdiğiniz en değerli şeydir. ' +
+              'OneRate’in onlarla tam olarak ne yaptığı aşağıda.',
+            sec1:
+              'Yazılmadan önce bir ana anahtarla şifrelenir ve gizli alanlar hiçbir ekrana geri ' +
+              'yazılmaz — ne danışmanlarınıza, ne bize.',
+            sec2:
+              'Her sorgu her katmanda kurum kimliğinizi taşır; bir acentenin verisine başka bir ' +
+              'acentenin oturumundan erişilemez.',
+            sec3:
+              'Acente sahipleri için iki adımlı doğrulama zorunludur ve iptal edilen bir oturum ' +
+              'süresi dolduğunda değil, anında çalışmaz olur.',
+            sec4:
+              'OneRate kayıtlı satıcı değildir ve hiçbir kart verisi işlemez; ödeme kapsamınız ' +
+              'bugün olduğu yerde kalır.',
+            accessTitle: 'Erişim talep edin',
+            accessBody:
+              'Acenteler teker teker açılıyor ve ilk soru hep aynı: hangi tedarikçi API ' +
+              'kontratlarını hâlihazırda tutuyorsunuz? Bunu yazın, size hizmet verip ' +
+              'veremeyeceğimizi hemen söyleyelim. Aşağıdaki düğme, soruları içinde hazır bir ' +
+              'e-posta açar.',
             ctaDocs: 'Dokümantasyon',
+            requestSubject: 'OneRate erişim talebi',
+            requestBody:
+              'Acente:\nÜlke:\nHâlihazırda tuttuğumuz tedarikçi API kontratları:\nAylık yaklaşık ' +
+              'otel rezervasyonu sayısı:\nAd ve görev:\n',
             questions: 'Sorular için:',
             customerQuestions: 'OneRate kullanıyor musunuz?',
             ctaSupport: 'Portaldan destek alın'
@@ -456,16 +1778,130 @@
             langLabel: 'Език',
             docTitle: 'OneRate — B2B хотелска дистрибуция',
             metaDescription:
-              'OneRate — мултитенант B2B хотелска дистрибуция. Агенциите носят собствените си ' +
-              'договори с доставчици; OneRate разпраща търсенето, нормализира цените, подрежда ' +
-              'от най-евтината и резервира.',
-            tagline: 'B2B хотелска дистрибуция, най-евтиното напред.',
-            desc:
-              'Агенциите носят собствените си договори с доставчици. OneRate разпраща търсенето до ' +
-              'всички bedbank-ове, нормализира цените, подрежда сравнимите стаи от най-евтината и ' +
-              'резервира — срещу фиксиран месечен абонамент.',
+              'OneRate обединява собствените bedbank договори на агенцията в едно търсене: цените ' +
+              'се нормализират, сравнимите стаи се подреждат от най-евтината, а резервацията минава ' +
+              'по договора на самата агенция. Фиксирана месечна такса, без дял от резервацията.',
+            tagline: 'Едно търсене през всички договори с доставчици, които вече имате.',
+            lede:
+              'OneRate разпраща търсенето ви до всички ваши bedbank-ове наведнъж, нормализира ' +
+              'върнатото, групира стаите, които наистина са сравними, и подрежда най-евтината ' +
+              'напред. Резервирате по собствения си договор, на собствените си цени.',
+            ctaRequest: 'Заявете достъп',
             ctaPortal: 'Вход в портала →',
+            heroModel:
+              'Договорите остават ваши, а парите отиват директно при доставчика. OneRate взема ' +
+              'фиксирана месечна такса и никакъв дял от резервацията.',
+            howEyebrow: 'Как работи',
+            howTitle: 'От едно търсене до резервация',
+            step1Title: 'Вашите достъпи, криптирани',
+            step1Body:
+              'Добавете всеки bedbank, с който имате договор, и въведете неговите API достъпи. Те ' +
+              'се криптират преди да бъдат записани, а тайните полета никога не се показват обратно.',
+            step2Title: 'Едно търсене, всички доставчици',
+            step2Body:
+              'Едно търсене тръгва към всички паралелно и резултатите пристигат в момента, в който ' +
+              'всеки отговори, вместо да се чака най-бавният.',
+            step3Title: 'Цени, направени сравними',
+            step3Body:
+              'Изхранването, условията за анулиране, данъците и валутата се нормализират, а стаите, ' +
+              'които наистина са една и съща стая, се групират — така разликата в цената е истинска.',
+            step4Title: 'Първо най-евтиното, после резервация',
+            step4Body:
+              'Сравнимите стаи се подреждат от най-евтината. Прилагат се вашата надценка и вашите ' +
+              'правила за предпочитание, а резервацията излиза по вашия договор.',
+            suppliersEyebrow: 'Доставчици',
+            suppliersTitle: 'Донесете договорите, които вече имате',
+            suppliersLede:
+              'OneRate няма собствени договори с доставчици и никога няма да има. Говори с ' +
+              'bedbank-овете, с които вие вече сте подписали, с вашите достъпи.',
+            suppliersStatus: 'RateHawk работи в продукция днес; GoGlobal и TBO следват.',
+            suppliersMore:
+              'Работите с bedbank, който не е в този списък? Кажете ни кой — за OneRate нов ' +
+              'доставчик е адаптер, а не смяна на платформа.',
+            portalEyebrow: 'Порталът',
+            portalTitle: 'Екранът, в който работят вашите агенти',
+            portalLede:
+              'Търсене, карта, сравнение на цени и резервация на един екран — в темата и езика, ' +
+              'които всеки агент предпочита. Плъзнете манипулатора, за да минете между тях.',
+            shotDark: 'Тъмна',
+            shotLight: 'Светла',
+            shotSlider: 'Покажи светлата тема',
+            shotCheapest: 'най-евтино',
+            shotCaption:
+              'Илюстрация на екрана за търсене, нарисувана с палитрата на самия продукт — не е ' +
+              'екранна снимка.',
+            portalLangs:
+              'Порталът, документацията и вашите PDF оферти са на седем езика:',
+            modelEyebrow: 'Моделът',
+            modelTitle: 'Не сме консолидатор',
+            modelLede:
+              'Повечето платформи на този пазар ви продават своя инвентар и задържат марж върху ' +
+              'него. OneRate ви продава софтуера и нищо друго — затова нищо в лявата колона не се ' +
+              'мени, докато растете.',
+            modelColOne: 'С OneRate',
+            modelColTwo: 'С консолидатор',
+            modelRow1: 'Договорът с доставчика',
+            modelRow1One: 'Ваш. Запазвате условията, които сте договорили.',
+            modelRow1Two: 'Техен. Препродавате техния инвентар на тяхната цена.',
+            modelRow2: 'Парите по резервацията',
+            modelRow2One: 'Директно от вашата агенция към доставчика.',
+            modelRow2Two: 'През тяхната сметка, при техните условия.',
+            modelRow3: 'Какво ви струва',
+            modelRow3One: 'Фиксирана месечна такса, каквото и да продавате.',
+            modelRow3Two: 'Марж върху всяка цена, докато сте при тях.',
+            modelRow4: 'Какво носите',
+            modelRow4One: 'Без обработка на карти, без PCI обхват, без отворена кредитна линия.',
+            modelRow4Two: 'Депозити, кредитни лимити и текуща сметка за управление.',
+            featuresEyebrow: 'Отвътре',
+            featuresTitle: 'Направено за това как една агенция наистина работи',
+            f1Title: 'Клонове и хора',
+            f1a:
+              'Клоновете и екипите са първокласни единици, а всяка резервация носи печата на агента ' +
+              'и клона, който я е направил.',
+            f1b: 'Обхватни роли: управителят на клон вижда своя клон, а не цялата агенция.',
+            f1c: 'Лимити за резервации по потребител и по клон, с одобрение над тавана.',
+            f2Title: 'Вашите цени, вашите правила',
+            f2a: 'Правила за надценка, прилагани преди агентът изобщо да види цена.',
+            f2b:
+              'Правила за предпочитание: клиент, на когото трябва да се оферира предпочитан ' +
+              'доставчик, не получава просто най-евтиното.',
+            f2c: 'Степенувани ценови листи за подагенциите във вашата мрежа.',
+            f3Title: 'Вашата марка, не нашата',
+            f3a: 'Лого, цветове, идентичност на подателя и собствен адрес за портала.',
+            f3b:
+              'Брандирани PDF оферти на седем езика, изготвяни във фонов режим и сваляни от портала.',
+            f3c: 'Ваши собствени клиенти вътре в агенцията, с резервациите им под тях.',
+            f4Title: 'Отчети и интеграция',
+            f4a: 'Отчети с разбивка по клон, агент и клиент, с експорт в CSV.',
+            f4b: 'Одитен дневник, който агенцията чете и експортира сама, без да пита нас.',
+            f4c: 'API ключове, API за четене и webhook-ове за бек офиса, който вече ползвате.',
+            securityEyebrow: 'Достъпи',
+            securityTitle: 'Какво става с това, което ни поверявате',
+            securityLede:
+              'Вашите bedbank достъпи са най-ценното, което давате на която и да е платформа. Ето ' +
+              'какво точно прави OneRate с тях.',
+            sec1:
+              'Криптират се с главен ключ преди да бъдат записани, а тайните полета никога не се ' +
+              'показват обратно на екран — нито на вашите агенти, нито на нас.',
+            sec2:
+              'Всяка заявка носи идентификатора на вашата организация на всеки слой, така че данните ' +
+              'на една агенция не са достижими от сесията на друга.',
+            sec3:
+              'Двуфакторното удостоверяване е задължително за собствениците на агенции, а отменена ' +
+              'сесия спира да работи веднага, а не при изтичане.',
+            sec4:
+              'OneRate не е регистриран търговец и не обработва картови данни, така че вашият ' +
+              'платежен обхват остава точно там, където е днес.',
+            accessTitle: 'Заявете достъп',
+            accessBody:
+              'Агенциите се отварят една по една и първият въпрос винаги е един и същ: кои договори ' +
+              'за API с доставчици вече имате? Кажете ни това и веднага ще ви отговорим дали можем ' +
+              'да ви обслужим. Бутонът по-долу отваря писмо с вече написаните въпроси.',
             ctaDocs: 'Към документацията',
+            requestSubject: 'Заявка за достъп до OneRate',
+            requestBody:
+              'Агенция:\nДържава:\nДоговори за API с доставчици, които вече имаме:\nПриблизително ' +
+              'колко хотелски резервации на месец:\nИме и длъжност:\n',
             questions: 'Въпроси?',
             customerQuestions: 'Вече използвате OneRate?',
             ctaSupport: 'Получете поддръжка в портала'
@@ -474,16 +1910,130 @@
             langLabel: 'Nyelv',
             docTitle: 'OneRate — B2B szállodai disztribúció',
             metaDescription:
-              'OneRate — több bérlős B2B szállodai disztribúció. Az irodák a saját beszállítói ' +
-              'szerződéseiket hozzák; a OneRate szétküldi a keresést, egységesíti az árakat, a ' +
-              'legolcsóbbtól rangsorol és foglal.',
-            tagline: 'B2B szállodai disztribúció, a legolcsóbb elöl.',
-            desc:
-              'Az irodák a saját beszállítói szerződéseiket hozzák. A OneRate szétküldi a keresést ' +
-              'minden bedbanknak, egységesíti az árakat, az összehasonlítható szobákat a ' +
-              'legolcsóbbtól rangsorolja, és foglal — fix havidíjas előfizetéssel.',
+              'A OneRate az iroda saját bedbank-szerződéseit egyetlen keresésbe fogja: az árakat ' +
+              'egységesíti, az összehasonlítható szobákat a legolcsóbbtól rangsorolja, a foglalás ' +
+              'pedig az iroda saját szerződésén megy ki. Fix havidíj, a foglalásból nulla részesedés.',
+            tagline: 'Egyetlen keresés az összes szerződésén, amit már megkötött.',
+            lede:
+              'A OneRate egyszerre küldi szét a keresést az összes bedbankjához, egységesíti a ' +
+              'visszaérkező árakat, csoportosítja a valóban összehasonlítható szobákat, és a ' +
+              'legolcsóbbat teszi előre. A saját szerződésén, a saját árain foglal.',
+            ctaRequest: 'Hozzáférés igénylése',
             ctaPortal: 'Belépés a portálra →',
+            heroModel:
+              'A szerződései az Önéi maradnak, a pénz pedig közvetlenül a beszállítóhoz megy. A ' +
+              'OneRate fix havidíjat számol, és egyetlen fillért sem visz el a foglalásból.',
+            howEyebrow: 'Hogyan működik',
+            howTitle: 'Egy kereséstől a foglalásig',
+            step1Title: 'A hozzáférései, titkosítva',
+            step1Body:
+              'Vegye fel mindegyik bedbankot, amellyel szerződése van, és adja meg az API ' +
+              'hozzáféréseit. Ezek tárolás előtt titkosításra kerülnek, a titkos mezőket pedig ' +
+              'soha nem írjuk vissza egy képernyőre sem.',
+            step2Title: 'Egy keresés, minden beszállító',
+            step2Body:
+              'Egyetlen keresés párhuzamosan indul mindegyikhez, és az eredmények akkor érkeznek, ' +
+              'amikor egy-egy beszállító válaszol — nem a leglassabbra várva.',
+            step3Title: 'Összehasonlíthatóvá tett árak',
+            step3Body:
+              'Az ellátás, a lemondási feltételek, az adók és a pénznem egységesítve vannak, a ' +
+              'valóban azonos szobák pedig egy csoportba kerülnek — így az árkülönbség valódi.',
+            step4Title: 'Előbb a legolcsóbb, aztán a foglalás',
+            step4Body:
+              'Az összehasonlítható szobák a legolcsóbbtól sorakoznak. Az Ön árrése és preferencia ' +
+              'szabályai érvényesülnek, a foglalás pedig a saját szerződésén megy ki.',
+            suppliersEyebrow: 'Beszállítók',
+            suppliersTitle: 'Hozza a szerződéseket, amik már megvannak',
+            suppliersLede:
+              'A OneRate-nek nincsenek és nem is lesznek saját beszállítói szerződései. Azokkal a ' +
+              'bedbankokkal beszél, amelyekkel Ön már aláírt, az Ön hozzáféréseivel.',
+            suppliersStatus: 'A RateHawk ma éles üzemben fut; a GoGlobal és a TBO következik.',
+            suppliersMore:
+              'Olyan bedbankkal dolgozik, ami nincs ezen a listán? Írja meg, melyikkel — a ' +
+              'OneRate-nek egy új beszállító egy adapter, nem platformváltás.',
+            portalEyebrow: 'A portál',
+            portalTitle: 'A képernyő, amin a munkatársai dolgoznak',
+            portalLede:
+              'Keresés, térkép, ár-összehasonlítás és foglalás egyetlen képernyőn — abban a témában ' +
+              'és nyelven, amit az adott munkatárs szeret. Húzza a fogantyút az összevetéshez.',
+            shotDark: 'Sötét',
+            shotLight: 'Világos',
+            shotSlider: 'A világos téma megmutatása',
+            shotCheapest: 'legolcsóbb',
+            shotCaption:
+              'A keresőképernyő illusztrációja, a termék saját palettájával rajzolva — nem ' +
+              'képernyőkép.',
+            portalLangs: 'A portál, a dokumentáció és az ajánlati PDF-ek hét nyelven állnak:',
+            modelEyebrow: 'A modell',
+            modelTitle: 'Nem konszolidátor',
+            modelLede:
+              'A piac legtöbb platformja a saját készletét adja el Önnek, és árrést tart rajta. A ' +
+              'OneRate a szoftvert adja el és semmi mást — ezért nem mozdul semmi a bal oldali ' +
+              'oszlopban, ahogy növekszik.',
+            modelColOne: 'A OneRate-tel',
+            modelColTwo: 'Egy konszolidátorral',
+            modelRow1: 'A beszállítói szerződés',
+            modelRow1One: 'Az Öné. Megtartja a kialkudott feltételeit.',
+            modelRow1Two: 'Az övék. Az ő készletüket adja tovább az ő árukon.',
+            modelRow2: 'A foglalás pénze',
+            modelRow2One: 'Az irodájától közvetlenül a beszállítóhoz.',
+            modelRow2Two: 'Az ő számlájukon keresztül, az ő feltételeikkel.',
+            modelRow3: 'Mennyibe kerül Önnek',
+            modelRow3One: 'Fix havidíj, bármennyit ad el.',
+            modelRow3Two: 'Árrés minden egyes áron, ameddig ott marad.',
+            modelRow4: 'Mit visel',
+            modelRow4One: 'Nincs kártyakezelés, nincs PCI hatókör, nincs nyitva tartandó hitelkeret.',
+            modelRow4Two: 'Letétek, hitelkeretek és egy kezelendő folyószámla.',
+            featuresEyebrow: 'Belül',
+            featuresTitle: 'Arra építve, ahogy egy iroda valójában működik',
+            f1Title: 'Fiókok és emberek',
+            f1a:
+              'A fiókok és csapatok első osztályú egységek, és minden foglaláson rajta van az azt ' +
+              'rögzítő munkatárs és fiók.',
+            f1b: 'Hatókörös szerepek: egy fiókvezető a saját fiókját látja, nem az egész irodát.',
+            f1c: 'Foglalási limit felhasználónként és fiókonként, a plafon felett jóváhagyással.',
+            f2Title: 'Az Ön árai, az Ön szabályai',
+            f2a: 'Árrés-szabályok, még azelőtt alkalmazva, hogy egy munkatárs árat látna.',
+            f2b:
+              'Preferencia-szabályok: annak az ügyfélnek, akinek a preferált beszállítót kell ' +
+              'ajánlani, nem egyszerűen a legolcsóbbat adjuk.',
+            f2c: 'Sávos árlisták a saját hálózatában lévő alirodáknak.',
+            f3Title: 'Az Ön márkája, nem a miénk',
+            f3a: 'Logó, színek, feladói azonosság és saját cím a portálhoz.',
+            f3b:
+              'Márkázott ajánlati PDF-ek hét nyelven, a háttérben elkészítve és a portálról letöltve.',
+            f3c: 'Saját ügyfelei az irodáján belül, a foglalásaik alattuk tartva.',
+            f4Title: 'Riportok és integráció',
+            f4a: 'Fiók, munkatárs és ügyfél szerinti bontású riportok, CSV-be exportálva.',
+            f4b: 'Auditnapló, amit az iroda maga olvas és exportál, minket megkérdezni sem kell.',
+            f4c: 'API kulcsok, olvasó API és webhookok a már működő háttérirodájához.',
+            securityEyebrow: 'Hozzáférések',
+            securityTitle: 'Mi lesz azzal, amit ránk bíz',
+            securityLede:
+              'A bedbank hozzáférései a legértékesebbek, amit bármely platformnak átad. Íme pontosan ' +
+              'az, amit a OneRate tesz velük.',
+            sec1:
+              'Írás előtt mesterkulccsal titkosítjuk őket, a titkos mezőket pedig soha nem írjuk ' +
+              'vissza képernyőre — sem a munkatársainak, sem nekünk.',
+            sec2:
+              'Minden lekérdezés minden rétegben viszi a szervezeti azonosítóját, így az egyik iroda ' +
+              'adata nem érhető el egy másik iroda munkamenetéből.',
+            sec3:
+              'Az irodatulajdonosoknak kötelező a kétlépcsős azonosítás, és egy visszavont ' +
+              'munkamenet azonnal érvénytelen, nem csak lejáratkor.',
+            sec4:
+              'A OneRate nem nyilvántartott kereskedő és nem kezel kártyaadatot, így a fizetési ' +
+              'hatóköre pontosan ott marad, ahol ma van.',
+            accessTitle: 'Hozzáférés igénylése',
+            accessBody:
+              'Az irodákat egyesével nyitjuk, és az első kérdés mindig ugyanaz: milyen beszállítói ' +
+              'API szerződései vannak már? Írja meg, és azonnal meg tudjuk mondani, tudjuk-e ' +
+              'szolgálni. A lenti gomb egy levelet nyit, a kérdésekkel együtt.',
             ctaDocs: 'Dokumentáció',
+            requestSubject: 'OneRate hozzáférési igény',
+            requestBody:
+              'Iroda:\nOrszág:\nBeszállítói API szerződések, amelyekkel már rendelkezünk:\nHavonta ' +
+              'nagyjából hány szállodai foglalás:\nNév és beosztás:\n',
             questions: 'Kérdésed van?',
             customerQuestions: 'Már használja a OneRate-et?',
             ctaSupport: 'Kérjen támogatást a portálon'
@@ -492,16 +2042,138 @@
             langLabel: 'Lingua',
             docTitle: 'OneRate — Distribuzione alberghiera B2B',
             metaDescription:
-              'OneRate — distribuzione alberghiera B2B multi-tenant. Le agenzie portano i propri ' +
-              'contratti con i fornitori; OneRate distribuisce la ricerca, normalizza le tariffe, ' +
-              'ordina dalla più economica e prenota.',
-            tagline: 'Distribuzione alberghiera B2B, il più economico prima.',
-            desc:
-              'Le agenzie portano i propri contratti con i fornitori. OneRate distribuisce la ' +
-              'ricerca su tutti i bedbank, normalizza le tariffe, ordina le camere confrontabili ' +
-              'dalla più economica e prenota — con un abbonamento mensile a prezzo fisso.',
+              'OneRate riunisce in un’unica ricerca i contratti bedbank dell’agenzia: tariffe ' +
+              'normalizzate, camere confrontabili ordinate dalla più economica, prenotazione sul ' +
+              'contratto dell’agenzia stessa. Canone mensile fisso, nessuna quota sulla prenotazione.',
+            tagline: 'Una sola ricerca su tutti i contratti che hai già.',
+            lede:
+              'OneRate distribuisce la tua ricerca a tutti i tuoi bedbank in una volta, normalizza ' +
+              'ciò che torna, raggruppa le camere davvero confrontabili e mette per prima la più ' +
+              'economica. Prenoti sul tuo contratto, alle tue tariffe.',
+            ctaRequest: 'Richiedi l’accesso',
             ctaPortal: 'Accedi al portale →',
+            heroModel:
+              'I tuoi contratti restano tuoi e il denaro va direttamente al fornitore. OneRate ' +
+              'applica un canone mensile fisso e non trattiene nulla sulla prenotazione.',
+            howEyebrow: 'Come funziona',
+            howTitle: 'Da una ricerca a una prenotazione',
+            step1Title: 'Le tue credenziali, cifrate',
+            step1Body:
+              'Aggiungi ogni bedbank con cui hai un contratto e inserisci le sue credenziali API. ' +
+              'Vengono cifrate prima di essere salvate e i campi segreti non sono mai restituiti a ' +
+              'schermo.',
+            step2Title: 'Una ricerca, tutti i fornitori',
+            step2Body:
+              'Una sola ricerca parte verso tutti in parallelo e i risultati arrivano man mano che ' +
+              'ciascuno risponde, invece di aspettare il più lento.',
+            step3Title: 'Tariffe rese confrontabili',
+            step3Body:
+              'Trattamento, condizioni di cancellazione, tasse e valuta vengono normalizzati e le ' +
+              'camere che sono davvero la stessa camera vengono raggruppate — così una differenza ' +
+              'di prezzo è una differenza vera.',
+            step4Title: 'Prima la più economica, poi si prenota',
+            step4Body:
+              'Le camere confrontabili sono ordinate dalla più economica. Si applicano il tuo ' +
+              'markup e le tue regole di preferenza, e la prenotazione esce sul tuo contratto.',
+            suppliersEyebrow: 'Fornitori',
+            suppliersTitle: 'Porta i contratti che hai già',
+            suppliersLede:
+              'OneRate non ha contratti propri con i fornitori e non ne avrà mai. Parla con i ' +
+              'bedbank con cui hai già firmato, usando le tue credenziali.',
+            suppliersStatus: 'RateHawk è in produzione oggi; GoGlobal e TBO seguono.',
+            suppliersMore:
+              'Lavori con un bedbank che non è in questo elenco? Dicci quale — per OneRate un nuovo ' +
+              'fornitore è un adapter, non un cambio di piattaforma.',
+            portalEyebrow: 'Il portale',
+            portalTitle: 'Lo schermo su cui lavorano i tuoi agenti',
+            portalLede:
+              'Ricerca, mappa, confronto tariffe e prenotazione in una schermata sola — nel tema e ' +
+              'nella lingua che ogni agente preferisce. Trascina la maniglia per passare dall’uno ' +
+              'all’altro.',
+            shotDark: 'Scuro',
+            shotLight: 'Chiaro',
+            shotSlider: 'Mostra il tema chiaro',
+            shotCheapest: 'più economica',
+            shotCaption:
+              'Un’illustrazione della schermata di ricerca, disegnata con la palette del prodotto — ' +
+              'non uno screenshot.',
+            portalLangs:
+              'Il portale, la documentazione e i tuoi PDF di preventivo sono in sette lingue:',
+            modelEyebrow: 'Il modello',
+            modelTitle: 'Non un consolidatore',
+            modelLede:
+              'Quasi tutte le piattaforme di questo mercato ti vendono il loro inventario e ci ' +
+              'tengono sopra un margine. OneRate ti vende il software e nient’altro: per questo ' +
+              'nella colonna di sinistra non si muove nulla mentre cresci.',
+            modelColOne: 'Con OneRate',
+            modelColTwo: 'Con un consolidatore',
+            modelRow1: 'Il contratto con il fornitore',
+            modelRow1One: 'Tuo. Conservi le condizioni che hai negoziato.',
+            modelRow1Two: 'Loro. Rivendi il loro inventario al loro prezzo.',
+            modelRow2: 'Il denaro della prenotazione',
+            modelRow2One: 'Dalla tua agenzia direttamente al fornitore.',
+            modelRow2Two: 'Attraverso il loro conto, alle loro condizioni.',
+            modelRow3: 'Quanto ti costa',
+            modelRow3One: 'Un canone mensile fisso, qualunque cosa tu venda.',
+            modelRow3Two: 'Un margine su ogni tariffa, per tutto il tempo che resti.',
+            modelRow4: 'Che cosa ti carichi',
+            modelRow4One:
+              'Nessuna gestione carte, nessun ambito PCI, nessuna linea di credito da tenere aperta.',
+            modelRow4Two: 'Depositi, limiti di credito e un conto corrente da gestire.',
+            featuresEyebrow: 'Dentro',
+            featuresTitle: 'Costruito su come lavora davvero un’agenzia',
+            f1Title: 'Filiali e persone',
+            f1a:
+              'Filiali e team come entità di primo livello, con ogni prenotazione marcata con ' +
+              'l’agente e la filiale che l’hanno fatta.',
+            f1b:
+              'Ruoli con ambito, così un responsabile di filiale vede la sua filiale e non tutta ' +
+              'l’agenzia.',
+            f1c:
+              'Limiti di prenotazione per utente e per filiale, con approvazione oltre il tetto.',
+            f2Title: 'I tuoi prezzi, le tue regole',
+            f2a: 'Regole di markup, applicate prima ancora che un agente veda una tariffa.',
+            f2b:
+              'Regole di preferenza: a un cliente a cui va quotato un fornitore preferito non viene ' +
+              'semplicemente quotato il più economico.',
+            f2c: 'Listini a scaglioni per le sub-agenzie della tua rete.',
+            f3Title: 'Il tuo marchio, non il nostro',
+            f3a: 'Logo, colori, identità del mittente e un indirizzo tuo per il portale.',
+            f3b:
+              'PDF di preventivo con il tuo marchio in sette lingue, generati in background e ' +
+              'scaricati dal portale.',
+            f3c: 'I tuoi clienti dentro la tua agenzia, con le loro prenotazioni sotto di loro.',
+            f4Title: 'Reportistica e integrazione',
+            f4a: 'Report per filiale, per agente e per cliente, esportabili in CSV.',
+            f4b: 'Un audit log che la tua agenzia legge ed esporta da sé, senza chiederlo a noi.',
+            f4c: 'Chiavi API, un’API in lettura e webhook per il back office che già usi.',
+            securityEyebrow: 'Credenziali',
+            securityTitle: 'Che cosa succede a ciò che ci affidi',
+            securityLede:
+              'Le tue credenziali bedbank sono la cosa più preziosa che consegni a una piattaforma. ' +
+              'Ecco esattamente che cosa ne fa OneRate.',
+            sec1:
+              'Vengono cifrate con una master key prima di essere scritte, e i campi segreti non ' +
+              'tornano mai a schermo — né ai tuoi agenti, né a noi.',
+            sec2:
+              'Ogni query porta con sé il tuo id organizzazione a ogni livello, così i dati di ' +
+              'un’agenzia non sono raggiungibili dalla sessione di un’altra.',
+            sec3:
+              'L’autenticazione a due fattori è obbligatoria per i titolari di agenzia, e una ' +
+              'sessione revocata smette di funzionare subito, non alla scadenza.',
+            sec4:
+              'OneRate non è merchant of record e non tratta dati di carta, quindi il tuo perimetro ' +
+              'di pagamento resta esattamente dov’è oggi.',
+            accessTitle: 'Richiedi l’accesso',
+            accessBody:
+              'Le agenzie vengono aperte una alla volta e la prima domanda è sempre la stessa: ' +
+              'quali contratti API con i fornitori hai già? Diccelo e ti sapremo dire subito se ' +
+              'possiamo servirti. Il pulsante qui sotto apre una mail con le domande già dentro.',
             ctaDocs: 'Leggi la documentazione',
+            requestSubject: 'Richiesta di accesso a OneRate',
+            requestBody:
+              'Agenzia:\nPaese:\nContratti API con fornitori che abbiamo già:\nQuante prenotazioni ' +
+              'alberghiere al mese, all’incirca:\nNome e ruolo:\n',
             questions: 'Domande?',
             customerQuestions: 'Usi già OneRate?',
             ctaSupport: 'Ottieni assistenza nel portale'
@@ -510,16 +2182,131 @@
             langLabel: 'Język',
             docTitle: 'OneRate — Dystrybucja hotelowa B2B',
             metaDescription:
-              'OneRate — wielodostępna dystrybucja hotelowa B2B. Agencje przynoszą własne umowy ' +
-              'z dostawcami; OneRate rozsyła wyszukiwanie, normalizuje stawki, sortuje od ' +
-              'najtańszego i rezerwuje.',
-            tagline: 'Dystrybucja hotelowa B2B, najtańsze na początku.',
-            desc:
-              'Agencje przynoszą własne umowy z dostawcami. OneRate rozsyła wyszukiwanie do ' +
-              'wszystkich bedbanków, normalizuje stawki, ustawia porównywalne pokoje od ' +
-              'najtańszego i rezerwuje — w stałym abonamencie miesięcznym.',
+              'OneRate łączy własne umowy bedbankowe biura podróży w jedno wyszukiwanie: stawki ' +
+              'znormalizowane, porównywalne pokoje od najtańszego, rezerwacja na własnej umowie ' +
+              'biura. Stały abonament miesięczny i zero prowizji od rezerwacji.',
+            tagline: 'Jedno wyszukiwanie po wszystkich umowach, które już macie.',
+            lede:
+              'OneRate rozsyła wyszukiwanie do wszystkich waszych bedbanków naraz, normalizuje to, ' +
+              'co wraca, grupuje pokoje naprawdę porównywalne i stawia najtańszy na początku. ' +
+              'Rezerwujecie na własnej umowie i po własnych stawkach.',
+            ctaRequest: 'Poproś o dostęp',
             ctaPortal: 'Zaloguj się do portalu →',
+            heroModel:
+              'Wasze umowy zostają wasze, a pieniądze idą prosto do dostawcy. OneRate pobiera stałą ' +
+              'opłatę miesięczną i nie bierze nic od rezerwacji.',
+            howEyebrow: 'Jak to działa',
+            howTitle: 'Od jednego wyszukiwania do rezerwacji',
+            step1Title: 'Wasze dane dostępowe, zaszyfrowane',
+            step1Body:
+              'Dodajcie każdy bedbank, z którym macie umowę, i wpiszcie jego dane API. Są ' +
+              'szyfrowane przed zapisem, a pola tajne nigdy nie wracają na ekran.',
+            step2Title: 'Jedno wyszukiwanie, wszyscy dostawcy',
+            step2Body:
+              'Jedno zapytanie idzie do wszystkich równolegle, a wyniki napływają w miarę jak ' +
+              'każdy odpowiada, zamiast czekać na najwolniejszego.',
+            step3Title: 'Stawki sprowadzone do porównywalności',
+            step3Body:
+              'Wyżywienie, warunki anulowania, podatki i waluta są normalizowane, a pokoje, które ' +
+              'naprawdę są tym samym pokojem, trafiają do jednej grupy — więc różnica ceny jest ' +
+              'różnicą prawdziwą.',
+            step4Title: 'Najpierw najtańsze, potem rezerwacja',
+            step4Body:
+              'Porównywalne pokoje są ułożone od najtańszego. Działają wasza marża i wasze reguły ' +
+              'preferencji, a rezerwacja wychodzi na waszej własnej umowie.',
+            suppliersEyebrow: 'Dostawcy',
+            suppliersTitle: 'Przynieście umowy, które już macie',
+            suppliersLede:
+              'OneRate nie ma własnych umów z dostawcami i nigdy mieć nie będzie. Rozmawia z ' +
+              'bedbankami, z którymi już podpisaliście, waszymi danymi dostępowymi.',
+            suppliersStatus: 'RateHawk działa dziś produkcyjnie; GoGlobal i TBO są następne.',
+            suppliersMore:
+              'Pracujecie z bedbankiem, którego nie ma na tej liście? Napiszcie z którym — dla ' +
+              'OneRate nowy dostawca to adapter, a nie zmiana platformy.',
+            portalEyebrow: 'Portal',
+            portalTitle: 'Ekran, na którym pracują wasi agenci',
+            portalLede:
+              'Wyszukiwanie, mapa, porównanie stawek i rezerwacja na jednym ekranie — w motywie i ' +
+              'języku, który każdy agent woli. Przeciągnijcie uchwyt, żeby przejść między nimi.',
+            shotDark: 'Ciemny',
+            shotLight: 'Jasny',
+            shotSlider: 'Pokaż jasny motyw',
+            shotCheapest: 'najtańsze',
+            shotCaption:
+              'Ilustracja ekranu wyszukiwania, narysowana paletą samego produktu — nie zrzut ekranu.',
+            portalLangs: 'Portal, dokumentacja i wasze PDF-y ofertowe są w siedmiu językach:',
+            modelEyebrow: 'Model',
+            modelTitle: 'To nie konsolidator',
+            modelLede:
+              'Większość platform na tym rynku sprzedaje wam swój inwentarz i trzyma na nim marżę. ' +
+              'OneRate sprzedaje wam oprogramowanie i nic poza tym — dlatego w lewej kolumnie nic ' +
+              'się nie zmienia, kiedy rośniecie.',
+            modelColOne: 'Z OneRate',
+            modelColTwo: 'Z konsolidatorem',
+            modelRow1: 'Umowa z dostawcą',
+            modelRow1One: 'Wasza. Zostają warunki, które sami wynegocjowaliście.',
+            modelRow1Two: 'Ich. Odsprzedajecie ich inwentarz po ich cenie.',
+            modelRow2: 'Pieniądze z rezerwacji',
+            modelRow2One: 'Prosto z waszego biura do dostawcy.',
+            modelRow2Two: 'Przez ich konto i na ich warunkach.',
+            modelRow3: 'Ile was to kosztuje',
+            modelRow3One: 'Stała opłata miesięczna, cokolwiek sprzedacie.',
+            modelRow3Two: 'Marża na każdej stawce, tak długo jak zostaniecie.',
+            modelRow4: 'Co bierzecie na siebie',
+            modelRow4One:
+              'Żadnej obsługi kart, żadnego zakresu PCI, żadnej linii kredytowej do utrzymania.',
+            modelRow4Two: 'Depozyty, limity kredytowe i rachunek bieżący do prowadzenia.',
+            featuresEyebrow: 'W środku',
+            featuresTitle: 'Zbudowane pod to, jak biuro naprawdę pracuje',
+            f1Title: 'Oddziały i ludzie',
+            f1a:
+              'Oddziały i zespoły jako pełnoprawne byty, a każda rezerwacja ma stempel agenta i ' +
+              'oddziału, który ją zrobił.',
+            f1b: 'Role z zakresem: kierownik oddziału widzi swój oddział, a nie całe biuro.',
+            f1c: 'Limity rezerwacji na użytkownika i na oddział, z akceptacją powyżej pułapu.',
+            f2Title: 'Wasze ceny, wasze reguły',
+            f2a: 'Reguły marży, stosowane zanim agent w ogóle zobaczy stawkę.',
+            f2b:
+              'Reguły preferencji: klient, któremu należy zaproponować preferowanego dostawcę, nie ' +
+              'dostaje po prostu najtańszego.',
+            f2c: 'Progowe cenniki dla subagentów w waszej własnej sieci.',
+            f3Title: 'Wasza marka, nie nasza',
+            f3a: 'Logo, kolory, tożsamość nadawcy i własny adres portalu.',
+            f3b:
+              'Ofertowe PDF-y z waszą marką w siedmiu językach, generowane w tle i pobierane z ' +
+              'portalu.',
+            f3c: 'Wasi własni klienci wewnątrz biura, z rezerwacjami trzymanymi pod nimi.',
+            f4Title: 'Raportowanie i integracja',
+            f4a: 'Raporty w podziale na oddział, agenta i klienta, z eksportem do CSV.',
+            f4b: 'Dziennik audytu, który biuro czyta i eksportuje samo, bez pytania nas.',
+            f4c: 'Klucze API, API do odczytu i webhooki dla zaplecza, które już prowadzicie.',
+            securityEyebrow: 'Dane dostępowe',
+            securityTitle: 'Co się dzieje z tym, co nam powierzacie',
+            securityLede:
+              'Wasze dane dostępowe do bedbanków to najcenniejsza rzecz, jaką oddajecie ' +
+              'jakiejkolwiek platformie. Oto dokładnie, co robi z nimi OneRate.',
+            sec1:
+              'Są szyfrowane kluczem głównym przed zapisem, a pola tajne nigdy nie wracają na ekran ' +
+              '— ani do waszych agentów, ani do nas.',
+            sec2:
+              'Każde zapytanie niesie wasz identyfikator organizacji na każdej warstwie, więc dane ' +
+              'jednego biura są nieosiągalne z sesji innego.',
+            sec3:
+              'Uwierzytelnianie dwuskładnikowe jest obowiązkowe dla właścicieli biur, a unieważniona ' +
+              'sesja przestaje działać natychmiast, a nie z upływem ważności.',
+            sec4:
+              'OneRate nie jest merchant of record i nie przetwarza danych kart, więc wasz zakres ' +
+              'płatniczy zostaje dokładnie tam, gdzie jest dziś.',
+            accessTitle: 'Poproś o dostęp',
+            accessBody:
+              'Biura otwieramy pojedynczo, a pierwsze pytanie jest zawsze to samo: które umowy API ' +
+              'z dostawcami już macie? Napiszcie to, a od razu powiemy, czy możemy was obsłużyć. ' +
+              'Przycisk poniżej otwiera wiadomość z gotowymi pytaniami.',
             ctaDocs: 'Przeczytaj dokumentację',
+            requestSubject: 'Prośba o dostęp do OneRate',
+            requestBody:
+              'Biuro:\nKraj:\nUmowy API z dostawcami, które już mamy:\nOrientacyjna liczba ' +
+              'rezerwacji hotelowych miesięcznie:\nImię, nazwisko i stanowisko:\n',
             questions: 'Pytania?',
             customerQuestions: 'Korzystają już Państwo z OneRate?',
             ctaSupport: 'Uzyskaj wsparcie w portalu'
@@ -528,23 +2315,154 @@
             langLabel: 'Limbă',
             docTitle: 'OneRate — Distribuție hotelieră B2B',
             metaDescription:
-              'OneRate — distribuție hotelieră B2B multi-tenant. Agențiile își aduc propriile ' +
-              'contracte cu furnizorii; OneRate distribuie căutarea, normalizează tarifele, ' +
-              'clasează de la cel mai ieftin și rezervă.',
-            tagline: 'Distribuție hotelieră B2B, cel mai ieftin întâi.',
-            desc:
-              'Agențiile își aduc propriile contracte cu furnizorii. OneRate distribuie căutarea ' +
-              'către toate bedbank-urile, normalizează tarifele, clasează camerele comparabile de ' +
-              'la cea mai ieftină și rezervă — cu un abonament lunar fix.',
+              'OneRate adună contractele bedbank ale agenției într-o singură căutare: tarife ' +
+              'normalizate, camere comparabile ordonate de la cel mai ieftin, rezervare pe ' +
+              'contractul propriu al agenției. Abonament lunar fix, fără comision din rezervare.',
+            tagline: 'O singură căutare pe toate contractele pe care le aveți deja.',
+            lede:
+              'OneRate trimite căutarea către toate bedbank-urile dumneavoastră deodată, ' +
+              'normalizează ce se întoarce, grupează camerele cu adevărat comparabile și pune ' +
+              'prima pe cea mai ieftină. Rezervați pe contractul propriu, la tarifele proprii.',
+            ctaRequest: 'Solicitați acces',
             ctaPortal: 'Intră în portal →',
+            heroModel:
+              'Contractele rămân ale dumneavoastră, iar banii merg direct la furnizor. OneRate ' +
+              'percepe un abonament lunar fix și nu ia nimic din rezervare.',
+            howEyebrow: 'Cum funcționează',
+            howTitle: 'De la o căutare la o rezervare',
+            step1Title: 'Credențialele dumneavoastră, criptate',
+            step1Body:
+              'Adăugați fiecare bedbank cu care aveți contract și introduceți credențialele lui de ' +
+              'API. Sunt criptate înainte de a fi scrise, iar câmpurile secrete nu sunt niciodată ' +
+              'afișate înapoi pe ecran.',
+            step2Title: 'O căutare, toți furnizorii',
+            step2Body:
+              'O singură căutare pleacă în paralel către toți, iar rezultatele sosesc pe măsură ce ' +
+              'fiecare răspunde, în loc să se aștepte cel mai lent.',
+            step3Title: 'Tarife făcute comparabile',
+            step3Body:
+              'Masa, condițiile de anulare, taxele și moneda sunt normalizate, iar camerele care ' +
+              'sunt cu adevărat aceeași cameră sunt grupate — astfel o diferență de preț este o ' +
+              'diferență reală.',
+            step4Title: 'Întâi cel mai ieftin, apoi rezervarea',
+            step4Body:
+              'Camerele comparabile sunt ordonate de la cea mai ieftină. Se aplică adaosul ' +
+              'dumneavoastră și regulile de preferință, iar rezervarea pleacă pe contractul propriu.',
+            suppliersEyebrow: 'Furnizori',
+            suppliersTitle: 'Aduceți contractele pe care le aveți deja',
+            suppliersLede:
+              'OneRate nu are contracte proprii cu furnizorii și nu va avea niciodată. Vorbește cu ' +
+              'bedbank-urile cu care ați semnat deja, folosind credențialele dumneavoastră.',
+            suppliersStatus: 'RateHawk rulează astăzi în producție; GoGlobal și TBO urmează.',
+            suppliersMore:
+              'Lucrați cu un bedbank care nu este pe listă? Spuneți-ne care — pentru OneRate un ' +
+              'furnizor nou este un adaptor, nu o schimbare de platformă.',
+            portalEyebrow: 'Portalul',
+            portalTitle: 'Ecranul pe care lucrează agenții dumneavoastră',
+            portalLede:
+              'Căutare, hartă, comparare de tarife și rezervare pe un singur ecran — în tema și ' +
+              'limba pe care fiecare agent le preferă. Trageți de mâner pentru a trece de la una ' +
+              'la alta.',
+            shotDark: 'Întunecat',
+            shotLight: 'Luminos',
+            shotSlider: 'Arată tema luminoasă',
+            shotCheapest: 'cel mai ieftin',
+            shotCaption:
+              'O ilustrație a ecranului de căutare, desenată în paleta proprie a produsului — nu o ' +
+              'captură de ecran.',
+            portalLangs:
+              'Portalul, documentația și PDF-urile de ofertă sunt în șapte limbi:',
+            modelEyebrow: 'Modelul',
+            modelTitle: 'Nu suntem consolidator',
+            modelLede:
+              'Majoritatea platformelor de pe piață vă vând stocul lor și rețin o marjă din el. ' +
+              'OneRate vă vinde software-ul și nimic altceva — de aceea nimic din coloana din ' +
+              'stânga nu se schimbă pe măsură ce creșteți.',
+            modelColOne: 'Cu OneRate',
+            modelColTwo: 'Cu un consolidator',
+            modelRow1: 'Contractul cu furnizorul',
+            modelRow1One: 'Al dumneavoastră. Păstrați condițiile pe care le-ați negociat.',
+            modelRow1Two: 'Al lor. Revindeți stocul lor la prețul lor.',
+            modelRow2: 'Banii din rezervare',
+            modelRow2One: 'Direct de la agenția dumneavoastră la furnizor.',
+            modelRow2Two: 'Prin contul lor, în condițiile lor.',
+            modelRow3: 'Cât vă costă',
+            modelRow3One: 'Un abonament lunar fix, orice ați vinde.',
+            modelRow3Two: 'O marjă la fiecare tarif, cât timp rămâneți.',
+            modelRow4: 'Ce duceți în spate',
+            modelRow4One:
+              'Fără procesare de carduri, fără arie PCI, fără linie de credit de ținut deschisă.',
+            modelRow4Two: 'Depozite, limite de credit și un cont curent de administrat.',
+            featuresEyebrow: 'Înăuntru',
+            featuresTitle: 'Construit după felul în care lucrează efectiv o agenție',
+            f1Title: 'Sucursale și oameni',
+            f1a:
+              'Sucursalele și echipele sunt entități de sine stătătoare, iar fiecare rezervare ' +
+              'poartă agentul și sucursala care au făcut-o.',
+            f1b:
+              'Roluri cu domeniu: un șef de sucursală își vede sucursala, nu întreaga agenție.',
+            f1c: 'Limite de rezervare pe utilizator și pe sucursală, cu aprobare peste plafon.',
+            f2Title: 'Prețurile dumneavoastră, regulile dumneavoastră',
+            f2a: 'Reguli de adaos, aplicate înainte ca un agent să vadă vreun tarif.',
+            f2b:
+              'Reguli de preferință: unui client căruia trebuie să i se ofere un furnizor preferat ' +
+              'nu i se dă pur și simplu cel mai ieftin.',
+            f2c: 'Liste de prețuri pe trepte pentru sub-agențiile din rețeaua dumneavoastră.',
+            f3Title: 'Marca dumneavoastră, nu a noastră',
+            f3a: 'Siglă, culori, identitate a expeditorului și adresă proprie pentru portal.',
+            f3b:
+              'PDF-uri de ofertă cu marca dumneavoastră în șapte limbi, generate în fundal și ' +
+              'descărcate din portal.',
+            f3c:
+              'Clienții dumneavoastră în interiorul agenției, cu rezervările păstrate sub ei.',
+            f4Title: 'Raportare și integrare',
+            f4a: 'Rapoarte defalcate pe sucursală, pe agent și pe client, exportabile în CSV.',
+            f4b: 'Un jurnal de audit pe care agenția îl citește și îl exportă singură, fără noi.',
+            f4c: 'Chei API, un API de citire și webhook-uri pentru back office-ul pe care îl aveți.',
+            securityEyebrow: 'Credențiale',
+            securityTitle: 'Ce se întâmplă cu ce ne încredințați',
+            securityLede:
+              'Credențialele dumneavoastră de bedbank sunt cel mai valoros lucru pe care îl dați ' +
+              'unei platforme. Iată exact ce face OneRate cu ele.',
+            sec1:
+              'Sunt criptate cu o cheie principală înainte de a fi scrise, iar câmpurile secrete nu ' +
+              'sunt niciodată afișate înapoi pe ecran — nici agenților dumneavoastră, nici nouă.',
+            sec2:
+              'Fiecare interogare poartă id-ul organizației dumneavoastră pe fiecare strat, așa că ' +
+              'datele unei agenții nu pot fi atinse din sesiunea alteia.',
+            sec3:
+              'Autentificarea în doi pași este obligatorie pentru proprietarii de agenții, iar o ' +
+              'sesiune revocată se oprește imediat, nu la expirare.',
+            sec4:
+              'OneRate nu este comerciant înregistrat și nu prelucrează date de card, deci aria ' +
+              'dumneavoastră de plăți rămâne exact unde este astăzi.',
+            accessTitle: 'Solicitați acces',
+            accessBody:
+              'Agențiile sunt deschise una câte una, iar prima întrebare este mereu aceeași: ce ' +
+              'contracte API cu furnizori aveți deja? Spuneți-ne asta și vă putem răspunde imediat ' +
+              'dacă vă putem servi. Butonul de mai jos deschide un e-mail cu întrebările deja scrise.',
             ctaDocs: 'Citește documentația',
+            requestSubject: 'Solicitare de acces OneRate',
+            requestBody:
+              'Agenție:\nȚară:\nContracte API cu furnizori pe care le avem deja:\nAproximativ câte ' +
+              'rezervări hoteliere pe lună:\nNume și rol:\n',
             questions: 'Întrebări?',
             customerQuestions: 'Folosiți deja OneRate?',
             ctaSupport: 'Obțineți asistență în portal'
           },
         };
 
+        // The attribute hooks. `setLang` used to know about exactly one attribute — a `<meta>`'s
+        // `content` — and a `data-i18n` on anything else wrote `textContent`, which on a void
+        // element does nothing at all, silently. This map is the smallest thing that stops being
+        // true: one row per attribute the page translates, and a form's `placeholder` is one more
+        // row rather than a rewrite (ROADMAP.md, R4.1).
+        var ATTRIBUTE_HOOKS = { 'data-i18n-label': 'aria-label' };
+
+        var MAIL_TO = 'mailto:hello@onerate.travel';
         var select = document.getElementById('lang');
+        var reveal = document.getElementById('reveal');
+        var shot = document.getElementById('shot');
         var STORAGE_KEY = 'onerate.lang';
 
         function setLang(lang) {
@@ -552,7 +2470,7 @@
           if (!copy) return;
           document.documentElement.lang = lang;
           select.value = lang;
-          select.setAttribute('aria-label', copy.langLabel);
+
           var nodes = document.querySelectorAll('[data-i18n]');
           for (var i = 0; i < nodes.length; i++) {
             var key = nodes[i].getAttribute('data-i18n');
@@ -562,6 +2480,27 @@
             if (nodes[i].tagName === 'META') nodes[i].setAttribute('content', copy[key]);
             else nodes[i].textContent = copy[key];
           }
+
+          for (var hook in ATTRIBUTE_HOOKS) {
+            var targets = document.querySelectorAll('[' + hook + ']');
+            for (var j = 0; j < targets.length; j++) {
+              var attrKey = targets[j].getAttribute(hook);
+              if (copy[attrKey]) targets[j].setAttribute(ATTRIBUTE_HOOKS[hook], copy[attrKey]);
+            }
+          }
+
+          // The access mail is composed rather than looked up: a url is not a sentence, and the
+          // seven encoded blobs it would take to store one per language are seven places for a
+          // typo to hide where no reader would ever see it. `encodeURIComponent` is what makes the
+          // Bulgarian and Romanian templates survive the trip into a mail client.
+          var mail =
+            MAIL_TO +
+            '?subject=' +
+            encodeURIComponent(copy.requestSubject) +
+            '&body=' +
+            encodeURIComponent(copy.requestBody);
+          var mails = document.querySelectorAll('[data-mail-template]');
+          for (var k = 0; k < mails.length; k++) mails[k].setAttribute('href', mail);
         }
 
         select.addEventListener('change', function () {
@@ -575,10 +2514,18 @@
           } catch (ignored) {}
         });
 
+        // The theme comparison. The slider writes one custom property and CSS does the rest — no
+        // class flipping, no second copy of the layout, and the value the markup ships with is the
+        // value the stylesheet already declares, so the picture is correct before this line runs.
+        if (reveal && shot) {
+          reveal.addEventListener('input', function () {
+            shot.style.setProperty('--reveal', reveal.value + '%');
+          });
+        }
+
         // What the visitor chose last, else what their browser asks for, else English. The browser
         // tag is split on '-' rather than matched by prefix: `ro-MD` is Romanian, and `roa`
-        // (Romance, other) is not — a distinction that could not arise while the page had two
-        // languages and does now.
+        // (Romance, other) is not.
         var stored = null;
         try {
           stored = localStorage.getItem(STORAGE_KEY);
@@ -587,7 +2534,7 @@
         // `Object.hasOwn`, not truthiness: TEXT — like every object — answers for 'constructor'
         // and the rest of Object.prototype through the prototype chain, and localStorage is
         // visitor-writable. `TEXT[stored]` would have taken a stored 'constructor' for a language
-        // and shipped <html lang="constructor">. Own keys are the only languages this page has.
+        // and shipped <html lang="constructor">.
         setLang(
           Object.hasOwn(TEXT, stored) ? stored : Object.hasOwn(TEXT, fromBrowser) ? fromBrowser : 'en'
         );

@@ -3,7 +3,15 @@
 The OneRate promo page: one static HTML file served at `onerate.travel`. Split out of
 `onerate-travel/onerate-app` on 2026-07-25 — see `docs/ADR-0009-landing-repo-split.md` there.
 
-## Four things that look wrong and are not
+It stopped being a poster on 2026-08-31. The page is now a hero and seven sections — what the
+product does,
+which suppliers it speaks to, an illustration of the portal in both themes, the Model-A contrast
+against a consolidator, the shipped feature set, what happens to a supplier credential, and an
+access request — because the product team's own finding was that the page was the whole demand
+funnel and carried a `mailto:` (`teams/urun.md`, B24). Sections are cheap; the SEVEN TRANSLATIONS
+of each new sentence are not. Weigh a new paragraph accordingly.
+
+## Six things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
@@ -27,7 +35,27 @@ The OneRate promo page: one static HTML file served at `onerate.travel`. Split o
    devDependencies and no workspaces; pnpm would add a `corepack enable` CI step and a lockfile
    format `actions/setup-node` does not cache out of the box. Likewise there is no TypeScript: the
    only source file is an HTML page, so there is nothing for `tsc` to check.
-4. **`public/fonts/` holds four `.woff2` files, and they are checked in.** The two applications
+4. **The illustrated portal screen carries a SECOND hand-copied palette, and it is deliberate.**
+   The section that shows the product light beside dark is the only place on this page where
+   `@onerate/ui`'s two palettes have to be true at the same time. A role name can mean one colour
+   per document, so the page cannot say `--paper` twice — it says `--shot-light-paper` and
+   `--shot-dark-paper`, and `SHOT_TOKENS` in `test/design-system.js` records the theme and the ROLE
+   each one was copied from so `design.test.js` can resolve it against `tokens.css` exactly the way
+   it resolves the brand. Sixteen hexes with nothing watching them is the failure this repo already
+   had once.
+
+   The screen is DRAWN, not photographed, and the caption on the page says so. A screenshot would
+   be a picture of demo data whose photographs are still placeholders
+   (`onerate-app/ROADMAP.md`); what is honest to show is the layout and the palette, both of which
+   are the product's own.
+5. **The suppliers the page names are checked against the product, not against the copy.**
+   `data-supplier` / `data-supplier-state` in the markup are read by `test/design.test.js`: a name
+   marked `live` must be in `SUPPLIER_CATALOG` (`onerate-supplier-sdk`, the only source of addable
+   suppliers) and a name marked `integrating` must have an adapter directory in
+   `onerate-supplier-gateway`. Both halves skip when the sibling repo is absent, like the tokens
+   check. Promising an agency a supplier the product cannot take is the one lie this page can tell
+   that no language test would catch.
+6. **`public/fonts/` holds four `.woff2` files, and they are checked in.** The two applications
    get Inter and Space Grotesk from `@fontsource-variable/*` and a bundler
    (`onerate-ui/src/styles.css:1-4`); with no build step this page cannot, and a font CDN would
    hand every visitor's IP to a third party across six EU markets. So the four subsets the seven
@@ -53,7 +81,8 @@ is the only way to check it without keeping a second copy of the copy.
 ## The design system, and why the values are copied
 
 The page carries `@onerate/ui`'s brand values — `--teal`, `--teal-on-ink`, `--focus`, the type
-stack, the spacing scale, `--touch` — under `@onerate/ui`'s own names, copied by hand. It cannot
+stack, the spacing scale, `--radius`, `--touch` — under `@onerate/ui`'s own names, copied by hand,
+plus the sixteen `--shot-*` values the illustrated screen is drawn in (point 4 above). It cannot
 import `tokens.css`: there is no build step (point 3 above), and adding one to publish a static
 page would be the tail wagging the dog.
 
@@ -62,7 +91,8 @@ the copy lives in `test/design-system.js` as well as in the page, and `test/desi
 it in two directions:
 
 - `index.html` against `design-system.js` — always, including CI. This catches a hex edited by
-  hand here.
+  hand here. `PAGE_TOKENS` covers the brand; `SHOT_TOKENS` covers the illustration, and each of its
+  entries carries the theme and the role it came from rather than only a value.
 - `design-system.js` against `onerate-ui/src/tokens.css` — only when that repo is checked out
   beside this one, and it reports itself **skipped** otherwise rather than passing over nothing.
   This catches drift, and drift starts upstream.
@@ -70,8 +100,11 @@ it in two directions:
 Changing a brand value means changing it in **both** files. If the second test is skipped in your
 run, check out `onerate-ui` beside this repo and run again before pushing.
 
-The page's own ground — `--bg`, `--panel`, `--fg`, `--muted`, `--border` — is NOT from the design
-system and is not meant to be. A poster is not a portal.
+The page's own ground — `--bg`, `--panel`, `--panel-lift`, `--fg`, `--muted`, `--border`,
+`--border-soft` — is NOT from the design system and is not meant to be, and the distinction survived
+the page growing: a marketing page is not the chrome an agent sits inside for eight hours. What has
+to match the product is the BRAND and, inside the illustration, the product's own two palettes —
+never the furniture around them.
 
 ## Language conventions
 
@@ -83,6 +116,20 @@ system and is not meant to be. A poster is not a portal.
   markup carrying `data-i18n` keys. It used to be paired `data-en`/`data-tr` spans; at seven
   languages that would be seven spans per sentence, and forgetting one would be easy to do and hard
   to see.
+- **Translated ATTRIBUTES go through `ATTRIBUTE_HOOKS`, one row per attribute.** `setLang` used to
+  know about exactly one — a `<meta>`'s `content` — and a `data-i18n` on anything else wrote
+  `textContent`, which on a void element does nothing at all, silently. Today
+  `data-i18n-label` writes `aria-label`; a form's `placeholder` is one more row of that map rather
+  than a rewrite (`ROADMAP.md`, R4.1). `bilingual.test.js` checks attribute keys with the same
+  seven-language parity it applies to text.
+- **The access mail is COMPOSED, not looked up.** `requestSubject` and `requestBody` are ordinary
+  dictionary keys; `setLang` assembles them into the `mailto:` with `encodeURIComponent` and writes
+  it to every `[data-mail-template]`. Storing seven pre-encoded urls instead would put seven blobs
+  in the dictionary and make a typo in one of them invisible. The markup still ships the English url
+  in full, for a reader with no JavaScript.
+- **Never nest an element inside one that carries `data-i18n`.** The loop writes `textContent`, so a
+  nested child is erased on the first language change. Where a cell needs both a tag and a sentence
+  — the comparison table's mobile column labels — the two are SIBLINGS, each with its own key.
 - **The English copy is written into the MARKUP as well**, and the script only replaces it. A
   visitor with JavaScript off — and every crawler that does not run it — sees the raw HTML, so
   empty elements filled entirely by script would ship a blank page. `test/bilingual.test.js`
@@ -93,8 +140,14 @@ system and is not meant to be. A poster is not a portal.
 
 ## Open work
 
-`ROADMAP.md` — open items only; completed ones are deleted, never checked off. Its single item,
-R3.4.4, spans this repo and `onerate-travel/onerate-app`. Do not close either half alone.
+`ROADMAP.md` — open items only; completed ones are deleted, never checked off.
+
+- **R3.4.4** spans this repo and `onerate-travel/onerate-app`. Do not close either half alone.
+- **R4.1** is the access-request FORM, and it is still blocked on the owner decision it has always
+  been blocked on: where a submission goes, and under whose Turnstile keys. What shipped on
+  2026-08-31 is a prefilled `mailto:` and the attribute-translation mechanism the form will need —
+  not the form. Do not build one that POSTs to a path with no function behind it: Pages answers it
+  with `index.html` at 200, the visitor is told it worked, and nobody ever hears from them.
 
 ## Commits
 

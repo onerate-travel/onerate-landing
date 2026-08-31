@@ -48,6 +48,39 @@ export const FAVICON_TOKENS = {
   '--teal': '#0e6b5c',
 };
 
+/**
+ * The palette the illustrated portal screen is drawn in — BOTH themes, at once, on a page that has
+ * only one.
+ *
+ * The screenshot section shows the product in light and in dark side by side, which is the one
+ * place on this page where `@onerate/ui`'s two palettes have to coexist. A role name can only mean
+ * one colour per document, so the page cannot say `--paper` twice; it says `--shot-light-paper` and
+ * `--shot-dark-paper` and this map is what keeps both halves honest — each entry names the theme
+ * and the ROLE it was copied from, so `design.test.js` can resolve it against `tokens.css` exactly
+ * the way it resolves the brand tokens above.
+ *
+ * Without this the illustration would be fourteen hand-typed hexes claiming to be the product, and
+ * "a copy with nothing watching it" is the sentence at the top of this file.
+ */
+export const SHOT_TOKENS = {
+  '--shot-light-paper': ['light', '--paper', '#f7f6f2'],
+  '--shot-light-card': ['light', '--paper-card', '#ffffff'],
+  '--shot-light-line': ['light', '--line', '#e4e1d8'],
+  '--shot-light-text': ['light', '--text', '#1b2333'],
+  '--shot-light-text-soft': ['light', '--text-soft', '#5b6478'],
+  '--shot-light-teal': ['light', '--teal', '#0e6b5c'],
+  '--shot-light-teal-tint': ['light', '--teal-tint', '#e3f1ec'],
+  '--shot-light-sunken': ['light', '--paper-sunken', '#edeae1'],
+  '--shot-dark-paper': ['dark', '--paper', '#0f1521'],
+  '--shot-dark-card': ['dark', '--paper-card', '#161d2b'],
+  '--shot-dark-line': ['dark', '--line', '#273044'],
+  '--shot-dark-text': ['dark', '--text', '#e4e8f0'],
+  '--shot-dark-text-soft': ['dark', '--text-soft', '#aab3c4'],
+  '--shot-dark-teal': ['dark', '--teal', '#127a68'],
+  '--shot-dark-teal-tint': ['dark', '--teal-tint', '#12302a'],
+  '--shot-dark-sunken': ['dark', '--paper-sunken', '#1e2637'],
+};
+
 const UPSTREAM = new URL('../../onerate-ui/src/tokens.css', import.meta.url);
 
 /** Where the values above were copied from, for a failure message that can be acted on. */

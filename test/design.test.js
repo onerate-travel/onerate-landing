@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FAVICON_TOKENS,
   PAGE_TOKENS,
+  SHOT_TOKENS,
   UPSTREAM_PATH,
   readUpstreamTokens,
   upstreamIsCheckedOut,
@@ -100,6 +101,89 @@ describe('the brand this page copies from @onerate/ui', () => {
       expect(drifted).toEqual([]);
     }
   );
+});
+
+describe('the illustrated portal screen', () => {
+  /**
+   * The section that shows the product light beside dark is the only place on this page where
+   * `@onerate/ui`'s two palettes have to be true at the same time, and it is therefore the only
+   * place where fourteen hand-typed hexes could quietly stop being the product's colours. Same
+   * two-direction check as the brand tokens: against the recorded copy always, against
+   * `tokens.css` when it is there to read.
+   */
+  it('declares both palettes it draws in', () => {
+    for (const [name, [, , value]] of Object.entries(SHOT_TOKENS)) {
+      expect(ROOT.style.getPropertyValue(name).trim(), `:root is missing ${name}`).toBe(value);
+    }
+  });
+
+  it.skipIf(!upstreamIsCheckedOut())('takes each one from the theme it claims', () => {
+    const upstream = readUpstreamTokens();
+    const drifted = Object.entries(SHOT_TOKENS)
+      .filter(([, [theme, role, value]]) => upstream[theme][role] !== value)
+      .map(([name, [theme, role, value]]) => `${name}: ${value} here, ${theme} ${role} is ${upstream[theme][role]}`);
+    expect(drifted).toEqual([]);
+  });
+
+  it('switches themes with a control a keyboard can reach', () => {
+    // A theme comparison built out of a div and a pointer listener is a picture a keyboard user
+    // cannot open. It is a real <input>, it is labelled, and it is held to the same touch floor as
+    // the language switcher.
+    const control = doc.querySelector('.shot-toggle input');
+    expect(control, 'the light/dark comparison has no form control behind it').toBeTruthy();
+    expect(control.getAttribute('type')).toBe('range');
+    expect(
+      control.getAttribute('aria-label') || doc.querySelector(`label[for="${control.id}"]`),
+      'the comparison slider has no accessible name'
+    ).toBeTruthy();
+    expect(ruleFor('.shot-toggle input').style.getPropertyValue('min-height')).toBe('var(--touch)');
+  });
+});
+
+describe('the suppliers the page names', () => {
+  /**
+   * A fitness guard, not an existence one — the same distinction that made the font check worth
+   * writing. The page can name any bedbank it likes and every other test stays green; what it must
+   * not do is promise an agency a supplier the product cannot actually take. So the names are read
+   * off the markup and asked of the two repositories that decide the answer:
+   *
+   *   marked `live`        → must be in `SUPPLIER_CATALOG`, which is the ONLY source of addable
+   *                          suppliers (`onerate-supplier-sdk/src/catalog/suppliers.ts`)
+   *   marked `integrating` → must at least have an adapter directory in the gateway
+   *
+   * Both are skipped rather than passed over when the sibling repo is absent, like the tokens half.
+   */
+  const named = [...doc.querySelectorAll('[data-supplier]')].map((el) => ({
+    id: el.getAttribute('data-supplier'),
+    state: el.getAttribute('data-supplier-state'),
+  }));
+  const sdk = fileURLToPath(new URL('../../onerate-supplier-sdk/src/catalog/suppliers.ts', import.meta.url));
+  const gateway = fileURLToPath(new URL('../../onerate-supplier-gateway/src/adapters', import.meta.url));
+
+  it('names some, and says of each one where it stands', () => {
+    expect(named.length).toBeGreaterThan(0);
+    for (const { id, state } of named) {
+      expect(['live', 'integrating'], `data-supplier="${id}" has state "${state}"`).toContain(state);
+    }
+    expect(named.some(({ state }) => state === 'live'), 'no supplier is claimed as live').toBe(true);
+  });
+
+  it.skipIf(!existsSync(sdk))('claims live only what the catalog can actually add', () => {
+    const catalog = readFileSync(sdk, 'utf8');
+    const overclaimed = named
+      .filter(({ state }) => state === 'live')
+      .filter(({ id }) => !catalog.includes(`'${id}'`))
+      .map(({ id }) => id);
+    expect(overclaimed, 'named as live and absent from SUPPLIER_CATALOG').toEqual([]);
+  });
+
+  it.skipIf(!existsSync(gateway))('claims in-integration only what has adapter code', () => {
+    const unwritten = named
+      .filter(({ state }) => state === 'integrating')
+      .filter(({ id }) => !existsSync(`${gateway}/${id}`))
+      .map(({ id }) => id);
+    expect(unwritten, 'named as integrating with no adapter directory').toEqual([]);
+  });
 });
 
 describe('the mark', () => {
@@ -269,6 +353,59 @@ describe('the document a screen reader walks', () => {
         option.value
       );
     }
+  });
+});
+
+describe('the page a prospect actually reads', () => {
+  /**
+   * The page stopped being a poster and became a document with an argument in it. Everything below
+   * is about that shape holding: a poster can afford one heading and no landmarks, a page with
+   * eight sections cannot.
+   */
+  const sections = [...doc.querySelectorAll('main > section')];
+
+  it('is a document with sections, not one block of copy', () => {
+    expect(sections.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('gives every section a name a screen reader can list it by', () => {
+    // A <section> with no accessible name is not a landmark at all — it is a <div> that cost more
+    // to type. `aria-labelledby` pointing at the section's own <h2> is the whole fix.
+    for (const section of sections) {
+      const id = section.getAttribute('aria-labelledby');
+      expect(id, 'a <section> carries no aria-labelledby').toBeTruthy();
+      expect(doc.getElementById(id)?.tagName, `#${id} is not this section's heading`).toBe('H2');
+    }
+  });
+
+  it('opens a mail that already asks the qualifying question', () => {
+    /**
+     * The page's only conversion surface, and the reason it is a `mailto:` rather than a form is
+     * recorded in `ROADMAP.md` R4.1: a form POSTing to a path with no function behind it gets
+     * `index.html` at 200, so the visitor is told it worked and no one ever hears from them.
+     *
+     * A prefilled body is what makes the address worth as much as the form would be. Every request
+     * that arrives answers §15.1 for that agency — which supplier contracts it already holds — and
+     * that is the single unknown the whole business model rests on.
+     */
+    const prefilled = [...doc.querySelectorAll('a[href^="mailto:"]')]
+      .map((a) => a.getAttribute('href'))
+      .filter((href) => href.includes('?'));
+    expect(prefilled.length, 'no prefilled access-request mail on the page').toBeGreaterThan(0);
+    for (const href of prefilled) {
+      expect(href.startsWith('mailto:hello@onerate.travel?')).toBe(true);
+      const query = new URLSearchParams(href.slice(href.indexOf('?') + 1));
+      expect(query.get('subject'), `${href} has no subject`).toBeTruthy();
+      expect(query.get('body'), `${href} has no body`).toBeTruthy();
+    }
+  });
+
+  it('keeps the plain address as well, for a client that cannot open a template', () => {
+    // A webmail user with no mail handler registered gets nothing from a `mailto:` with a query
+    // string. The footer's bare address is the fallback, and it is asserted so a tidy-up cannot
+    // remove it as a duplicate.
+    const hrefs = [...doc.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    expect(hrefs).toContain('mailto:hello@onerate.travel');
   });
 });
 

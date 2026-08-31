@@ -53,6 +53,24 @@ than the viewport (`public/index.html`, `body`/`main`), so a form can lengthen t
 making its own top unreachable; there is an `<h1>` for a form's `<h2>` to sit under; and
 `test/design.test.js` holds all of it.
 
+**Also done, 2026-08-31 — two of the three things the form needs, and an interim funnel.**
+
+- **Attribute translation, the piece the note below called "the piece with no workaround".**
+  `setLang` now carries an `ATTRIBUTE_HOOKS` map; `data-i18n-label` writes `aria-label` today and a
+  `placeholder` is one more row of that map. `test/bilingual.test.js` checks attribute keys with the
+  same seven-language parity it applies to text, which is the acceptance line below, met early.
+- **A prefilled `mailto:` in place of the bare address.** It asks the qualifying question in the
+  visitor's own language — which supplier API contracts the agency already holds — so every request
+  that arrives answers §15.1 for that agency (`teams/urun.md`, T5). Composed by `setLang` from
+  `requestSubject`/`requestBody` rather than stored as seven encoded urls; asserted by
+  `bilingual.test.js`, `design.test.js` and `make smoke`.
+- **The page around it.** A hero and seven sections, so the form has somewhere to belong other
+  than under a poster.
+
+This does NOT close the item. A `mailto:` loses the reader whose browser has no mail handler, it
+cannot validate a field, and it collects nothing anyone can query. The decision below is still what
+the form is waiting on.
+
 **Verified, so it is no longer an open question.** `wrangler pages deploy public` DOES compile a
 `functions/` directory — from the process's working directory, not from the published one:
 
@@ -74,13 +92,17 @@ rehearsal deploy to settle; it does not.
       Candidates: an ops mailbox via Cloudflare Email Sending (the fleet already sends and smokes
       it); a KV or D1 record read from the admin panel; a ticket in the support surface (ADR-0019).
       The decision also has to say which Turnstile sitekey/secret pair the page and the function use.
-- [ ] Once answered: the form's markup and `<h2>`, a form CSS vocabulary, and — the piece with no
-      workaround — attribute translation. `setLang` writes `textContent` and `<meta content>` and
-      nothing else (`public/index.html`), so a `data-i18n` on an `<input>` writes the text content
-      of a void element and does **nothing, silently**. A `placeholder`, an `<option>` label, an
-      error string and a success message all need it, in seven languages.
-- [ ] scenario: the form is fully translated in all seven languages, asserted by extending
-      `test/bilingual.test.js`'s parity check to translated attributes
+- [ ] Once answered: the form's markup and `<h2>`, and a form CSS vocabulary. The page still has no
+      `input`, `label`, `textarea`, `button` or `fieldset` rule — `.langs select` and the comparison
+      slider are its only controls — and `@onerate/ui`'s `.kv-input`/`.kv-field`/`.kv-btn` are the
+      smallest set worth copying. Attribute translation is no longer part of this bullet: it landed
+      on 2026-08-31 and a `placeholder` is one row of `ATTRIBUTE_HOOKS`.
+- [ ] Re-ask `teams/tasarim/kabuk.md` O3 when the form lands, as that note says to: `color-scheme:
+      dark` was enough for a page whose only control is a select, and the moment there are text
+      inputs the platform may draw them by its own scheme again.
+- [ ] scenario: the form itself is fully translated in all seven languages, placeholders and error
+      strings included. The parity check that asserts it already exists and already runs — the
+      attribute half of `test/bilingual.test.js` — so this is copy, not mechanism.
 - [ ] scenario: with JavaScript off the page is still readable and the form still submits
       (`CLAUDE.md`, "Language conventions")
 - [ ] scenario: an empty or invalid field produces an in-page error, not a browser bubble, and the

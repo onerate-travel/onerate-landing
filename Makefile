@@ -133,6 +133,11 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 # same construct claimed /tr/ was not Turkish while it was being served perfectly; fixed here too
 # rather than only where it bit.
 #
+# The access-request check greps for TWO things for the same reason. `data-mail-template` proves
+# the markup still carries the hook the script writes the href through, and the encoded subject
+# proves the SHIPPED href is already prefilled — the page's only conversion surface is worth
+# nothing if it opens an empty mail, and an empty one looks identical in a status code.
+#
 # The translation check greps for TWO things, deliberately: `data-i18n` proves the markup still
 # carries its hooks, and a literal Turkish string ('Portala giriş') proves the TEXT dictionary
 # still carries copy — delete the translations and the second grep fails. It used to grep for
@@ -152,6 +157,9 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	echo "$$page" | grep -q 'data-i18n' || { echo "FAIL: the i18n markup is missing from the live page"; exit 1; }; \
 	echo "$$page" | grep -q 'Portala giriş' || { echo "FAIL: the translated copy is missing from the live page"; exit 1; }; \
 	echo "  ok  translated copy present (data-i18n hooks + a Turkish string)"; \
+	echo "$$page" | grep -q 'data-mail-template' || { echo "FAIL: the access-request mail is missing from the live page"; exit 1; }; \
+	echo "$$page" | grep -q 'subject=OneRate%20access%20request' || { echo "FAIL: the access mail ships with no prefilled subject"; exit 1; }; \
+	echo "  ok  access-request mail present, and prefilled"; \
 	echo; \
 	echo "  ROADMAP.md must not be published (CLAUDE.md, point 1)."; \
 	echo "  Asserting on the BODY, never the status code: this project has no custom 404.html, so"; \

@@ -2,6 +2,11 @@
 
 The OneRate promo page — the single static page served at <https://onerate.travel>.
 
+A hero and seven sections, in seven languages: what the product does, the suppliers it speaks to, an
+illustration of the portal in both of its themes, the Model-A contrast against a consolidator, the
+shipped feature set, what happens to a supplier credential, and an access request that opens a
+prefilled mail.
+
 Split out of [`onerate-travel/onerate-app`](https://github.com/onerate-travel/onerate-app) on 2026-07-25 so a copy change
 does not wait behind the product monorepo's miniflare and Playwright suites. Reasoning:
 `docs/ADR-0009-landing-repo-split.md` in that repo.
@@ -13,8 +18,8 @@ does not wait behind the product monorepo's miniflare and Playwright suites. Rea
 | `public/` | **the deployed site** — everything here is published, nothing outside it is |
 | `public/fonts/` | the four webfont subsets the page needs, self-hosted; both are SIL OFL |
 | `test/lang.test.js` | pins the page's language default against the shipped HTML |
-| `test/design.test.js` | pins its brand, layout, motion and document structure |
-| `test/design-system.js` | the `@onerate/ui` values the page copies, and the reader that checks them |
+| `test/design.test.js` | pins its brand, layout, motion, document structure, and the suppliers it is allowed to name |
+| `test/design-system.js` | the `@onerate/ui` values the page copies — brand and both screen palettes — and the reader that checks them |
 | `.github/workflows/deploy.yml` | `staging` → Pages preview, `main` → `onerate.travel` |
 
 ## Working on it
@@ -22,10 +27,14 @@ does not wait behind the product monorepo's miniflare and Playwright suites. Rea
 ```bash
 npm install
 npm test
-open public/index.html
+python3 -m http.server -d public 8000   # then open http://localhost:8000
 ```
 
-There is no build step and no dev server. The page is one self-contained file, and the only other
+**Serve it; do not `open public/index.html`.** The `@font-face` sources are root-absolute
+(`/fonts/…`), which under `file://` resolve to the filesystem root and quietly 404 — the page then
+renders in system-ui while looking otherwise correct, which is the exact failure
+`test/design.test.js`'s font check exists to refuse. Any static server will do; the page has no
+build step and needs no dev server beyond one that serves `public/` at `/`. The page is one self-contained file, and the only other
 things in `public/` are a favicon and the fonts it references.
 
 `test/design.test.js` has one half that reads `../onerate-ui/src/tokens.css` and reports itself
@@ -59,7 +68,7 @@ make smoke             # verify what is actually live
 calls; the Makefile runs `npm test` first and refuses on three facts a laptop cannot otherwise
 promise — a clean working tree, the right branch, and that branch pushed.
 
-`make smoke` checks the live page for the portal link, the docs link and the Turkish copy, and then
-checks that `ROADMAP.md` is **not** published. That last one asserts on the response **body**, never
+`make smoke` checks the live page for the portal link, the docs link, the Turkish copy and the
+prefilled access-request mail, and then checks that `ROADMAP.md` is **not** published. That last one asserts on the response **body**, never
 the status code: this project has no custom `404.html`, so Pages answers every unmatched path with
 `index.html` at 200 and a status code there proves nothing.
