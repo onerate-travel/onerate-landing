@@ -125,13 +125,18 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 
 # ---- Verifying what shipped -------------------------------------------------------------------
 #
-# Bodies are captured into a variable and then grepped — never `curl … | grep -q`. Under
-# `-o pipefail`, `grep -q` exits the moment it matches, curl takes SIGPIPE on the closed pipe, and
-# the pipeline reports failure *because the assertion succeeded*. The ROADMAP check below hides
-# that bug perfectly while it passes (grep never matches, so it reads the whole stream) and would
-# have sprung it on the one day the check needed to be trusted. Found in onerate-docs, where the
-# same construct claimed /tr/ was not Turkish while it was being served perfectly; fixed here too
-# rather than only where it bit.
+# Bodies are captured into a variable and then grepped with a HERESTRING — never through a pipe,
+# and `echo "$$page" | grep -q` is a pipe. Under `-o pipefail`, `grep -q` exits the moment it
+# matches, the writer takes SIGPIPE on the closed pipe, and the pipeline reports failure *because
+# the assertion succeeded*. The ROADMAP check below hides that bug perfectly while it passes (grep
+# never matches, so it reads the whole stream) and would have sprung it on the one day the check
+# needed to be trusted. Found in onerate-docs, where the same construct claimed /tr/ was not
+# Turkish while it was being served perfectly.
+#
+# It was fixed here on the curl side and NOT on the echo side, which only moved the trigger: with a
+# 3 KB page `echo` finished writing before `grep -q` could exit, so the pipeline stayed green by
+# timing alone. The page is now 137 KB, echo is still writing when grep exits, and every check
+# began failing on the first deploy that mattered. A herestring has no second process to kill.
 #
 # The access-request check greps for TWO things for the same reason. `data-mail-template` proves
 # the markup still carries the hook the script writes the href through, and the encoded subject
@@ -150,15 +155,15 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 smoke: ## Check production: the page is live, translated, and the roadmap is NOT published
 	@set -euo pipefail; \
 	page=$$(curl -fsS $(PROD_URL)/); \
-	echo "$$page" | grep -q 'app.onerate.travel' || { echo "FAIL: no portal link on the live page"; exit 1; }; \
+	grep -q 'app.onerate.travel' <<<"$$page" || { echo "FAIL: no portal link on the live page"; exit 1; }; \
 	echo "  ok  portal link present"; \
-	echo "$$page" | grep -q 'docs.onerate.travel' || { echo "FAIL: no docs link on the live page"; exit 1; }; \
+	grep -q 'docs.onerate.travel' <<<"$$page" || { echo "FAIL: no docs link on the live page"; exit 1; }; \
 	echo "  ok  docs link present"; \
-	echo "$$page" | grep -q 'data-i18n' || { echo "FAIL: the i18n markup is missing from the live page"; exit 1; }; \
-	echo "$$page" | grep -q 'Portala giriş' || { echo "FAIL: the translated copy is missing from the live page"; exit 1; }; \
+	grep -q 'data-i18n' <<<"$$page" || { echo "FAIL: the i18n markup is missing from the live page"; exit 1; }; \
+	grep -q 'Portala giriş' <<<"$$page" || { echo "FAIL: the translated copy is missing from the live page"; exit 1; }; \
 	echo "  ok  translated copy present (data-i18n hooks + a Turkish string)"; \
-	echo "$$page" | grep -q 'data-mail-template' || { echo "FAIL: the access-request mail is missing from the live page"; exit 1; }; \
-	echo "$$page" | grep -q 'subject=OneRate%20access%20request' || { echo "FAIL: the access mail ships with no prefilled subject"; exit 1; }; \
+	grep -q 'data-mail-template' <<<"$$page" || { echo "FAIL: the access-request mail is missing from the live page"; exit 1; }; \
+	grep -q 'subject=OneRate%20access%20request' <<<"$$page" || { echo "FAIL: the access mail ships with no prefilled subject"; exit 1; }; \
 	echo "  ok  access-request mail present, and prefilled"; \
 	echo; \
 	echo "  ROADMAP.md must not be published (CLAUDE.md, point 1)."; \
@@ -166,7 +171,7 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	echo "  Pages answers every unmatched path with index.html at 200. A 200 here is normal and"; \
 	echo "  means the file is absent — anyone reading a status code would draw the wrong conclusion."; \
 	roadmap=$$(curl -fsS $(PROD_URL)/ROADMAP.md); \
-	if echo "$$roadmap" | grep -q 'R3.4.4'; then \
+	if grep -q 'R3.4.4' <<<"$$roadmap"; then \
 	  echo "FAIL: the roadmap is being served at $(PROD_URL)/ROADMAP.md"; \
 	  echo "The deploy published the repo root instead of $(PUBLISH_DIR)/."; exit 1; fi; \
 	echo "  ok  roadmap is not published"; \
@@ -176,7 +181,7 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	echo "  for a woff2 falls back to a system font. The page would look subtly wrong while"; \
 	echo "  every status code stayed green."; \
 	svg=$$(curl -fsS $(PROD_URL)/favicon.svg); \
-	echo "$$svg" | grep -q "<circle" || { echo "FAIL: /favicon.svg is not published"; exit 1; }; \
+	grep -q "<circle" <<<"$$svg" || { echo "FAIL: /favicon.svg is not published"; exit 1; }; \
 	echo "  ok  favicon is published"; \
 	for f in space-grotesk-latin-wght-normal inter-latin-wght-normal inter-latin-ext-wght-normal inter-cyrillic-wght-normal; do \
 	  magic=$$(curl -fsS -r 0-3 $(PROD_URL)/fonts/$$f.woff2); \
