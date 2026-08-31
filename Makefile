@@ -138,10 +138,17 @@ deploy-prod: require-clean require-branch-main preflight gate ## Publish to oner
 # timing alone. The page is now 137 KB, echo is still writing when grep exits, and every check
 # began failing on the first deploy that mattered. A herestring has no second process to kill.
 #
-# The access-request check greps for TWO things for the same reason. `data-mail-template` proves
-# the markup still carries the hook the script writes the href through, and the encoded subject
-# proves the SHIPPED href is already prefilled — the page's only conversion surface is worth
-# nothing if it opens an empty mail, and an empty one looks identical in a status code.
+# The access-request check does NOT assert on the `href`, and that is not laziness — it is the one
+# thing on this page a check cannot ask production for. The zone has Email Obfuscation on, so
+# Cloudflare rewrites every `mailto:` in the served HTML into `/cdn-cgi/l/email-protection#…`. See
+# CLAUDE.md, "the mailto you wrote is not the mailto that ships", for why that is accepted rather
+# than fixed.
+#
+# So the three greps ask for what survives that rewrite and still proves the feature works:
+# `data-mail-template` is the hook the script writes through, `requestSubject` is the template
+# itself, and the `encodeURIComponent` line is the code that assembles them. Delete any one of the
+# three and the button opens an empty mail — which is what the check exists to refuse, and which
+# looks identical in a status code.
 #
 # The translation check greps for TWO things, deliberately: `data-i18n` proves the markup still
 # carries its hooks, and a literal Turkish string ('Portala giriş') proves the TEXT dictionary
@@ -163,8 +170,9 @@ smoke: ## Check production: the page is live, translated, and the roadmap is NOT
 	grep -q 'Portala giriş' <<<"$$page" || { echo "FAIL: the translated copy is missing from the live page"; exit 1; }; \
 	echo "  ok  translated copy present (data-i18n hooks + a Turkish string)"; \
 	grep -q 'data-mail-template' <<<"$$page" || { echo "FAIL: the access-request mail is missing from the live page"; exit 1; }; \
-	grep -q 'subject=OneRate%20access%20request' <<<"$$page" || { echo "FAIL: the access mail ships with no prefilled subject"; exit 1; }; \
-	echo "  ok  access-request mail present, and prefilled"; \
+	grep -q "requestSubject: 'OneRate access request'" <<<"$$page" || { echo "FAIL: the access mail template is missing from the live page"; exit 1; }; \
+	grep -q 'encodeURIComponent(copy.requestSubject)' <<<"$$page" || { echo "FAIL: nothing on the live page composes the access mail"; exit 1; }; \
+	echo "  ok  access-request mail present, and its template ships"; \
 	echo; \
 	echo "  ROADMAP.md must not be published (CLAUDE.md, point 1)."; \
 	echo "  Asserting on the BODY, never the status code: this project has no custom 404.html, so"; \

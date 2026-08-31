@@ -33,6 +33,26 @@
          owns is its favicon, and unfurlers render a missing image as a broken one. -->
     <meta name="twitter:card" content="summary" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      The ONLY thing that has to run before the page is painted, which is why it is here and not
+      with the rest of the script at the end of the body: an override applied after first paint is
+      a flash of exactly the theme the reader went out of their way to turn off.
+
+      It reads the key `@onerate/ui`'s `theme.ts` writes (`onerate.theme`) and follows its rule —
+      `system` is the ABSENCE of the attribute, so anything that is not an explicit light or dark
+      leaves the document alone and `prefers-color-scheme` answers. Wrapped, because Safari throws
+      on storage in private mode and a colour scheme is not worth a blank page.
+    -->
+    <script>
+      (function () {
+        try {
+          var held = localStorage.getItem('onerate.theme');
+          if (held === 'light' || held === 'dark') {
+            document.documentElement.setAttribute('data-theme', held);
+          }
+        } catch (ignored) {}
+      })();
+    </script>
     <style>
       /* ---- the product's typefaces, self-hosted ----
          `@onerate/ui` gets these from `@fontsource-variable/*` and an `@import`
@@ -99,42 +119,46 @@
       }
 
       :root {
-        /* `dark`, not `light dark`: the palette below is the page's ONLY theme. Declaring a
-           light mode that does not exist made the platform draw light form controls on a dark
-           page. Note that the illustrated portal screen further down is drawn in BOTH of the
-           product's themes — that is a picture of a themed application, not a theme for this
-           document, and the distinction is why its palette carries its own names. */
-        color-scheme: dark;
+        /* `light`, and the page means it now. It said `dark` for as long as dark was the only
+           palette it had — and that was the honest answer then, because declaring a light mode
+           that did not exist made the platform draw light form controls on a dark page. The page
+           has two palettes today and two selects on it, so the same reasoning gives the opposite
+           value. */
+        color-scheme: light;
 
         /* ---- the page's own ground ----
-           NOT taken from the design system, deliberately. `@onerate/ui`'s dark palette is the
-           chrome an agent sits inside for eight hours; this is a page read once, by someone
-           deciding whether to reply. What has to match the product is the BRAND, not the
-           furniture. */
-        --bg: #0b1020;
-        --panel: rgba(255, 255, 255, 0.04);
-        --panel-lift: rgba(255, 255, 255, 0.07);
-        --fg: #eef2ff;
-        --muted: #9aa4bf;
-        --border: rgba(255, 255, 255, 0.1);
-        --border-soft: rgba(255, 255, 255, 0.06);
+           NOT taken from the design system, deliberately: `@onerate/ui`'s palette is the chrome an
+           agent sits inside for eight hours, and this is a page read once by someone deciding
+           whether to reply. What has to match the product is the BRAND, not the furniture. It has
+           two answers now for the same reason the brand does. */
+        --bg: #f7f6f2;
+        --panel: rgba(16, 26, 43, 0.04);
+        --panel-lift: rgba(16, 26, 43, 0.06);
+        --fg: #101a2b;
+        --muted: #5b6478;
+        --border: rgba(16, 26, 43, 0.14);
+        --border-soft: rgba(16, 26, 43, 0.08);
 
         /* ---- the design system, copied by hand ----
            Every value below is `@onerate/ui`'s, under `@onerate/ui`'s own NAME. This repo has no
            build step and cannot import `tokens.css` (CLAUDE.md, point 3), so the values are copied
-           and `test/design.test.js` is what keeps the copy honest: it reads
-           `onerate-ui/src/tokens.css` when that repo is checked out beside this one and fails if a
-           single value has moved. Copying without that test is how the page ended up two years of
-           brand behind in the first place.
+           and `test/design.test.js` keeps the copy honest — in both palettes, each against the
+           block it came from.
 
-           ROLES, not shades — the same rule `tokens.css:13-17` states. `--teal` is the FILL (the
-           CTA). `--teal-on-ink` is the brand read as TEXT on dark, and the two are not
-           interchangeable: `--teal` as text on `--bg` measures 3.61:1 and would fail the 4.5 floor
-           the moment the wordmark used it. `--teal-on-ink` measures 10.5:1. */
-        --teal: #127a68;
+           ROLES, not shades, and the theme is what makes that rule bite. `--teal` is the FILL: it
+           is what a CTA is painted in, and it moves between palettes only enough to stay findable.
+           `--teal-text` is the brand READ AS TEXT and it inverts — #0a5347 on paper, #5fd6bb on
+           ink — because a colour that carries as text on one ground cannot on the other.
+           `--teal-on-ink` is the brand on the dark CHROME and is identical in both, which is why
+           the illustrated screen's dark pane keeps using it whichever theme the page is in. */
+        --teal: #0e6b5c;
+        --teal-text: #0a5347;
         --teal-on-ink: #7fd0be;
         --on-accent: #ffffff;
-        --focus: #5b9bff;
+        --focus: #2f7cf6;
+
+        /* Not opinions about light, so they are declared once and never re-answered. Same split
+           `tokens.css` makes. */
         --font-display: 'Space Grotesk Variable', 'Space Grotesk', sans-serif;
         --font-ui: 'Inter Variable', 'Inter', system-ui, sans-serif;
         --text-sm: 12px;
@@ -149,14 +173,10 @@
         --touch: 40px;
 
         /* ---- the illustrated portal screen: BOTH product themes, at once ----
-           The one place on this page where `@onerate/ui`'s two palettes have to be true
-           simultaneously. A role name can mean only one colour per document, so the page cannot
-           say `--paper` twice — it says it once per theme, and `test/design-system.js` records
-           which theme and which ROLE each of these fourteen was copied from so `design.test.js`
-           can resolve them against `tokens.css` exactly the way it resolves the brand above.
-
-           Without that map this illustration would be fourteen hand-typed hexes claiming to be the
-           product, which is the failure this whole file is arranged against. */
+           These do NOT follow the page's theme, and that is the point: the section shows what the
+           product looks like light beside dark, so its two palettes are fixed whichever one the
+           reader is holding the page in. `test/design-system.js` records the theme and the ROLE
+           each of these sixteen was copied from. */
         --shot-light-paper: #f7f6f2;
         --shot-light-card: #ffffff;
         --shot-light-line: #e4e1d8;
@@ -178,6 +198,51 @@
            declaring it here is what stops the clip from rendering off a fallback nobody looks at
            before the script runs. */
         --reveal: 42%;
+      }
+
+      /* ---- dark, twice, and the two selectors are the whole mechanism ----
+         `:root:not([data-theme='light'])` inside the query and `:root[data-theme='dark']` outside
+         it, exactly as `tokens.css` writes it: the system preference is the default AND an explicit
+         choice wins in either direction. `system` is the ABSENCE of the attribute rather than a
+         third value — `data-theme="system"` would match neither block and be ignored silently.
+
+         Only colour roles are re-answered. Two blocks with one palette between them is a real
+         hazard — a value corrected in one and not the other is a page that is right until somebody
+         picks a theme by hand — so `design.test.js` reads both and requires them to agree. */
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --panel: rgba(255, 255, 255, 0.04);
+        --panel-lift: rgba(255, 255, 255, 0.07);
+        --fg: #eef2ff;
+        --muted: #9aa4bf;
+        --border: rgba(255, 255, 255, 0.1);
+        --border-soft: rgba(255, 255, 255, 0.06);
+        --teal: #127a68;
+        --teal-text: #5fd6bb;
+        --teal-on-ink: #7fd0be;
+        --on-accent: #ffffff;
+        --focus: #5b9bff;
+        }
+        .prefs select {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa4bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --panel: rgba(255, 255, 255, 0.04);
+        --panel-lift: rgba(255, 255, 255, 0.07);
+        --fg: #eef2ff;
+        --muted: #9aa4bf;
+        --border: rgba(255, 255, 255, 0.1);
+        --border-soft: rgba(255, 255, 255, 0.06);
+        --teal: #127a68;
+        --teal-text: #5fd6bb;
+        --teal-on-ink: #7fd0be;
+        --on-accent: #ffffff;
+        --focus: #5b9bff;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
@@ -233,7 +298,7 @@
         font-weight: 600;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--teal-on-ink);
+        color: var(--teal-text);
       }
       h2 {
         margin-top: var(--space-3);
@@ -270,7 +335,7 @@
         letter-spacing: -0.02em;
         font-size: clamp(26px, 5vw, 38px);
       }
-      .brand .dot { color: var(--teal-on-ink); }
+      .brand .dot { color: var(--teal-text); }
       .tagline {
         margin: var(--space-5) auto 0;
         max-width: 20ch;
@@ -323,7 +388,7 @@
         border: 1px solid var(--border);
         box-shadow: none;
       }
-      .cta.ghost:hover { border-color: var(--teal-on-ink); transform: translateY(-1px); }
+      .cta.ghost:hover { border-color: var(--teal-text); transform: translateY(-1px); }
       /* The business model, given the weight of a quotation rather than a bullet — it is the one
          sentence on the page a competitor cannot copy without changing what they are. */
       .model-line {
@@ -331,7 +396,7 @@
         max-width: 58ch;
         padding: var(--space-4) var(--space-5);
         border: 1px solid var(--border);
-        border-left: 3px solid var(--teal-on-ink);
+        border-left: 3px solid var(--teal-text);
         border-radius: var(--radius);
         background: var(--panel);
         color: var(--fg);
@@ -357,7 +422,7 @@
         font-weight: 700;
         font-size: 13px;
         letter-spacing: 0.1em;
-        color: var(--teal-on-ink);
+        color: var(--teal-text);
       }
       .step h3 { margin-top: var(--space-3); }
       .step p {
@@ -433,7 +498,7 @@
         bottom: 0;
         left: var(--reveal);
         width: 1px;
-        background: var(--teal-on-ink);
+        background: var(--teal-text);
         pointer-events: none;
       }
       .shot-toggle {
@@ -453,7 +518,7 @@
            well under it, and a control this page's whole illustration depends on being dragged is
            the last one that should be hard to hit. */
         min-height: var(--touch);
-        accent-color: var(--teal-on-ink);
+        accent-color: var(--teal-text);
         cursor: ew-resize;
       }
       .shot-caption {
@@ -685,7 +750,7 @@
         color: var(--muted);
         border-bottom-color: var(--border);
       }
-      .compare thead th.ours { color: var(--teal-on-ink); }
+      .compare thead th.ours { color: var(--teal-text); }
       .compare tbody th {
         width: 22%;
         font-weight: 650;
@@ -735,7 +800,7 @@
       }
       .facts li {
         padding-top: var(--space-4);
-        border-top: 1px solid var(--teal-on-ink);
+        border-top: 1px solid var(--teal-text);
         color: var(--muted);
         font-size: 14px;
       }
@@ -798,20 +863,25 @@
           text-transform: uppercase;
           color: var(--muted);
         }
-        .compare td.ours .col-tag { color: var(--teal-on-ink); }
+        .compare td.ours .col-tag { color: var(--teal-text); }
         /* The `ours` cell keeps its fill, and stacked it needs the padding back to sit on it. */
         .compare td.ours { padding: var(--space-3); border-radius: 8px; }
       }
 
-      /* One control, not a row of buttons. Two languages fitted in the corner as EN/TR; seven do
-         not, and seven `aria-pressed` buttons announce themselves as seven independent toggles
-         rather than one question with seven answers. Same reasoning, and the same native select
-         element, as the portal's own switcher.
+      /* Two preference controls, both native selects, both in the FLOW.
+         `position: fixed` gave the old single control a layer of its own above the content and on
+         a short viewport the two drew on top of each other; as the first child of the column the
+         bar takes its own 40px and pushes nothing off the screen.
 
-         IN THE FLOW, not `position: fixed`. Fixed gave it a layer of its own above the content; on
-         a short viewport the two drew on top of each other. */
-      .langs { align-self: flex-end; }
-      .langs select {
+         Selects rather than button groups, for the reason the portal chose the same: seven
+         languages is not a row of toggles, and three themes announced as three `aria-pressed`
+         buttons is three independent switches rather than one question with three answers. */
+      .prefs {
+        align-self: flex-end;
+        display: flex;
+        gap: var(--space-2);
+      }
+      .prefs select {
         appearance: none;
         background-color: var(--panel);
         color: var(--muted);
@@ -825,17 +895,21 @@
         font: inherit;
         font-size: var(--text-md);
         cursor: pointer;
-        /* The one colour literal outside `:root` on this page, and it cannot be anything else: a
-           data URI is a separate document and `var()` does not cross into it. `%239aa4bf` is
-           `--muted`; `test/design.test.js` asserts the two are still the same value, which turns
-           an unavoidable duplicate into a pinned one. */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa4bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        /* The one colour that cannot be a `var()`: a data URI is a separate document and `var()`
+           does not cross into it. `%235b6478` is the LIGHT `--muted`; the dark blocks below draw
+           the same arrow in `%239aa4bf`, because an arrow left in the other theme's grey is
+           invisible against its own control. `design.test.js` pins all three against the palette
+           rather than tolerating the duplication. */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b6478' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: right var(--space-3) center;
         background-size: 9px 5px;
       }
-      .langs select:hover,
-      .langs select:focus-visible { color: var(--fg); border-color: var(--teal-on-ink); }
+      .prefs select:hover,
+      .prefs select:focus-visible { color: var(--fg); border-color: var(--teal-text); }
+      :root[data-theme='dark'] .prefs select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa4bf' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      }
 
       footer { margin-top: calc(var(--space-7) * 2); text-align: center; }
       .foot {
@@ -847,7 +921,7 @@
     </style>
   </head>
   <body>
-    <nav class="langs">
+    <nav class="prefs">
       <!--
         Labelled by the page's own copy, and every OPTION is an endonym — a Polish visitor scans
         this list for "Polski", not for "Polish", and would not recognise the latter on a page
@@ -862,6 +936,18 @@
         comparison slider uses. It used to be a special case inside `setLang`; making it one more
         row of the attribute map is what puts it under `bilingual.test.js`'s parity check.
       -->
+      <!--
+        Appearance, with the product's own three answers and its own storage key: `system` is the
+        ABSENCE of an override rather than a third palette, so choosing it removes both the
+        attribute and the stored value. The words are `@onerate/ui`'s, copied verbatim from its
+        seven locale files rather than invented here — the portal already decided what "Match my
+        system" is called in Bulgarian.
+      -->
+      <select id="theme" aria-label="Appearance" data-i18n-label="themeSwitch">
+        <option value="system" data-i18n="themeSystem">Match my system</option>
+        <option value="light" data-i18n="themeLight">Light</option>
+        <option value="dark" data-i18n="themeDark">Dark</option>
+      </select>
       <select id="lang" aria-label="Language" data-i18n-label="langLabel">
         <option value="en" lang="en">English</option>
         <option value="tr" lang="tr">Türkçe</option>
@@ -1248,7 +1334,7 @@
           uses.
         -->
         <div class="shot-toggle">
-          <span data-i18n="shotDark">Dark</span>
+          <span data-i18n="themeDark">Dark</span>
           <input
             id="reveal"
             type="range"
@@ -1258,7 +1344,7 @@
             aria-label="Reveal the light theme"
             data-i18n-label="shotSlider"
           />
-          <span data-i18n="shotLight">Light</span>
+          <span data-i18n="themeLight">Light</span>
         </div>
         <p class="shot-caption" data-i18n="shotCaption">
           An illustration of the search screen, drawn in the product's own palette — not a
@@ -1511,6 +1597,10 @@
         var TEXT = {
           en: {
             langLabel: 'Language',
+            themeSwitch: 'Appearance',
+            themeSystem: 'Match my system',
+            themeLight: 'Light',
+            themeDark: 'Dark',
             docTitle: 'OneRate — B2B Hotel Distribution',
             metaDescription:
               "OneRate connects a travel agency's own bedbank contracts into one search: rates " +
@@ -1558,8 +1648,6 @@
             portalLede:
               'Search, map, rate comparison and booking on one screen — in the theme and the ' +
               'language each of your agents prefers. Drag the handle to move between them.',
-            shotDark: 'Dark',
-            shotLight: 'Light',
             shotSlider: 'Reveal the light theme',
             shotCheapest: 'cheapest',
             shotCaption:
@@ -1645,6 +1733,10 @@
           },
           tr: {
             langLabel: 'Dil',
+            themeSwitch: 'Görünüm',
+            themeSystem: 'Sistemi izle',
+            themeLight: 'Açık',
+            themeDark: 'Koyu',
             docTitle: 'OneRate — B2B Otel Dağıtımı',
             metaDescription:
               'OneRate acentenin kendi bedbank kontratlarını tek aramada birleştirir: fiyatlar ' +
@@ -1692,8 +1784,6 @@
             portalLede:
               'Arama, harita, fiyat karşılaştırma ve rezervasyon tek ekranda — her danışmanın ' +
               'tercih ettiği tema ve dilde. Aradaki tutamağı sürükleyerek geçiş yapın.',
-            shotDark: 'Koyu',
-            shotLight: 'Açık',
             shotSlider: 'Açık temayı göster',
             shotCheapest: 'en ucuz',
             shotCaption:
@@ -1776,6 +1866,10 @@
           },
           bg: {
             langLabel: 'Език',
+            themeSwitch: 'Изглед',
+            themeSystem: 'Според системата',
+            themeLight: 'Светъл',
+            themeDark: 'Тъмен',
             docTitle: 'OneRate — B2B хотелска дистрибуция',
             metaDescription:
               'OneRate обединява собствените bedbank договори на агенцията в едно търсене: цените ' +
@@ -1823,8 +1917,6 @@
             portalLede:
               'Търсене, карта, сравнение на цени и резервация на един екран — в темата и езика, ' +
               'които всеки агент предпочита. Плъзнете манипулатора, за да минете между тях.',
-            shotDark: 'Тъмна',
-            shotLight: 'Светла',
             shotSlider: 'Покажи светлата тема',
             shotCheapest: 'най-евтино',
             shotCaption:
@@ -1908,6 +2000,10 @@
           },
           hu: {
             langLabel: 'Nyelv',
+            themeSwitch: 'Megjelenés',
+            themeSystem: 'Rendszer szerint',
+            themeLight: 'Világos',
+            themeDark: 'Sötét',
             docTitle: 'OneRate — B2B szállodai disztribúció',
             metaDescription:
               'A OneRate az iroda saját bedbank-szerződéseit egyetlen keresésbe fogja: az árakat ' +
@@ -1956,8 +2052,6 @@
             portalLede:
               'Keresés, térkép, ár-összehasonlítás és foglalás egyetlen képernyőn — abban a témában ' +
               'és nyelven, amit az adott munkatárs szeret. Húzza a fogantyút az összevetéshez.',
-            shotDark: 'Sötét',
-            shotLight: 'Világos',
             shotSlider: 'A világos téma megmutatása',
             shotCheapest: 'legolcsóbb',
             shotCaption:
@@ -2040,6 +2134,10 @@
           },
           it: {
             langLabel: 'Lingua',
+            themeSwitch: 'Aspetto',
+            themeSystem: 'Come il sistema',
+            themeLight: 'Chiaro',
+            themeDark: 'Scuro',
             docTitle: 'OneRate — Distribuzione alberghiera B2B',
             metaDescription:
               'OneRate riunisce in un’unica ricerca i contratti bedbank dell’agenzia: tariffe ' +
@@ -2090,8 +2188,6 @@
               'Ricerca, mappa, confronto tariffe e prenotazione in una schermata sola — nel tema e ' +
               'nella lingua che ogni agente preferisce. Trascina la maniglia per passare dall’uno ' +
               'all’altro.',
-            shotDark: 'Scuro',
-            shotLight: 'Chiaro',
             shotSlider: 'Mostra il tema chiaro',
             shotCheapest: 'più economica',
             shotCaption:
@@ -2180,6 +2276,10 @@
           },
           pl: {
             langLabel: 'Język',
+            themeSwitch: 'Wygląd',
+            themeSystem: 'Zgodnie z systemem',
+            themeLight: 'Jasny',
+            themeDark: 'Ciemny',
             docTitle: 'OneRate — Dystrybucja hotelowa B2B',
             metaDescription:
               'OneRate łączy własne umowy bedbankowe biura podróży w jedno wyszukiwanie: stawki ' +
@@ -2228,8 +2328,6 @@
             portalLede:
               'Wyszukiwanie, mapa, porównanie stawek i rezerwacja na jednym ekranie — w motywie i ' +
               'języku, który każdy agent woli. Przeciągnijcie uchwyt, żeby przejść między nimi.',
-            shotDark: 'Ciemny',
-            shotLight: 'Jasny',
             shotSlider: 'Pokaż jasny motyw',
             shotCheapest: 'najtańsze',
             shotCaption:
@@ -2313,6 +2411,10 @@
           },
           ro: {
             langLabel: 'Limbă',
+            themeSwitch: 'Aspect',
+            themeSystem: 'Ca sistemul',
+            themeLight: 'Luminos',
+            themeDark: 'Întunecat',
             docTitle: 'OneRate — Distribuție hotelieră B2B',
             metaDescription:
               'OneRate adună contractele bedbank ale agenției într-o singură căutare: tarife ' +
@@ -2363,8 +2465,6 @@
               'Căutare, hartă, comparare de tarife și rezervare pe un singur ecran — în tema și ' +
               'limba pe care fiecare agent le preferă. Trageți de mâner pentru a trece de la una ' +
               'la alta.',
-            shotDark: 'Întunecat',
-            shotLight: 'Luminos',
             shotSlider: 'Arată tema luminoasă',
             shotCheapest: 'cel mai ieftin',
             shotCaption:
@@ -2461,9 +2561,11 @@
 
         var MAIL_TO = 'mailto:hello@onerate.travel';
         var select = document.getElementById('lang');
+        var theme = document.getElementById('theme');
         var reveal = document.getElementById('reveal');
         var shot = document.getElementById('shot');
         var STORAGE_KEY = 'onerate.lang';
+        var THEME_KEY = 'onerate.theme';
 
         function setLang(lang) {
           var copy = TEXT[lang];
@@ -2513,6 +2615,39 @@
             localStorage.setItem(STORAGE_KEY, select.value);
           } catch (ignored) {}
         });
+
+        // Appearance. The storage key, the attribute and the meaning of `system` are
+        // `@onerate/ui`'s `theme.ts`, reimplemented rather than imported for the reason every other
+        // shared value on this page is copied: there is no build step. What matters is that the two
+        // surfaces agree on the KEY, so a reader who picked dark in the portal is not asked again
+        // here — `onerate.theme`, the same name, deliberately.
+        function applyTheme(next) {
+          // `system` removes the attribute rather than stamping a third value: the dark block is
+          // keyed on `:root:not([data-theme='light'])`, so `data-theme="system"` would match
+          // neither block and be ignored, silently.
+          if (next === 'light' || next === 'dark') {
+            document.documentElement.setAttribute('data-theme', next);
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+          try {
+            if (next === 'system') localStorage.removeItem(THEME_KEY);
+            else localStorage.setItem(THEME_KEY, next);
+          } catch (ignored) {}
+        }
+
+        if (theme) {
+          var heldTheme = null;
+          try {
+            heldTheme = localStorage.getItem(THEME_KEY);
+          } catch (ignored) {}
+          // The head script already applied it; this only puts the control in step with what the
+          // document is actually showing.
+          theme.value = heldTheme === 'light' || heldTheme === 'dark' ? heldTheme : 'system';
+          theme.addEventListener('change', function () {
+            applyTheme(theme.value);
+          });
+        }
 
         // The theme comparison. The slider writes one custom property and CSS does the rest — no
         // class flipping, no second copy of the layout, and the value the markup ships with is the

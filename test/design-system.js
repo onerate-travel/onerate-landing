@@ -21,21 +21,74 @@ import { fileURLToPath } from 'node:url';
  * `teams/tasarim/uygulama-landing.md`.
  */
 
-/** Values the page declares in its own `:root`, resolved for a page that is only ever dark. */
+/**
+ * The design system's values the page copies, now in BOTH palettes.
+ *
+ * It used to be one flat map, and it could be: the page had a single theme and `:root` held the
+ * dark answer to every role. The page follows `prefers-color-scheme` now and takes an override, so
+ * a role has two answers and the file has to say which is which — `light` is what `:root` declares
+ * and `dark` is what the two dark blocks re-declare.
+ *
+ * Only COLOUR roles appear under `dark`. The scale, the radius, the touch floor and the type stack
+ * are not opinions about light, which is the same split `tokens.css` makes and the same sentence it
+ * uses to explain it.
+ */
 export const PAGE_TOKENS = {
-  '--teal': '#127a68',
-  '--teal-on-ink': '#7fd0be',
-  '--on-accent': '#ffffff',
-  '--focus': '#5b9bff',
-  '--font-display': "'Space Grotesk Variable', 'Space Grotesk', sans-serif",
-  '--font-ui': "'Inter Variable', 'Inter', system-ui, sans-serif",
-  '--text-md': '13px',
-  '--space-2': '8px',
-  '--space-3': '12px',
-  '--space-4': '16px',
-  '--space-5': '24px',
-  '--space-6': '32px',
-  '--touch': '40px',
+  light: {
+    '--teal': '#0e6b5c',
+    '--teal-text': '#0a5347',
+    '--teal-on-ink': '#7fd0be',
+    '--on-accent': '#ffffff',
+    '--focus': '#2f7cf6',
+    '--font-display': "'Space Grotesk Variable', 'Space Grotesk', sans-serif",
+    '--font-ui': "'Inter Variable', 'Inter', system-ui, sans-serif",
+    '--text-sm': '12px',
+    '--text-md': '13px',
+    '--radius': '10px',
+    '--space-2': '8px',
+    '--space-3': '12px',
+    '--space-4': '16px',
+    '--space-5': '24px',
+    '--space-6': '32px',
+    '--space-7': '48px',
+    '--touch': '40px',
+  },
+  dark: {
+    '--teal': '#127a68',
+    '--teal-text': '#5fd6bb',
+    // The one role that is the SAME in both, and `tokens.css` repeats it in its dark block rather
+    // than omitting it, so that a reader of either palette sees it stated. Copied the same way.
+    '--teal-on-ink': '#7fd0be',
+    '--on-accent': '#ffffff',
+    '--focus': '#5b9bff',
+  },
+};
+
+/**
+ * The page's own ground — NOT the design system, and deliberately so, but it has two palettes now
+ * for the same reason the brand does. It is pinned here because a page that reads its own `--fg`
+ * from a block that forgot to declare it renders from a FALLBACK, and a fallback is a definition
+ * written where nobody looks for one.
+ */
+export const GROUND_TOKENS = {
+  light: {
+    '--bg': '#f7f6f2',
+    '--panel': 'rgba(16, 26, 43, 0.04)',
+    '--panel-lift': 'rgba(16, 26, 43, 0.06)',
+    '--fg': '#101a2b',
+    '--muted': '#5b6478',
+    '--border': 'rgba(16, 26, 43, 0.14)',
+    '--border-soft': 'rgba(16, 26, 43, 0.08)',
+  },
+  dark: {
+    '--bg': '#0b1020',
+    '--panel': 'rgba(255, 255, 255, 0.04)',
+    '--panel-lift': 'rgba(255, 255, 255, 0.07)',
+    '--fg': '#eef2ff',
+    '--muted': '#9aa4bf',
+    '--border': 'rgba(255, 255, 255, 0.1)',
+    '--border-soft': 'rgba(255, 255, 255, 0.06)',
+  },
 };
 
 /**

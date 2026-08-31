@@ -11,7 +11,7 @@ access request — because the product team's own finding was that the page was 
 funnel and carried a `mailto:` (`teams/urun.md`, B24). Sections are cheap; the SEVEN TRANSLATIONS
 of each new sentence are not. Weigh a new paragraph accordingly.
 
-## Six things that look wrong and are not
+## Seven things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
@@ -55,7 +55,25 @@ of each new sentence are not. Weigh a new paragraph accordingly.
    `onerate-supplier-gateway`. Both halves skip when the sibling repo is absent, like the tokens
    check. Promising an agency a supplier the product cannot take is the one lie this page can tell
    that no language test would catch.
-6. **`public/fonts/` holds four `.woff2` files, and they are checked in.** The two applications
+6. **The `mailto:` you wrote is not the `mailto:` that ships, and that is accepted.** The zone has
+   Cloudflare's Email Obfuscation on, so every `mailto:` in the served HTML comes back as
+   `/cdn-cgi/l/email-protection#…`. Measured in Chrome against production: with JavaScript on the
+   page's own `setLang` writes the composed `mailto:` over it and the buttons work — Cloudflare's
+   decoder alone would restore only the ADDRESS and drop the subject and body, so the prefilled
+   template survives because this page builds it, not because Cloudflare gives it back. With
+   JavaScript off all three mail links lead to a Cloudflare 404.
+
+   Owner decision, 2026-08-31: leave it. A visitor with JavaScript off is, for a page selling to
+   travel agencies, close to nobody, and turning obfuscation off exposes the address on the one
+   page whose whole job is to be written to. The fix, if it is ever wanted, is a Configuration Rule
+   scoped to the apex hostname setting Email Obfuscation off — not the zone-wide toggle, which
+   would also un-hide the addresses on `docs.` and `support.`.
+
+   The consequence for `make smoke`: it cannot assert on the `href`, so it asserts on what survives
+   the rewrite — the `data-mail-template` hook, the `requestSubject` template, and the
+   `encodeURIComponent` line that assembles them. Do not "fix" it back to grepping the href; it
+   will be red forever, and a check that is always red is a check nobody reads.
+7. **`public/fonts/` holds four `.woff2` files, and they are checked in.** The two applications
    get Inter and Space Grotesk from `@fontsource-variable/*` and a bundler
    (`onerate-ui/src/styles.css:1-4`); with no build step this page cannot, and a font CDN would
    hand every visitor's IP to a third party across six EU markets. So the four subsets the seven

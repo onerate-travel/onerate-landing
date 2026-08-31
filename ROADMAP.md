@@ -42,46 +42,6 @@ carries no stub (a second copy would be one more thing to keep in sync), so a ch
       - [ ] scenario: whichever default is chosen is asserted for both surfaces —
             `test/lang.test.js` covers this page, `apps/web/src/i18n.test.ts` covers the portal
 
-## R4.2 Cloudflare rewrites every `mailto:` on the page, and the no-JS path dies — P2
-
-Found 2026-08-31 by the `make smoke` check added with the page rewrite, on the first production
-deploy that check ever ran against. It is NOT caused by that deploy: the zone setting predates it
-and the old page's footer address was rewritten too. Nothing looked at it, because until this deploy
-nothing asserted the mail link.
-
-**Measured, not assumed** (Chrome against `https://onerate.travel/`, JS on and JS off):
-
-| | `[data-mail-template]` href | footer address |
-|---|---|---|
-| JS on | `mailto:hello@onerate.travel?subject=…&body=…` — correct | `mailto:hello@onerate.travel` |
-| JS off | `/cdn-cgi/l/email-protection#3b53…` | `/cdn-cgi/l/email-protection#5c34…` |
-
-`GET https://onerate.travel/cdn-cgi/l/email-protection` answers **404** with Cloudflare's own error
-page. So a visitor with JavaScript off who clicks the page's ONLY conversion surface lands on a
-Cloudflare 404. Not on this page, not in a mail client — a dead end.
-
-Zone setting, read from the API on the day: `email_obfuscation: on`, `editable: true`, zone
-`961d1e0727aa17f628644cf8d1388efd`.
-
-Why JS-on is nevertheless correct, and why that is not the fix: `setLang` writes the composed
-`mailto:` over whatever the markup shipped, so the script wins the race regardless of Cloudflare's
-decoder — which on its own restores only the ADDRESS and drops the subject and body. The prefilled
-template survives because this page builds it, not because Cloudflare gives it back.
-
-This contradicts a rule the repo states in two places — `CLAUDE.md`, "Language conventions" ("a
-visitor with JavaScript off … sees the raw HTML") and R4.1's own acceptance line ("with JavaScript
-off the page is still readable and the form still submits").
-
-- [ ] **Owner decision — at what scope is Email Obfuscation turned off?** Zone-wide is one API call
-      and also stops obfuscating addresses on `docs.` and `support.`, which is a real (small) loss.
-      A Configuration Rule scoped to the apex hostname turns it off for this page alone and leaves
-      the rest of the zone as it is. Recommended: the scoped rule — the landing page is the only
-      surface whose whole job is a mail link.
-- [ ] Once answered: apply it, then `make smoke` — the two mail assertions it already carries are
-      what proves the fix, and they are red today for exactly the right reason.
-- [ ] scenario: with JavaScript disabled, the access CTA opens a mail client with the subject and
-      body already filled in
-
 ## R4.1 the access-request form (K6) has a mechanism and no destination — P2
 
 Opened 2026-08-30 by the design review (`teams/tasarim/kabuk.md` §3/L4, `teams/urun.md:315-325`).

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   FAVICON_TOKENS,
+  GROUND_TOKENS,
   PAGE_TOKENS,
   SHOT_TOKENS,
   UPSTREAM_PATH,
@@ -31,12 +32,33 @@ const propertyNames = (style) => Array.from({ length: style.length }, (_, i) => 
 const declarationsOf = (rule) =>
   propertyNames(rule.style).map((name) => [name, rule.style.getPropertyValue(name)]);
 
+/**
+ * The page has three palette blocks now, and which selector each one carries is the whole of how a
+ * theme override works — copied from `tokens.css` rather than invented:
+ *
+ *   :root                              the light palette, and the default
+ *   :root:not([data-theme='light'])    inside @media (prefers-color-scheme: dark) — the system
+ *   :root[data-theme='dark'])          outside it — an explicit choice, which must win
+ *
+ * `system` is the ABSENCE of the attribute, not a third value: `data-theme="system"` would match
+ * neither block and be ignored silently, which is worse than being wrong.
+ */
 const ROOT = ruleFor(':root');
+const DARK_MEDIA = rules.find(
+  (rule) =>
+    rule.constructor.name === 'CSSMediaRule' && rule.conditionText.includes('prefers-color-scheme')
+);
+const DARK_BY_SYSTEM = DARK_MEDIA && [...DARK_MEDIA.cssRules].find(isStyleRule);
+const DARK_BY_CHOICE = ruleFor(":root[data-theme='dark']");
+/** A block that ANSWERS roles rather than paints with them. Colour literals are legal only here. */
+const PALETTE_SELECTORS = [':root', ":root:not([data-theme='light'])", ":root[data-theme='dark']"];
 const REDUCED_MOTION = rules.find(
   (rule) => rule.constructor.name === 'CSSMediaRule' && rule.conditionText.includes('prefers-reduced-motion')
 );
 const FONT_FACES = rules.filter((rule) => rule.constructor.name === 'CSSFontFaceRule');
-const PAINTING_RULES = rules.filter(isStyleRule).filter((rule) => selectorOf(rule) !== ':root');
+const PAINTING_RULES = rules
+  .filter(isStyleRule)
+  .filter((rule) => !PALETTE_SELECTORS.includes(selectorOf(rule)));
 
 /**
  * This suite is the thing the landing page has never had. Its 33 existing tests are all about
@@ -49,9 +71,53 @@ describe('the brand this page copies from @onerate/ui', () => {
     // Under its own NAME, which is half the point: this page used to call #5b8cff `--accent`, and
     // `--accent` is the exact name whose undefined reads painted the wrong teal across the product
     // (tokens.css:5-11). One word, three meanings, two repositories.
-    for (const [name, value] of Object.entries(PAGE_TOKENS)) {
+    for (const [name, value] of Object.entries(PAGE_TOKENS.light)) {
       expect(ROOT.style.getPropertyValue(name).trim(), `:root is missing ${name}`).toBe(value);
     }
+    for (const [name, value] of Object.entries(GROUND_TOKENS.light)) {
+      expect(ROOT.style.getPropertyValue(name).trim(), `:root is missing ${name}`).toBe(value);
+    }
+  });
+
+  it('re-answers the dark roles in BOTH dark blocks, with the same values', () => {
+    /**
+     * Two blocks and one palette. The system block and the override block are separate rules, so a
+     * value corrected in one and not the other is a page that is right until someone picks a theme
+     * by hand — the least reproducible bug shape there is, and invisible to anyone whose laptop
+     * happens to be in the mode that was fixed.
+     */
+    expect(DARK_BY_SYSTEM, 'no dark block under prefers-color-scheme').toBeTruthy();
+    expect(DARK_BY_CHOICE, "no :root[data-theme='dark'] block").toBeTruthy();
+    expect(selectorOf(DARK_BY_SYSTEM)).toBe(":root:not([data-theme='light'])");
+
+    for (const block of [DARK_BY_SYSTEM, DARK_BY_CHOICE]) {
+      for (const [name, value] of Object.entries({ ...PAGE_TOKENS.dark, ...GROUND_TOKENS.dark })) {
+        expect(
+          block.style.getPropertyValue(name).trim(),
+          `${selectorOf(block)} is missing ${name}`
+        ).toBe(value);
+      }
+    }
+  });
+
+  it('answers a role in the dark only if the light declared it first', () => {
+    // A name that exists only in a dark block renders from a fallback in the light — the failure
+    // `tokens.css` opens by describing, one page smaller.
+    const declaredLight = propertyNames(ROOT.style).filter((n) => n.startsWith('--'));
+    for (const block of [DARK_BY_SYSTEM, DARK_BY_CHOICE]) {
+      const orphans = propertyNames(block.style)
+        .filter((n) => n.startsWith('--'))
+        .filter((n) => !declaredLight.includes(n));
+      expect(orphans, `${selectorOf(block)} declares names the light palette never does`).toEqual([]);
+    }
+  });
+
+  it('tells the browser which schemes it actually has', () => {
+    // `dark` alone was correct while dark was the only palette, and is a lie now: the platform
+    // draws form controls from this, and the page has two selects on it.
+    expect(ROOT.style.getPropertyValue('color-scheme').trim()).toBe('light');
+    expect(DARK_BY_SYSTEM.style.getPropertyValue('color-scheme').trim()).toBe('dark');
+    expect(DARK_BY_CHOICE.style.getPropertyValue('color-scheme').trim()).toBe('dark');
   });
 
   it('spends every token it declares, and declares every token it spends', () => {
@@ -81,23 +147,42 @@ describe('the brand this page copies from @onerate/ui', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('pins the one colour that cannot be a var(): the switcher’s chevron', () => {
+  it('pins the one colour that cannot be a var(): the switcher’s chevron, in each theme', () => {
     // A data URI is a separate document and `var()` does not cross into it, so the arrow's stroke
-    // is a second copy of `--muted` by necessity. Asserted rather than tolerated.
-    const muted = ROOT.style.getPropertyValue('--muted').trim();
-    const chevron = ruleFor('.langs select').style.getPropertyValue('background-image');
-    expect(chevron).toContain(`stroke='%23${muted.slice(1)}'`);
+    // is a second copy of `--muted` by necessity — and now a third, because `--muted` has two
+    // answers and an arrow drawn in the other one is invisible against its own control.
+    const encoded = (hex) => `stroke='%23${hex.slice(1)}'`;
+    expect(ruleFor('.prefs select').style.getPropertyValue('background-image')).toContain(
+      encoded(GROUND_TOKENS.light['--muted'])
+    );
+    const darkChevron = [DARK_MEDIA && [...DARK_MEDIA.cssRules], rules]
+      .filter(Boolean)
+      .flat()
+      .filter(isStyleRule)
+      .filter((rule) => selectorOf(rule).endsWith('.prefs select'))
+      .map((rule) => rule.style.getPropertyValue('background-image'))
+      .filter(Boolean);
+    expect(
+      darkChevron.filter((image) => image.includes(encoded(GROUND_TOKENS.dark['--muted']))).length,
+      'the dark chevron is not drawn in the dark --muted, in both dark blocks'
+    ).toBe(2);
   });
 
   it.skipIf(!upstreamIsCheckedOut())(
     'still agrees with tokens.css, when onerate-ui is checked out beside this repo',
     () => {
-      // The drift half. It is skipped rather than absent in CI — see test/design-system.js for why
-      // that is the honest shape and what would have to change to close it.
+      // The drift half, now asked of each palette against the block it was copied from rather than
+      // of one flattened answer. It is skipped rather than absent in CI — see test/design-system.js
+      // for why that is the honest shape.
       const upstream = readUpstreamTokens();
-      const drifted = Object.entries(PAGE_TOKENS)
-        .filter(([name, value]) => upstream.resolve(name) !== value)
-        .map(([name, value]) => `${name}: ${value} here, ${upstream.resolve(name)} in ${UPSTREAM_PATH}`);
+      const drifted = [];
+      for (const theme of ['light', 'dark']) {
+        for (const [name, value] of Object.entries(PAGE_TOKENS[theme])) {
+          if (upstream[theme][name] !== value) {
+            drifted.push(`${theme} ${name}: ${value} here, ${upstream[theme][name]} in ${UPSTREAM_PATH}`);
+          }
+        }
+      }
       expect(drifted).toEqual([]);
     }
   );
@@ -286,7 +371,7 @@ describe('the layout can outgrow the viewport', () => {
   it('keeps the language switcher in the flow, off the content’s layer', () => {
     // Fixed, it drew on top of a vertically centred <main> on a short viewport — a phone held
     // sideways is 375px tall.
-    expect(ruleFor('.langs').style.getPropertyValue('position')).toBe('');
+    expect(ruleFor('.prefs').style.getPropertyValue('position')).toBe('');
   });
 });
 
@@ -414,7 +499,7 @@ describe('touch targets', () => {
     // 40px is `--touch`, the fleet's own baseline (tokens.css:192-197) rather than WCAG's 24px.
     // The identical control is tested against it in onerate-ui/src/rhythm.test.tsx:98; this page
     // gave it 6px of padding around 13px type, about 27px.
-    expect(ruleFor('.langs select').style.getPropertyValue('min-height')).toBe('var(--touch)');
-    expect(PAGE_TOKENS['--touch']).toBe('40px');
+    expect(ruleFor('.prefs select').style.getPropertyValue('min-height')).toBe('var(--touch)');
+    expect(PAGE_TOKENS.light['--touch']).toBe('40px');
   });
 });
