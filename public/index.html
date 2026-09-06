@@ -891,11 +891,6 @@
         font-weight: 600;
         font-size: 18px;
       }
-      .supplier-status {
-        margin-top: var(--space-4);
-        color: var(--fg);
-        font-size: 14px;
-      }
       .supplier-more {
         margin-top: var(--space-5);
         color: var(--muted);
@@ -2119,18 +2114,22 @@
           They used to drive a two-column status board — "Connected" beside "Adapter written", with
           a hollow dot for the second. It was honest and it read as a gap chart: a visitor's first
           impression was of a platform with nothing plugged in yet, which is a worse distortion than
-          the one the board was built to prevent. The honesty now lives in one sentence and in the
-          guard; the names carry equal visual weight because to the agency reading them they ARE
-          equal — the question is which contract the agency holds, not which one we finished first.
+          the one the board was built to prevent. The names carry equal visual weight because to the
+          agency reading them they ARE equal — the question is which contract the agency holds, not
+          which one we finished first.
+
+          A one-line status sentence stood in for the board and was removed in turn on 2026-09-06,
+          for the same reason at a smaller scale: it re-ranked the three names this paragraph
+          deliberately leaves level. So the honesty now lives in the GUARD alone, and the guard is
+          invisible to a reader — nothing on the page discloses that two of these three are adapter
+          code rather than a live connection. Owner decision, not an oversight. If the disclosure
+          comes back, it belongs somewhere that does not turn the list into a ranking again.
         -->
         <ul class="supplier-names">
           <li data-reveal data-supplier="ratehawk" data-supplier-state="live">RateHawk</li>
           <li data-reveal data-supplier="goglobal" data-supplier-state="integrating">GoGlobal</li>
           <li data-reveal data-supplier="tbo" data-supplier-state="integrating">TBO</li>
         </ul>
-        <p class="supplier-status" data-i18n="suppliersStatus">
-          RateHawk runs in production today; GoGlobal and TBO follow.
-        </p>
         <p class="supplier-more" data-i18n="suppliersMore">
           Working with a bedbank that is not on this list? Tell us which one — for OneRate a new
           supplier is an adapter, not a change of platform.
@@ -2722,7 +2721,6 @@
             suppliersLede:
               'OneRate holds no supplier contracts of its own and never will. It speaks to the ' +
               'bedbanks you have already signed with, using your credentials.',
-            suppliersStatus: 'RateHawk runs in production today; GoGlobal and TBO follow.',
             suppliersMore:
               'Working with a bedbank that is not on this list? Tell us which one — for OneRate a ' +
               'new supplier is an adapter, not a change of platform.',
@@ -2866,7 +2864,6 @@
             suppliersLede:
               'OneRate’in kendi tedarikçi kontratı yoktur ve olmayacaktır. Zaten imzaladığınız ' +
               'bedbank’larla, sizin kimlik bilgilerinizle konuşur.',
-            suppliersStatus: 'RateHawk bugün üretimde çalışıyor; GoGlobal ve TBO sırada.',
             suppliersMore:
               'Bu listede olmayan bir bedbank ile mi çalışıyorsunuz? Hangisi olduğunu yazın — ' +
               'OneRate için yeni bir tedarikçi bir adaptördür, platform değişikliği değil.',
@@ -3007,7 +3004,6 @@
             suppliersLede:
               'OneRate няма собствени договори с доставчици и никога няма да има. Говори с ' +
               'bedbank-овете, с които вие вече сте подписали, с вашите достъпи.',
-            suppliersStatus: 'RateHawk работи в продукция днес; GoGlobal и TBO следват.',
             suppliersMore:
               'Работите с bedbank, който не е в този списък? Кажете ни кой — за OneRate нов ' +
               'доставчик е адаптер, а не смяна на платформа.',
@@ -3150,7 +3146,6 @@
             suppliersLede:
               'A OneRate-nek nincsenek és nem is lesznek saját beszállítói szerződései. Azokkal a ' +
               'bedbankokkal beszél, amelyekkel Ön már aláírt, az Ön hozzáféréseivel.',
-            suppliersStatus: 'A RateHawk ma éles üzemben fut; a GoGlobal és a TBO következik.',
             suppliersMore:
               'Olyan bedbankkal dolgozik, ami nincs ezen a listán? Írja meg, melyikkel — a ' +
               'OneRate-nek egy új beszállító egy adapter, nem platformváltás.',
@@ -3293,7 +3288,6 @@
             suppliersLede:
               'OneRate non ha contratti propri con i fornitori e non ne avrà mai. Parla con i ' +
               'bedbank con cui hai già firmato, usando le tue credenziali.',
-            suppliersStatus: 'RateHawk è in produzione oggi; GoGlobal e TBO seguono.',
             suppliersMore:
               'Lavori con un bedbank che non è in questo elenco? Dicci quale — per OneRate un nuovo ' +
               'fornitore è un adapter, non un cambio di piattaforma.',
@@ -3442,7 +3436,6 @@
             suppliersLede:
               'OneRate nie ma własnych umów z dostawcami i nigdy mieć nie będzie. Rozmawia z ' +
               'bedbankami, z którymi już podpisaliście, waszymi danymi dostępowymi.',
-            suppliersStatus: 'RateHawk działa dziś produkcyjnie; GoGlobal i TBO są następne.',
             suppliersMore:
               'Pracujecie z bedbankiem, którego nie ma na tej liście? Napiszcie z którym — dla ' +
               'OneRate nowy dostawca to adapter, a nie zmiana platformy.',
@@ -3586,7 +3579,6 @@
             suppliersLede:
               'OneRate nu are contracte proprii cu furnizorii și nu va avea niciodată. Vorbește cu ' +
               'bedbank-urile cu care ați semnat deja, folosind credențialele dumneavoastră.',
-            suppliersStatus: 'RateHawk rulează astăzi în producție; GoGlobal și TBO urmează.',
             suppliersMore:
               'Lucrați cu un bedbank care nu este pe listă? Spuneți-ne care — pentru OneRate un ' +
               'furnizor nou este un adaptor, nu o schimbare de platformă.',
