@@ -11,7 +11,12 @@ access request — because the product team's own finding was that the page was 
 funnel and carried a `mailto:` (`teams/urun.md`, B24). Sections are cheap; the SEVEN TRANSLATIONS
 of each new sentence are not. Weigh a new paragraph accordingly.
 
-## Eight things that look wrong and are not
+On 2026-09-06 the first of those sections became a WALKTHROUGH: the four "how it works" steps
+scroll past one drawn product screen that redraws itself at each of them, and every other section
+arrives as the reader reaches it. Not a word of copy changed — the four steps were already written
+and already translated seven times, which is the budget the whole redesign was built under.
+
+## Nine things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload
    publishes every file in the directory it is given. Deploying the root would put this project's
@@ -112,6 +117,32 @@ of each new sentence are not. Weigh a new paragraph accordingly.
    learns who the visitor is before they say yes. There is no privacy notice behind the bar yet —
    `ROADMAP.md`, R4.2.
 
+9. **The walkthrough's screen is a THIRD drawing of the product and carries no third palette, and
+   it is dark on a light page.** It reuses the comparison's own `.dark .ui-*` rules by carrying the
+   same class, so the sixteen `--shot-*` values stay the only copy of the product's palettes on this
+   page (point 4). It does not follow the page theme, and that is the decision: the section BELOW it
+   is where the two palettes are compared, with a control and a caption, and a picture that changes
+   its subject four times should not also be changing its colours. Its border is `--shot-dark-line`
+   rather than `--border` for the same reason the shadow is a `color-mix` of the screen's own paper
+   — on the dark page the page's own hairline is invisible and the panel loses its edge.
+
+   Three quieter decisions live with it, and each of them is one line that looks removable:
+
+   - **`js-reveal` is added in the `<head>`, and only where `IntersectionObserver` exists.** The
+     hidden state has to be armed before first paint or the reader sees the finished page and then
+     watches it be built. It must NOT be armed where nothing can clear it: `opacity: 0` in the sheet
+     plus a callback that never comes is a blank page that looks, in every screenshot and every
+     status code, exactly like success.
+   - **The steps recede only under `[data-live]`,** which the script writes when it installs the
+     observer. Translated copy left at 32% opacity with nothing to restore it is the same failure
+     one level down.
+   - **The whole script's walkthrough block sits behind one `typeof IntersectionObserver` check,**
+     because a bare `new IntersectionObserver` throws in a browser without one and this file is a
+     single IIFE — the consent banner and the language the page renders in are both BELOW it.
+
+   `test/walkthrough.test.js` drives the observer with a stub and renders the page with the
+   constructor removed, which is the only way any of the above is visible to a test.
+
 ## TDD — the Iron Law
 
 ```text
@@ -120,7 +151,8 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
 Red → Green → Refactor. Every bug fix starts with a failing regression test that reproduces it.
 
-`test/lang.test.js`, `test/bilingual.test.js` and `test/design.test.js` parse the *shipped*
+`test/lang.test.js`, `test/bilingual.test.js`, `test/design.test.js` and `test/walkthrough.test.js`
+parse the *shipped*
 `public/index.html` — never a copy of its script or its stylesheet — so editing the page is exactly
 what makes them fail. Keep it that way. `bilingual.test.js` goes further and RUNS the page once per language, because the
 `TEXT` dictionary is inside an IIFE with nothing exported: reading what the page actually rendered

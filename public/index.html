@@ -51,6 +51,20 @@
             document.documentElement.setAttribute('data-theme', held);
           }
         } catch (ignored) {}
+
+        // The second thing that cannot wait for the end of the body, and for the same reason: the
+        // page's sections start HIDDEN so they can arrive as the reader reaches them, and a hidden
+        // state armed after first paint is a flash of the finished page followed by an animation
+        // of it being built.
+        //
+        // The condition is the whole of the safety. `opacity: 0` in the stylesheet and `opacity: 1`
+        // from a callback is a blank page in any browser that never makes the callback, so the
+        // class that hides anything is added only where the observer that puts it back exists.
+        // No script, no class, no hidden content — and `test/walkthrough.test.js` asserts all
+        // three.
+        if (typeof IntersectionObserver === 'function') {
+          document.documentElement.classList.add('js-reveal');
+        }
       })();
     </script>
     <!--
@@ -234,6 +248,12 @@
         --space-7: 48px;
         --touch: 40px;
 
+        /* How far a section travels on its way in. It is a custom property rather than a literal
+           inside the transform because the ARRIVED state then has no `transform` of its own to
+           declare — `--rise: 0px` undoes the movement without a second transform in the sheet,
+           which keeps the list of things `prefers-reduced-motion` has to stop down to one. */
+        --rise: 18px;
+
         /* The room the consent banner takes at the bottom of the viewport, measured by the script
            and written back here. It is 0 whenever the banner is not up — which is every visit
            after the first, and every visit with JavaScript off. A hard-coded reserve cannot work:
@@ -356,13 +376,19 @@
            has to hold. */
         margin: auto;
         width: 100%;
-        max-width: 1040px;
+        /* 1040 was the width of a single column of prose. The walkthrough is a column of prose
+           BESIDE a screen, and at 1040 neither of them was wide enough to be what it is. */
+        max-width: 1120px;
       }
 
       /* ---- rhythm ------------------------------------------------------------------------- */
       /* One vertical step between sections, derived rather than typed, so the page has a rhythm
          instead of nine opinions. */
-      section { margin-top: calc(var(--space-7) * 2); }
+      /* Three steps, not two. The page argues in sections now and the silence between them is what
+         says a new argument has started — the same reason a chapter break is a page and not a line.
+         The narrow-viewport block below cuts it back to one, because on a phone the same silence is
+         just scrolling. */
+      section { margin-top: calc(var(--space-7) * 3); }
       .eyebrow {
         font-family: var(--font-display);
         font-size: var(--text-sm);
@@ -376,8 +402,8 @@
         font-family: var(--font-display);
         font-weight: 600;
         letter-spacing: -0.02em;
-        font-size: clamp(22px, 3.4vw, 30px);
-        line-height: 1.2;
+        font-size: clamp(24px, 4.4vw, 40px);
+        line-height: 1.12;
       }
       h3 {
         font-family: var(--font-display);
@@ -389,8 +415,50 @@
         margin-top: var(--space-4);
         max-width: 62ch;
         color: var(--muted);
-        font-size: 16px;
+        font-size: 17px;
       }
+
+      /* ---- arrival ---------------------------------------------------------------------------
+         Every block on this page below the fold starts a little low and a little transparent, and
+         is put right when the reader reaches it. That is the whole of the effect and it is applied
+         from ONE pair of rules, so there is no per-section animation to keep in step with anything.
+
+         `.js-reveal` is added by the head script, and only where an IntersectionObserver exists to
+         undo what it does. That condition is the difference between an effect and a bug: an
+         `opacity: 0` no callback ever clears is a blank page that looks, in every screenshot, like
+         a page that works.
+
+         The travel is `var(--rise)` rather than a literal so that the arrived state can cancel it
+         by re-answering the token — one `transform` in the sheet instead of two, and therefore one
+         line for `prefers-reduced-motion` to stop. */
+      .js-reveal [data-reveal] {
+        opacity: 0;
+        transform: translateY(var(--rise));
+        transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .js-reveal [data-reveal].is-in {
+        opacity: 1;
+        --rise: 0px;
+      }
+      /* A list arrives as a list rather than as a wall. The delay is on the child index, so a card
+         grid and a row of supplier names get the same cascade without either of them being told
+         about it. */
+      .js-reveal [data-reveal]:nth-child(2) { transition-delay: 0.07s; }
+      .js-reveal [data-reveal]:nth-child(3) { transition-delay: 0.14s; }
+      .js-reveal [data-reveal]:nth-child(4) { transition-delay: 0.21s; }
+
+      /* The hero is the one block that cannot wait to be scrolled to, so it arrives on load and in
+         CSS alone — no observer, no class, nothing to fail. Under a reduced-motion preference the
+         duration collapses to 0.01ms and the end state, which is the visible one, simply applies. */
+      @keyframes arrive {
+        from { opacity: 0; transform: translateY(18px); }
+        to { opacity: 1; transform: none; }
+      }
+      .hero > * { animation: arrive 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+      .hero .tagline { animation-delay: 0.07s; }
+      .hero .lede { animation-delay: 0.14s; }
+      .hero .ctas { animation-delay: 0.21s; }
+      .hero .model-line { animation-delay: 0.28s; }
 
       /* ---- hero --------------------------------------------------------------------------- */
       .hero {
@@ -415,8 +483,8 @@
         font-family: var(--font-display);
         font-weight: 600;
         letter-spacing: -0.025em;
-        line-height: 1.12;
-        font-size: clamp(30px, 6.4vw, 54px);
+        line-height: 1.06;
+        font-size: clamp(32px, 7.2vw, 68px);
       }
       .hero .lede {
         margin-left: auto;
@@ -475,18 +543,102 @@
         font-size: 15px;
       }
 
-      /* ---- numbered steps ----------------------------------------------------------------- */
-      .steps {
-        margin-top: var(--space-6);
+      /* ---- the walkthrough: four steps, one screen, and the scroll between them ------------- */
+      /*
+         This was a four-column grid of paragraphs, and the copy in it has not changed by a word —
+         `step1Title` through `step4Body`, the same four keys, already translated seven times. What
+         changed is that the four sentences now have a PICTURE of themselves, and it is one screen
+         that redraws rather than four screenshots that scroll.
+
+         Which is the point of the whole section: the product's argument is a SEQUENCE — credentials
+         become a search, a search becomes comparable rates, comparable rates become a booking — and
+         a sequence is the one thing a grid of four boxes cannot show. A reader scrolling past four
+         static cards reads four features. A reader scrolling past one screen that keeps changing
+         watches a search happen.
+
+         Nothing here is a scroll hijack. The page scrolls at the speed the reader's own device
+         scrolls; the only thing the scroll position decides is WHICH beat the pinned screen is
+         drawing, and it decides it through an IntersectionObserver rather than a scroll handler —
+         no work on the scroll thread, and nothing to throttle.
+
+         The cost of the effect is paid entirely by readers who can see it. The steps are ordinary
+         list items with ordinary text in them: with no JavaScript, with no IntersectionObserver, or
+         under `prefers-reduced-motion`, this section is the column of prose it always was, and the
+         screen beside it is a still. `test/walkthrough.test.js` is the file that keeps that true.
+      */
+      .walk {
+        margin-top: calc(var(--space-7) * 1.5);
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: var(--space-5);
+        /* The text column is the narrower one. The screen is the thing being looked at; the step is
+           the caption under it, even though it sits beside it. */
+        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+        gap: calc(var(--space-7) * 1.4);
+        align-items: start;
+      }
+      .walk-steps {
         list-style: none;
+        position: relative;
+        /* Room BELOW the last step, and it is the difference between a sequence with an ending and
+           one that is cut off. The canvas is `sticky`, so it unpins as soon as its bottom reaches
+           the bottom of this column — without the trailing room that happened while the reader was
+           still on step four, and the fourth beat, which is the whole payoff, was the one beat the
+           screen would not hold still for. Measured before and after: 320px of pinned scroll on the
+           last beat against 400 on each of the others; now they are even. */
+        padding-bottom: 24vh;
       }
-      .step {
-        padding-top: var(--space-4);
-        border-top: 1px solid var(--border);
+      .walk-step {
+        /* The height IS the timing. Four steps in a normal-height column would swap the screen four
+           times inside one flick of a trackpad, which reads as a glitch rather than as a sequence;
+           a step the reader has to scroll THROUGH is a step they read. 56 rather than 62 because
+           the trailing room above buys the same dwell without the extra page. */
+        min-height: 56vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: var(--space-5) 0;
+        /* The gutter the spine runs in. */
+        padding-left: calc(var(--space-5) + var(--space-3));
       }
+
+      /* ---- the spine ------------------------------------------------------------------------
+         A rail down the left of the steps that fills as the reader goes: four segments, the ones
+         behind them solid, the one they are on filling, the rest a hairline. It is the one thing
+         the walkthrough was missing that a reader glancing at it needs — how far through a sequence
+         they are — and it says it without a word, which is what keeps it out of the seven
+         translations.
+
+         Drawn ENTIRELY under `[data-live]`, like the dimming: a rail that can never fill is a
+         progress bar the reader reads as broken, and that is what a browser with no observer would
+         otherwise be shown for ever. */
+      .walk[data-live] .walk-step::before,
+      .walk[data-live] .walk-step::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        /* 3px, not 2. At two the filled segment and the track were both hairlines and the only
+           difference between "read" and "not read" was a shade — which is the one thing a progress
+           rail cannot afford to be. */
+        width: 3px;
+        border-radius: 3px;
+      }
+      .walk[data-live] .walk-step::before {
+        top: 0;
+        bottom: 0;
+        background: var(--border-soft);
+      }
+      .walk[data-live] .walk-step::after {
+        top: 0;
+        height: 0;
+        background: var(--teal-text);
+        transition: height 0.55s ease;
+      }
+      .walk[data-live] .walk-step.is-active::after,
+      .walk[data-live] .walk-step.is-past::after { height: 100%; }
+      /* Both of these hang off `data-live`, which the script writes only once the observer is
+         installed. Without it nothing recedes and nothing transitions: four steps at full contrast,
+         which is exactly what a reader with no observer should get. */
+      .walk[data-live] .walk-step { transition: opacity 0.5s ease; }
+      .walk[data-live] .walk-step:not(.is-active) { opacity: 0.32; }
       .step-n {
         display: block;
         font-family: var(--font-display);
@@ -495,12 +647,232 @@
         letter-spacing: 0.1em;
         color: var(--teal-text);
       }
-      .step h3 { margin-top: var(--space-3); }
-      .step p {
-        margin-top: var(--space-2);
-        color: var(--muted);
-        font-size: 14px;
+      .walk-step { position: relative; }
+      .walk-step h3 {
+        margin-top: var(--space-3);
+        font-size: clamp(18px, 2.4vw, 23px);
       }
+      .walk-step p {
+        margin-top: var(--space-3);
+        max-width: 46ch;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .walk-canvas {
+        position: sticky;
+        /* Held at eye level rather than at the top of the window: the step being read sits in the
+           middle of the viewport, so the picture of it belongs beside it and not above it. */
+        top: 19vh;
+      }
+
+      /* ---- the stage: the product screen, redrawn four times ---------------------------------
+         Deliberately ONE palette, and it is the product's dark chrome in both page themes.
+
+         The section below this one is where the two palettes are compared, with a control and a
+         caption; asking the same question twice would make the second asking noise. What this
+         screen is for is the SEQUENCE, and a picture that changes its subject four times should not
+         also be changing its colours. So it is drawn in the `--shot-dark-*` set — the same sixteen
+         values `test/design-system.js` records against `tokens.css` — and it reuses the comparison's
+         own `.dark .ui-*` rules by carrying the same class, which is what stops a third copy of the
+         product's palette from existing at all.
+
+         On the light page that is a deep panel floating on paper; on the dark page it is a lit
+         screen a shade above the ground. `--teal-on-ink` is identical in both palettes precisely
+         because it is the brand ON this chrome, so the accent inside it is right either way. */
+      .stage {
+        position: relative;
+        overflow: hidden;
+        /* The screen's OWN line, not the page's. `--border` is a tint of the page's foreground, and
+           on the dark page that is a pale hairline the eye reads as part of the paper — the panel
+           lost its edge entirely and the results looked like they were lying on the page. The
+           product's own `--shot-dark-line` is a shade lighter than the dark ground and a shade
+           darker than the light one, so the same value draws the edge in both. */
+        border: 1px solid var(--shot-dark-line);
+        border-radius: 16px;
+        aspect-ratio: 16 / 10;
+        box-shadow: 0 40px 90px color-mix(in srgb, var(--shot-dark-paper) 45%, transparent);
+      }
+      /* The gap between rows moves onto the rows themselves, because a beat FOLDS two of them away
+         and a flex `gap` keeps its space for a row of zero height — the duplicates would collapse
+         into a stack of blank stripes. A margin collapses with the row that owns it. */
+      .stage .ui-list { gap: 0; }
+      .stage .ui-row {
+        margin-bottom: 5px;
+        padding: var(--space-2) var(--space-3);
+        opacity: 0;
+        transition: opacity 0.5s ease, margin 0.45s ease, padding 0.45s ease, max-height 0.45s ease;
+        /* A ceiling rather than a height: it is what the fold in beat three animates DOWN to, and
+           `max-height: 0` on a row whose real height is unknown is the only way to collapse one in
+           CSS alone. */
+        max-height: 52px;
+      }
+      .stage .ui-count,
+      .stage .ui-pin,
+      .stage .ui-marks,
+      .stage .lanes { opacity: 0; transition: opacity 0.5s ease; }
+      /* `display`, not opacity, and it is the difference between eight rows of one height and eight
+         rows of two. The badge is a block ABOVE the price: hidden with `opacity: 0` it still takes
+         its line, so the row it is in stands taller than every other row for the whole of the three
+         beats in which it says nothing. */
+      .stage .ui-best { display: none; }
+
+      /* Which supplier this rate came from, named rather than coded. The three names are the same
+         three the suppliers section lists, they are proper nouns in all seven languages, and they
+         are the only reason the fold in beat three reads as a fold: two rows for one hotel from two
+         bedbanks, becoming one. */
+      .ui-from {
+        margin-left: var(--space-2);
+        padding: 1px 6px;
+        border: 1px solid var(--shot-dark-line);
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 650;
+        color: var(--shot-dark-text-soft);
+        white-space: nowrap;
+      }
+      .ui-tick {
+        width: 13px;
+        height: 13px;
+        margin-left: var(--space-2);
+        flex: none;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        color: var(--teal-on-ink);
+      }
+
+      /* The credential vault, which is beat one and nothing else. It covers the results rather than
+         sitting beside them because at this point in the story there are no results yet — the
+         agency has handed over a key and been shown that it is held, not read. */
+      .vault {
+        position: absolute;
+        inset: 34px 0 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--space-3);
+        padding: var(--space-5) clamp(var(--space-5), 8%, var(--space-7));
+        background: var(--shot-dark-paper);
+        opacity: 0;
+        transition: opacity 0.45s ease;
+      }
+      .vault-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border: 1px solid var(--shot-dark-line);
+        border-radius: 8px;
+        background: var(--shot-dark-card);
+        color: var(--shot-dark-text);
+        font-size: 11px;
+        font-weight: 650;
+      }
+      /* The secret, shown as what the product actually shows: a field that is never echoed back.
+         Dots, not a blurred string — a blur suggests there is something under it to sharpen. */
+      .vault-secret {
+        margin-left: auto;
+        letter-spacing: 0.18em;
+        color: var(--shot-dark-text-soft);
+      }
+      .vault-lock {
+        width: 13px;
+        height: 13px;
+        flex: none;
+        color: var(--teal-on-ink);
+      }
+
+      /* The three bedbanks answering at once. A lane fills to the right as its supplier returns,
+         and they fill at different rates because that is the honest picture: results stream in as
+         each one answers rather than waiting for the slowest. */
+      .lanes {
+        display: flex;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+      }
+      .lane {
+        flex: 1;
+        position: relative;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--shot-dark-line);
+        font-size: 9px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        color: var(--shot-dark-text-soft);
+      }
+      .lane::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        height: 1px;
+        width: 0;
+        background: var(--teal-on-ink);
+        transition: width 1.3s ease;
+      }
+
+      /* ---- the four beats -------------------------------------------------------------------
+         Every rule below is keyed on one attribute the script writes, and the markup ships with it
+         already set to `1`. A reader with no script gets beat one — a real screen with a real state
+         in it — rather than the empty frame an "animate everything in" version would leave. */
+      .stage[data-beat='1'] .vault { opacity: 1; }
+
+      .stage[data-beat='2'] .ui-row,
+      .stage[data-beat='3'] .ui-row,
+      .stage[data-beat='4'] .ui-row { opacity: 1; }
+      .stage[data-beat='2'] .lanes,
+      .stage[data-beat='3'] .lanes,
+      .stage[data-beat='4'] .lanes { opacity: 1; }
+      .stage[data-beat='2'] .lane::after { width: 72%; }
+      .stage[data-beat='2'] .lane.l2::after { width: 46%; }
+      .stage[data-beat='2'] .lane.l3::after { width: 88%; }
+      .stage[data-beat='3'] .lane::after,
+      .stage[data-beat='4'] .lane::after { width: 100%; }
+      .stage[data-beat='2'] .ui-count,
+      .stage[data-beat='3'] .ui-count,
+      .stage[data-beat='4'] .ui-count { opacity: 1; }
+      .stage[data-beat='2'] .ui-pin,
+      .stage[data-beat='3'] .ui-pin,
+      .stage[data-beat='4'] .ui-pin { opacity: 1; }
+      /* Arrival, staggered — the list does not appear, it fills. */
+      .stage[data-beat='2'] .ui-row:nth-child(3) { transition-delay: 0.1s; }
+      .stage[data-beat='2'] .ui-row:nth-child(4) { transition-delay: 0.2s; }
+      .stage[data-beat='2'] .ui-row:nth-child(5) { transition-delay: 0.3s; }
+      .stage[data-beat='2'] .ui-row:nth-child(6) { transition-delay: 0.4s; }
+      .stage[data-beat='2'] .ui-row:nth-child(7) { transition-delay: 0.5s; }
+      .stage[data-beat='2'] .ui-row:nth-child(8) { transition-delay: 0.6s; }
+      .stage[data-beat='2'] .ui-row:nth-child(9) { transition-delay: 0.7s; }
+
+      /* Beat three is the fold. The second offer for a hotel the agency already has a cheaper offer
+         for stops being a row and becomes a dot on the row that survived — which is exactly what
+         "rooms that are genuinely the same room are grouped" means, drawn. */
+      .stage[data-beat='3'] .ui-row[data-duplicate],
+      .stage[data-beat='4'] .ui-row[data-duplicate] {
+        opacity: 0;
+        max-height: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+      }
+      .stage[data-beat='3'] .ui-marks,
+      .stage[data-beat='4'] .ui-marks { opacity: 1; }
+
+      /* Beat four ranks what is left and books the top of it. `order` rather than anything that
+         moves: the rows are already where they belong once the duplicates are gone, and the reorder
+         is a fact about the list rather than an animation of one. */
+      .stage[data-beat='4'] .ui-row { order: 7; }
+      .stage[data-beat='4'] .ui-row.rank-1 { order: 1; }
+      .stage[data-beat='4'] .ui-row.rank-2 { order: 2; }
+      .stage[data-beat='4'] .ui-row.rank-3 { order: 3; }
+      .stage[data-beat='4'] .ui-row.rank-4 { order: 4; }
+      .stage[data-beat='4'] .ui-row.rank-5 { order: 5; }
+      .stage[data-beat='4'] .ui-row.rank-6 { order: 6; }
+      .stage[data-beat='4'] .ui-row.rank-1 {
+        border-color: var(--shot-dark-teal);
+        background: var(--shot-dark-teal-tint);
+      }
+      .stage[data-beat='4'] .ui-best { display: block; }
+      .stage[data-beat='4'] .ui-row.rank-1 .ui-tick { opacity: 1; }
 
       /* ---- suppliers ---------------------------------------------------------------------- */
       .supplier-names {
@@ -964,15 +1336,40 @@
         }
         .cta:hover,
         .cta.ghost:hover { transform: none; }
+        /* Not merely shortened — removed. The reveal is an enhancement, and for a reader who has
+           asked for less motion the enhancement is simply the page, already there. */
+        .js-reveal [data-reveal] {
+          opacity: 1;
+          transform: none;
+        }
       }
 
       /* ---- narrow viewports ------------------------------------------------------------------- */
+      /* The walkthrough stops being two columns well before its text column stops being readable:
+         a 46ch paragraph beside a screen needs room the two of them stop having at about 900px. It
+         becomes one column with the screen pinned to the TOP of it, which is the same effect with
+         the axis changed — the steps still scroll past a screen that redraws. */
+      @media (max-width: 900px) {
+        .walk {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--space-5);
+        }
+        .walk-canvas {
+          order: -1;
+          top: var(--space-4);
+        }
+        .walk-step { min-height: 46vh; }
+      }
       @media (max-width: 760px) {
         .cards, .facts { grid-template-columns: minmax(0, 1fr); }
       }
       @media (max-width: 620px) {
         body { padding: var(--space-4); }
-        section { margin-top: var(--space-7); }
+        section { margin-top: calc(var(--space-7) * 1.5); }
+        /* The stage takes the phone's shape for the same reason the comparison does — and it
+           needs no rule of its own for the map, because `.ui-map { display: none }` below is
+           written on the class both screens share. */
+        .stage { aspect-ratio: 4 / 3; }
         /* The screen stops being two columns before its columns stop being readable; the map is
            what goes, because a 140px-wide map is a texture rather than a map. */
         .ui-body { grid-template-columns: minmax(0, 1fr); }
@@ -1148,47 +1545,219 @@
 
       <section aria-labelledby="how-title">
         <p class="eyebrow" data-i18n="howEyebrow">How it works</p>
-        <h2 id="how-title" data-i18n="howTitle">From one search to a booking</h2>
-        <ol class="steps">
-          <li class="step">
-            <span class="step-n">01</span>
-            <h3 data-i18n="step1Title">Your credentials, encrypted</h3>
-            <p data-i18n="step1Body">
-              Add each bedbank you hold a contract with and enter its API credentials. They are
-              encrypted before they are stored, and secret fields are never echoed back to a screen.
-            </p>
-          </li>
-          <li class="step">
-            <span class="step-n">02</span>
-            <h3 data-i18n="step2Title">One search, every supplier</h3>
-            <p data-i18n="step2Body">
-              A single search goes out to all of them in parallel, and results stream in as each one
-              answers rather than waiting for the slowest.
-            </p>
-          </li>
-          <li class="step">
-            <span class="step-n">03</span>
-            <h3 data-i18n="step3Title">Rates made comparable</h3>
-            <p data-i18n="step3Body">
-              Board, cancellation terms, taxes and currency are normalized, and rooms that are
-              genuinely the same room are grouped — so a price difference is a real difference.
-            </p>
-          </li>
-          <li class="step">
-            <span class="step-n">04</span>
-            <h3 data-i18n="step4Title">Cheapest first, then booked</h3>
-            <p data-i18n="step4Body">
-              Comparable rooms are ranked cheapest first. Your markup and your preference rules
-              apply, and the booking goes out on your own contract.
-            </p>
-          </li>
-        </ol>
+        <h2 data-reveal id="how-title" data-i18n="howTitle">From one search to a booking</h2>
+        <!--
+          The steps, unchanged as copy and rebuilt as a walkthrough. Each <li> is one beat, and the
+          screen to the right of them redraws itself at each one — see the stylesheet's "the
+          walkthrough" block for why the sequence is the argument and a grid of four cards could
+          not have made it.
+
+          `data-beat-step` is the join between a step and the state of the screen. It is written on
+          the markup rather than inferred from the element's index so that the two cannot drift
+          apart when a step moves; `test/walkthrough.test.js` reads it from both sides.
+        -->
+        <div class="walk" id="walk">
+          <ol class="walk-steps">
+            <li class="walk-step" data-beat-step="1">
+              <span class="step-n">01</span>
+              <h3 data-i18n="step1Title">Your credentials, encrypted</h3>
+              <p data-i18n="step1Body">
+                Add each bedbank you hold a contract with and enter its API credentials. They are
+                encrypted before they are stored, and secret fields are never echoed back to a screen.
+              </p>
+            </li>
+            <li class="walk-step" data-beat-step="2">
+              <span class="step-n">02</span>
+              <h3 data-i18n="step2Title">One search, every supplier</h3>
+              <p data-i18n="step2Body">
+                A single search goes out to all of them in parallel, and results stream in as each one
+                answers rather than waiting for the slowest.
+              </p>
+            </li>
+            <li class="walk-step" data-beat-step="3">
+              <span class="step-n">03</span>
+              <h3 data-i18n="step3Title">Rates made comparable</h3>
+              <p data-i18n="step3Body">
+                Board, cancellation terms, taxes and currency are normalized, and rooms that are
+                genuinely the same room are grouped — so a price difference is a real difference.
+              </p>
+            </li>
+            <li class="walk-step" data-beat-step="4">
+              <span class="step-n">04</span>
+              <h3 data-i18n="step4Title">Cheapest first, then booked</h3>
+              <p data-i18n="step4Body">
+                Comparable rooms are ranked cheapest first. Your markup and your preference rules
+                apply, and the booking goes out on your own contract.
+              </p>
+            </li>
+          </ol>
+
+          <!--
+            The screen, and it is `aria-hidden` on purpose. Everything in it is a picture of the
+            sentence beside it: to a screen reader it would be the same step twice, the second time
+            as a pile of hotel names and prices with no sentence in them at all. The steps are the
+            accessible copy; this is the illustration of them, and the caption under the comparison
+            further down says for both of them that the product is DRAWN here, not photographed.
+
+            It ships at `data-beat="1"` rather than empty, so a reader with no script — and every
+            crawler — gets a screen with a real state in it.
+          -->
+          <div class="walk-canvas">
+            <div class="stage dark" id="stage" data-beat="1" aria-hidden="true">
+              <div class="ui">
+                <div class="ui-bar">
+                  <span class="ui-brand">OneRate</span>
+                  <span class="ui-field">Roma · 12–15.10 · 2</span>
+                  <span class="ui-count">128</span>
+                </div>
+                <div class="ui-body">
+                  <div class="ui-list">
+                    <!-- The three bedbanks answering at once, named rather than coded: these are
+                         the same three the suppliers section lists, and they are proper nouns in
+                         all seven languages. -->
+                    <div class="lanes">
+                      <span class="lane l1">RateHawk</span>
+                      <span class="lane l2">GoGlobal</span>
+                      <span class="lane l3">TBO</span>
+                    </div>
+                    <!-- Deliberately NOT in price order. This is the list as it arrives — two
+                         suppliers answering for the same hotel, nothing ranked yet — because the
+                         product's third and fourth steps are what turn it into the other list.
+                         `data-duplicate` is the row that folds away in beat three; `rank-*` is
+                         where each survivor lands in beat four. -->
+                <div class="ui-row rank-2">
+                  <div>
+                    <span class="ui-name">Palazzo Verdi</span>
+                    <span class="ui-from">TBO</span>
+                    <span class="ui-marks"><i></i><i></i></span>
+                  </div>
+                  <div class="ui-price">€228</div>
+                </div>
+                <div class="ui-row" data-duplicate>
+                  <div>
+                    <span class="ui-name">Hotel Aurora</span>
+                    <span class="ui-from">GoGlobal</span>
+                    <span class="ui-marks"></span>
+                  </div>
+                  <div class="ui-price">€231</div>
+                </div>
+                <div class="ui-row rank-6">
+                  <div>
+                    <span class="ui-name">Villa Borghese Suites</span>
+                    <span class="ui-from">RateHawk</span>
+                    <span class="ui-marks"><i></i></span>
+                  </div>
+                  <div class="ui-price">€263</div>
+                </div>
+                <div class="ui-row rank-1">
+                  <div>
+                    <span class="ui-name">Hotel Aurora</span>
+                    <span class="ui-from">RateHawk</span>
+                    <span class="ui-marks"><i></i><i></i></span>
+                  </div>
+                  <div class="ui-price"><span class="ui-best" data-i18n="shotCheapest">cheapest</span>€214</div>
+                  <svg class="ui-tick" viewBox="0 0 16 16" focusable="false"><path d="M3 8.6l3.6 3.6L13 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </div>
+                <div class="ui-row rank-4">
+                  <div>
+                    <span class="ui-name">Albergo Nomentana</span>
+                    <span class="ui-from">TBO</span>
+                    <span class="ui-marks"><i></i></span>
+                  </div>
+                  <div class="ui-price">€256</div>
+                </div>
+                <div class="ui-row" data-duplicate>
+                  <div>
+                    <span class="ui-name">Palazzo Verdi</span>
+                    <span class="ui-from">RateHawk</span>
+                    <span class="ui-marks"></span>
+                  </div>
+                  <div class="ui-price">€249</div>
+                </div>
+                <div class="ui-row rank-5">
+                  <div>
+                    <span class="ui-name">Hotel Quirinale</span>
+                    <span class="ui-from">GoGlobal</span>
+                    <span class="ui-marks"><i></i></span>
+                  </div>
+                  <div class="ui-price">€271</div>
+                </div>
+                <div class="ui-row rank-3">
+                  <div>
+                    <span class="ui-name">Casa Trastevere</span>
+                    <span class="ui-from">GoGlobal</span>
+                    <span class="ui-marks"><i></i></span>
+                  </div>
+                  <div class="ui-price">€241</div>
+                </div>
+                  </div>
+              <div class="ui-map">
+                <svg class="ui-map-art" viewBox="0 0 160 100"
+                     preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+                  <g class="map-block">
+                    <rect x="3" y="3" width="20" height="16" rx="2" />
+                    <rect x="35" y="3" width="34" height="16" rx="2" />
+                    <rect x="83" y="3" width="32" height="16" rx="2" />
+                    <rect x="129" y="3" width="28" height="16" rx="2" />
+                    <rect x="3" y="30" width="20" height="27" rx="2" />
+                    <rect x="35" y="30" width="34" height="27" rx="2" />
+                    <rect x="83" y="30" width="32" height="27" rx="2" />
+                    <rect x="129" y="30" width="28" height="27" rx="2" />
+                    <rect x="3" y="69" width="20" height="12" rx="2" />
+                    <rect x="35" y="69" width="34" height="12" rx="2" />
+                    <rect x="83" y="69" width="32" height="12" rx="2" />
+                    <rect x="3" y="93" width="20" height="7" rx="2" />
+                    <rect x="35" y="93" width="34" height="7" rx="2" />
+                    <rect x="83" y="93" width="32" height="7" rx="2" />
+                  </g>
+                  <polygon class="map-park" points="127,67 153,63 159,81 141,93 126,85" />
+                  <g class="map-street">
+                    <path d="M0 26 L62 22 L110 27 L160 21" />
+                    <path d="M0 62 L54 66 L112 60 L160 65" />
+                    <path d="M0 88 L70 84 L160 90" />
+                    <path d="M30 0 L26 44 L32 100" />
+                    <path d="M74 0 L80 52 L72 100" />
+                    <path d="M124 0 L118 40 L126 100" />
+                    <path d="M8 100 L58 0" />
+                    <path d="M96 100 L160 46" />
+                  </g>
+                </svg>
+                <span class="ui-pin p1">€214</span>
+                <span class="ui-pin p2">€228</span>
+                <span class="ui-pin p3">€241</span>
+              </div>
+                </div>
+              </div>
+
+              <!-- Beat one. The vault covers the results because at this point in the story there
+                   are none: the agency has handed over a key and is being shown that it is held,
+                   not read. Dots rather than a blur — a blur suggests something to sharpen. -->
+              <div class="vault">
+            <div class="vault-row">
+              <svg class="vault-lock" viewBox="0 0 16 16" focusable="false"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6" /><rect x="2.5" y="7" width="11" height="7" rx="1.6" fill="currentColor" /></svg>
+              <span>RateHawk</span>
+              <span class="vault-secret">••••••••</span>
+            </div>
+            <div class="vault-row">
+              <svg class="vault-lock" viewBox="0 0 16 16" focusable="false"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6" /><rect x="2.5" y="7" width="11" height="7" rx="1.6" fill="currentColor" /></svg>
+              <span>GoGlobal</span>
+              <span class="vault-secret">••••••••</span>
+            </div>
+            <div class="vault-row">
+              <svg class="vault-lock" viewBox="0 0 16 16" focusable="false"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6" /><rect x="2.5" y="7" width="11" height="7" rx="1.6" fill="currentColor" /></svg>
+              <span>TBO</span>
+              <span class="vault-secret">••••••••</span>
+            </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="suppliers-title">
         <p class="eyebrow" data-i18n="suppliersEyebrow">Suppliers</p>
-        <h2 id="suppliers-title" data-i18n="suppliersTitle">Bring the contracts you already have</h2>
-        <p class="lede" data-i18n="suppliersLede">
+        <h2 data-reveal id="suppliers-title" data-i18n="suppliersTitle">Bring the contracts you already have</h2>
+        <p class="lede" data-reveal data-i18n="suppliersLede">
           OneRate holds no supplier contracts of its own and never will. It speaks to the bedbanks
           you have already signed with, using your credentials.
         </p>
@@ -1208,9 +1777,9 @@
           equal — the question is which contract the agency holds, not which one we finished first.
         -->
         <ul class="supplier-names">
-          <li data-supplier="ratehawk" data-supplier-state="live">RateHawk</li>
-          <li data-supplier="goglobal" data-supplier-state="integrating">GoGlobal</li>
-          <li data-supplier="tbo" data-supplier-state="integrating">TBO</li>
+          <li data-reveal data-supplier="ratehawk" data-supplier-state="live">RateHawk</li>
+          <li data-reveal data-supplier="goglobal" data-supplier-state="integrating">GoGlobal</li>
+          <li data-reveal data-supplier="tbo" data-supplier-state="integrating">TBO</li>
         </ul>
         <p class="supplier-status" data-i18n="suppliersStatus">
           RateHawk runs in production today; GoGlobal and TBO follow.
@@ -1223,13 +1792,13 @@
 
       <section aria-labelledby="portal-title">
         <p class="eyebrow" data-i18n="portalEyebrow">The portal</p>
-        <h2 id="portal-title" data-i18n="portalTitle">The screen your agents work in</h2>
-        <p class="lede" data-i18n="portalLede">
+        <h2 data-reveal id="portal-title" data-i18n="portalTitle">The screen your agents work in</h2>
+        <p class="lede" data-reveal data-i18n="portalLede">
           Search, map, rate comparison and booking on one screen — in the theme and the language
           each of your agents prefers. Drag the handle to move between them.
         </p>
 
-        <div class="shot" id="shot">
+        <div class="shot" data-reveal id="shot">
           <!-- Dark underneath, light clipped over it. Both panes carry the same markup, generated
                from one row list, so the comparison is between two palettes rather than two
                layouts — and a row edited into one pane and not the other cannot happen quietly. -->
@@ -1484,12 +2053,12 @@
           screenshot.
         </p>
 
-        <p class="lede" data-i18n="portalLangs">
+        <p class="lede" data-reveal data-i18n="portalLangs">
           The portal, the documentation and your offer PDFs are in seven languages:
         </p>
         <!-- Endonyms, and untranslated on purpose: this list is the same in all seven languages,
              which is exactly what it is claiming. -->
-        <ul class="endonyms">
+        <ul class="endonyms" data-reveal>
           <li lang="en">English</li>
           <li lang="tr">Türkçe</li>
           <li lang="bg">Български</li>
@@ -1502,13 +2071,13 @@
 
       <section aria-labelledby="model-title">
         <p class="eyebrow" data-i18n="modelEyebrow">The model</p>
-        <h2 id="model-title" data-i18n="modelTitle">Not a consolidator</h2>
-        <p class="lede" data-i18n="modelLede">
+        <h2 data-reveal id="model-title" data-i18n="modelTitle">Not a consolidator</h2>
+        <p class="lede" data-reveal data-i18n="modelLede">
           Most platforms in this market sell you their inventory and keep a margin on it. OneRate
           sells you the software and nothing else, which is why nothing in the left-hand column
           moves as you grow.
         </p>
-        <table class="compare">
+        <table class="compare" data-reveal>
           <thead>
             <tr>
               <td></td>
@@ -1583,9 +2152,9 @@
 
       <section aria-labelledby="features-title">
         <p class="eyebrow" data-i18n="featuresEyebrow">Inside</p>
-        <h2 id="features-title" data-i18n="featuresTitle">Built for how an agency actually runs</h2>
+        <h2 data-reveal id="features-title" data-i18n="featuresTitle">Built for how an agency actually runs</h2>
         <div class="cards">
-          <div class="card">
+          <div class="card" data-reveal>
             <h3 data-i18n="f1Title">Branches and people</h3>
             <ul>
               <li data-i18n="f1a">
@@ -1600,7 +2169,7 @@
               </li>
             </ul>
           </div>
-          <div class="card">
+          <div class="card" data-reveal>
             <h3 data-i18n="f2Title">Your prices, your rules</h3>
             <ul>
               <li data-i18n="f2a">Markup rules, applied before an agent ever sees a rate.</li>
@@ -1613,7 +2182,7 @@
               </li>
             </ul>
           </div>
-          <div class="card">
+          <div class="card" data-reveal>
             <h3 data-i18n="f3Title">Your brand, not ours</h3>
             <ul>
               <li data-i18n="f3a">
@@ -1628,7 +2197,7 @@
               </li>
             </ul>
           </div>
-          <div class="card">
+          <div class="card" data-reveal>
             <h3 data-i18n="f4Title">Reporting and integration</h3>
             <ul>
               <li data-i18n="f4a">
@@ -1647,25 +2216,25 @@
 
       <section aria-labelledby="security-title">
         <p class="eyebrow" data-i18n="securityEyebrow">Credentials</p>
-        <h2 id="security-title" data-i18n="securityTitle">What happens to what you hand us</h2>
-        <p class="lede" data-i18n="securityLede">
+        <h2 data-reveal id="security-title" data-i18n="securityTitle">What happens to what you hand us</h2>
+        <p class="lede" data-reveal data-i18n="securityLede">
           Your bedbank credentials are the most valuable thing you give any platform. Here is
           exactly what OneRate does with them.
         </p>
         <ul class="facts">
-          <li data-i18n="sec1">
+          <li data-reveal data-i18n="sec1">
             They are encrypted with a master key before they are written, and secret fields are
             never echoed back to a screen — not to your agents, and not to us.
           </li>
-          <li data-i18n="sec2">
+          <li data-reveal data-i18n="sec2">
             Every query carries your organization id at every layer, so one agency's data cannot be
             reached from another agency's session.
           </li>
-          <li data-i18n="sec3">
+          <li data-reveal data-i18n="sec3">
             Two-factor authentication is mandatory for agency owners, and a revoked session stops
             working immediately rather than at expiry.
           </li>
-          <li data-i18n="sec4">
+          <li data-reveal data-i18n="sec4">
             OneRate is not a merchant of record and handles no card data, so your payment scope
             stays exactly where it is today.
           </li>
@@ -1673,8 +2242,8 @@
       </section>
 
       <section class="access" aria-labelledby="access-title">
-        <h2 id="access-title" data-i18n="accessTitle">Request access</h2>
-        <p class="lede" data-i18n="accessBody">
+        <h2 data-reveal id="access-title" data-i18n="accessTitle">Request access</h2>
+        <p class="lede" data-reveal data-i18n="accessBody">
           Agencies are opened one at a time, and the first question is always the same: which
           supplier API contracts do you already hold? Tell us that and we can say straight away
           whether we can serve you. The button below opens a mail with the questions already in it.
@@ -2917,6 +3486,100 @@
           reveal.addEventListener('input', function () {
             shot.style.setProperty('--reveal', reveal.value + '%');
           });
+        }
+
+        // ---- the walkthrough, and the rest of the page arriving ---------------------------------
+        //
+        // Both effects below are ONE capability check. `IntersectionObserver` is the whole of what
+        // this page uses to know where the reader is — no scroll handler, nothing running on the
+        // scroll thread — and where it does not exist neither effect degrades: they simply are not
+        // there, which is what the markup and the head script already arranged for.
+        //
+        // The guard is also load-bearing for everything under it. A bare `new IntersectionObserver`
+        // in a browser without one throws a ReferenceError, and this file is a single IIFE: the
+        // consent banner, the theme control and the language the page renders in are all BELOW this
+        // line and would simply never happen. `test/walkthrough.test.js` renders the page with the
+        // constructor removed and checks the last block in the file still ran.
+        var watches = typeof IntersectionObserver === 'function';
+
+        var walk = document.getElementById('walk');
+        var stage = document.getElementById('stage');
+        if (watches && walk && stage) {
+          var beats = walk.querySelectorAll('.walk-step');
+          // `data-live` is what turns on the receding of the steps that are not being read. It is
+          // written HERE rather than in the markup so that the dimming cannot outlive the observer
+          // that undoes it: a step at 32% opacity with nothing left to restore it is translated
+          // copy the reader was shown and cannot read.
+          walk.setAttribute('data-live', '');
+
+          var inBand = [];
+          var current = -1;
+          var showBeat = function (index) {
+            if (index === current) return;
+            current = index;
+            stage.setAttribute('data-beat', beats[index].getAttribute('data-beat-step'));
+            for (var b = 0; b < beats.length; b++) {
+              beats[b].classList.toggle('is-active', b === index);
+              // Where the reader HAS BEEN, which `is-active` cannot say. Without it the spine's
+              // filled segment would jump from step to step instead of growing — and it has to run
+              // backwards too, for a reader scrolling up to re-read one.
+              beats[b].classList.toggle('is-past', b < index);
+            }
+          };
+
+          var band = new IntersectionObserver(
+            function (entries) {
+              for (var e = 0; e < entries.length; e++) {
+                var at = Array.prototype.indexOf.call(beats, entries[e].target);
+                if (at >= 0) inBand[at] = entries[e].isIntersecting;
+              }
+              // The LAST step in the band wins, which is the reader's own direction of travel: on
+              // the way down the step being entered is the one being read, and on the way up the
+              // one above it takes over as soon as the one below leaves.
+              var last = -1;
+              for (var i = 0; i < beats.length; i++) if (inBand[i]) last = i;
+              // Nothing in the band is the ordinary state BETWEEN two steps, not a reason to reset.
+              // Falling back to the first beat here would snap the screen back to the start every
+              // time the reader crossed a gap.
+              if (last >= 0) showBeat(last);
+            },
+            {
+              // A band across the viewport rather than the whole of it: with the default root
+              // every step is "visible" for most of the section and the screen would be answering
+              // four questions at once. 10% of the viewport height is one step at a time at every
+              // window size.
+              //
+              // Centred at 45% rather than at 50%, which is not a rounding error: a reader's eye
+              // sits above the middle of the window, so a beat that changes exactly on the centre
+              // line changes just after the step has been read rather than as it arrives. Five per
+              // cent is about 35px on a laptop — too small to see and exactly enough to feel.
+              rootMargin: '-40% 0px -50% 0px',
+              threshold: 0,
+            }
+          );
+          for (var n = 0; n < beats.length; n++) band.observe(beats[n]);
+          // The first beat is already drawn by the markup; this is what marks its STEP, so the
+          // other three recede the moment the dimming is switched on rather than a scroll later.
+          showBeat(0);
+        }
+
+        if (watches) {
+          var arriving = document.querySelectorAll('[data-reveal]');
+          if (arriving.length) {
+            var rise = new IntersectionObserver(
+              function (entries, self) {
+                for (var i = 0; i < entries.length; i++) {
+                  if (!entries[i].isIntersecting) continue;
+                  entries[i].target.classList.add('is-in');
+                  // Once. A block that arrived and then left is a block the reader has read, and
+                  // re-hiding it would make scrolling back up a second performance of the page.
+                  self.unobserve(entries[i].target);
+                }
+              },
+              { rootMargin: '0px 0px -10% 0px', threshold: 0.12 }
+            );
+            for (var a = 0; a < arriving.length; a++) rise.observe(arriving[a]);
+          }
         }
 
         // What the visitor chose last, else what their browser asks for, else English. The browser
