@@ -98,11 +98,11 @@ describe('landing language default', () => {
 describe('choosing a language', () => {
   it('rewrites the copy on the page, not just the lang attribute', () => {
     const page = render('en-US');
-    expect(page.text('tagline')).toBe('One search across every supplier contract you already hold.');
+    expect(page.text('tagline')).toBe('Every supplier.\nOne clear view.');
 
     const after = page.choose('pl');
     expect(after.lang).toBe('pl');
-    expect(after.text('tagline')).toBe('Jedno wyszukiwanie po wszystkich umowach, które już macie.');
+    expect(after.text('tagline')).toBe('Wszyscy dostawcy.\nJeden przejrzysty widok.');
     expect(after.text('ctaDocs')).toBe('Przeczytaj dokumentację');
     page.close();
   });

@@ -176,7 +176,7 @@ describe('the default language is in the markup, not only in the script', () => 
       expect(text, `[data-i18n="${key}"] is empty without JavaScript`).toBeTruthy();
     }
     expect(noScript.querySelector('[data-i18n="tagline"]').textContent).toContain(
-      'supplier contract'
+      'Every supplier.'
     );
   });
 });

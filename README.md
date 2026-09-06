@@ -7,6 +7,12 @@ illustration of the portal in both of its themes, the Model-A contrast against a
 shipped feature set, what happens to a supplier credential, and an access request that opens a
 prefilled mail.
 
+The product-led hero includes a drawn portal preview with an optional native scroll animation.
+A dark walkthrough pins one screen beside four steps, with accessible chapter links that follow
+scroll progress in either direction. On narrow screens, the illustration stays above the copy;
+the observer recalculates its reading band on resize. Reduced-motion preferences disable device
+movement and keep every step at full contrast. No animation library or build step is needed.
+
 Split out of [`onerate-travel/onerate-app`](https://github.com/onerate-travel/onerate-app) on 2026-07-25 so a copy change
 does not wait behind the product monorepo's miniflare and Playwright suites. Reasoning:
 `docs/ADR-0009-landing-repo-split.md` in that repo.

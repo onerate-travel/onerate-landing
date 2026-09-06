@@ -16,6 +16,14 @@ scroll past one drawn product screen that redraws itself at each of them, and ev
 arrives as the reader reaches it. Not a word of copy changed — the four steps were already written
 and already translated seven times, which is the budget the whole redesign was built under.
 
+The subsequent product-led redesign adds a short headline and eyebrow in all seven languages,
+a decorative light portal illustration in the hero, a sticky navigation bar, and chapter links in
+the dark walkthrough. The four explanatory steps still use the existing translations. The hero's
+native CSS scroll timeline is optional; reduced motion leaves a static device. The walkthrough
+observer uses pixel margins calculated from viewport height and rebuilds on resize, with its band
+below the pinned illustration on mobile. Do not restore percentage vertical root margins: those
+resolve against viewport width and can collapse the reading band on wide, short windows.
+
 ## Nine things that look wrong and are not
 
 1. **The deployed directory is `public/`, never the repo root.** Cloudflare Pages Direct Upload

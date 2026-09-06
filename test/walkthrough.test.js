@@ -164,6 +164,21 @@ describe('scrolling moves the screen', () => {
     page.close();
   });
 
+  it('rebuilds its viewport-height band after a resize, below the mobile screen', () => {
+    const page = render();
+    const win = page.document.defaultView;
+    const first = page.watching(page.steps()[0]);
+    expect(first.options.rootMargin).toBe('-307px 0px -384px 0px');
+    win.innerWidth = 390;
+    win.innerHeight = 844;
+    win.dispatchEvent(new win.Event('resize'));
+    expect(first.targets).toHaveLength(0);
+    expect(page.watching(page.steps()[0]).options.rootMargin).toBe('-591px 0px -169px 0px');
+    page.cross([[page.steps()[2], true]]);
+    expect(page.beat()).toBe('3');
+    page.close();
+  });
+
   it('marks the step that is being read, so the others can recede', () => {
     const page = render();
     const steps = page.steps();
@@ -171,6 +186,22 @@ describe('scrolling moves the screen', () => {
     expect(steps.map((step) => step.classList.contains('is-active'))).toEqual([
       false, true, false, false,
     ]);
+    page.close();
+  });
+
+  it('keeps the chapter links in sync when scrolling forward and backward', () => {
+    const page = render();
+    const links = [...page.document.querySelectorAll('.walk-chapters a')];
+    expect(links).toHaveLength(4);
+    links.forEach((link, index) => {
+      expect(page.document.querySelector(link.getAttribute('href'))).toBe(page.steps()[index]);
+    });
+    for (const index of [3, 1, 0]) {
+      page.cross(page.steps().map((step, at) => [step, at === index]));
+      expect(links.map((link) => link.getAttribute('aria-current'))).toEqual(
+        links.map((_, at) => at === index ? 'step' : null)
+      );
+    }
     page.close();
   });
 
