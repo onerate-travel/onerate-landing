@@ -259,6 +259,10 @@
            after the first, and every visit with JavaScript off. A hard-coded reserve cannot work:
            the bar is one line on a desk and three on a phone in Bulgarian. */
         --consent-height: 0px;
+        /* G7.4 — the sticky bar's own height, so `scroll-padding-top` can be derived from it
+           rather than restated as a number that goes stale when the bar does. The narrow block
+           re-declares both this and `.site-nav`'s `min-height` together. */
+        --nav-height: 76px;
 
         /* ---- the illustrated portal screen: BOTH product themes, at once ----
            These do NOT follow the page's theme, and that is the point: the section shows what the
@@ -1312,16 +1316,41 @@
       /* `.cta` was written for an <a>; these are <button>s, because they perform an action rather
          than go somewhere. That difference is exactly the four declarations below — a button
          brings its own border, font and cursor from the user agent, and an anchor does not. */
+      /**
+       * G7.2 — BOTH neutral. Neither of these is the page's primary action.
+       *
+       * "Allow" was `.cta` unchanged: saturated teal with a brand-tinted glow, which made asking a
+       * visitor about ANALYTICS the loudest thing on the page — louder than "Request access", which
+       * is the only conversion this site has and which sits in the navigation as a plain text link.
+       * A brand-coloured button is also a thumb on the scale of a consent question.
+       *
+       * So the fill comes off both and the pair reads as one question with two equal answers. They
+       * keep `.cta`'s geometry, because they are still buttons on this page and should measure like
+       * the rest of them.
+       */
       .consent .cta {
-        border: 0;
+        border: 1px solid var(--border);
+        background: transparent;
+        /* This page's own foreground token is `--fg`; `--text` is the PRODUCT's name for the same
+           role and does not exist here. `design.test.js` catches the difference, which is exactly
+           what it is for — a token read but never declared renders from a fallback nobody chose. */
+        color: var(--fg);
+        box-shadow: none;
         font-family: inherit;
         font-size: var(--text-md);
         cursor: pointer;
         padding: var(--space-2) var(--space-5);
         min-height: var(--touch);
       }
-      .consent .cta.ghost {
-        border: 1px solid var(--border);
+      /* The 1px lift from `.cta:hover` is left alone — it is the page's own hover and already
+         stopped under `prefers-reduced-motion`. What is cancelled is the brand-tinted GLOW, which
+         is the half that made this the loudest control on the page. Re-declaring `transform` here
+         (even as `none`) would put this selector on `design.test.js`'s list of movers that the
+         reduced-motion block has to name, which is a claim about motion this rule is not making. */
+      .consent .cta:hover {
+        border-color: var(--teal-text);
+        color: var(--teal-text);
+        box-shadow: none;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1449,7 +1478,19 @@
       .foot + .foot { margin-top: var(--space-4); }
       .foot a { color: var(--muted); }
       /* Product-led landing: generous type, a quiet device frame, and a dark scroll chapter. */
-      html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+      /**
+       * G7.4 — an anchor lands BELOW the sticky header, and the gap is derived from it.
+       *
+       * `scroll-padding-top` on the scroller rather than `scroll-margin-top` on each target, which
+       * is the better half of the same fix: it covers every anchor on the page, including ones
+       * added later, instead of a list somebody has to remember to extend.
+       *
+       * It was a flat `100px` — right for the 76px bar and unexamined against the 64px one the
+       * narrow block declares, where it was quietly 20px more than needed. Stated as the bar's own
+       * height plus a gap, so a bar that changes height moves this with it rather than leaving a
+       * number that used to be correct.
+       */
+      html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-height) + var(--space-4)); }
       body { background-image: none; padding-top: 0; }
       main { max-width: 1200px; }
       .site-nav {
@@ -1478,8 +1519,16 @@
       .site-nav #theme { max-width: 156px; }
       .hero { padding-top: clamp(64px, 8vw, 112px); }
       .hero .eyebrow { letter-spacing: 0.08em; font-size: 13px; }
+      /* G7.1 — the headings are Space Grotesk, which is what the PRODUCT sets every heading in.
+         The site and the portal disagreed about the loudest element either of them has: the landing
+         page's `h1`, `h2` and card headings were re-declared as `--font-ui` (Inter) in this late
+         block, overriding the `--font-display` rules above them, while `.kv-headline`,
+         `.kv-section-title`, `.kv-modal-title` and `.kv-price` in the product are all Space Grotesk.
+         Space Grotesk was still being DOWNLOADED here and used for the wordmark, the eyebrows and
+         the prices — so the file was paid for and the headings were set in something else.
+         Owner, 2026-09-07: one answer, and it is the product's. */
       .tagline {
-        font-family: var(--font-ui);
+        font-family: var(--font-display);
         font-size: clamp(46px, 7.5vw, 96px);
         font-weight: 650;
         line-height: 1.03;
@@ -1521,7 +1570,7 @@
       .explore-link { display: inline-flex; align-items: center; gap: 14px; margin-top: 32px; padding: 12px; text-decoration: none; color: var(--muted); font-size: 12px; }
       .explore-link span:last-child { font-size: 20px; color: var(--teal-text); }
       section { margin-top: 160px; }
-      h2 { font-family: var(--font-ui); font-size: clamp(32px, 4.6vw, 58px); font-weight: 620; letter-spacing: -0.05em; max-width: 850px; text-wrap: balance; }
+      h2 { font-family: var(--font-display); font-size: clamp(32px, 4.6vw, 58px); font-weight: 620; letter-spacing: -0.05em; max-width: 850px; text-wrap: balance; }
       .story-section {
         padding: 72px 56px 0;
         border-radius: 32px;
@@ -1534,7 +1583,7 @@
       .walk { grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.25fr); gap: 48px; margin-top: 24px; }
       .walk-step { min-height: 66vh; scroll-margin-top: 22vh; padding-left: 24px; }
       .walk-steps { padding-bottom: 28vh; }
-      .walk-step h3 { font-family: var(--font-ui); font-size: clamp(24px, 2.5vw, 34px); line-height: 1.15; letter-spacing: -0.04em; }
+      .walk-step h3 { font-family: var(--font-display); font-size: clamp(24px, 2.5vw, 34px); line-height: 1.15; letter-spacing: -0.04em; }
       .walk-step p { color: var(--shot-dark-text-soft); font-size: 15px; line-height: 1.7; }
       .walk .step-n { color: var(--teal-on-ink); font-size: 12px; margin-bottom: 12px; }
       .walk[data-live] .walk-step:not(.is-active) { opacity: 0.38; }
@@ -1562,7 +1611,7 @@
       .card:nth-child(2)::before { border-radius: 50%; box-shadow: inset 0 0 0 6px var(--bg); background: var(--teal-text); }
       .card:nth-child(3)::before { border-radius: 50% 50% 8px 8px; }
       .card:nth-child(4)::before { border-radius: 50%; border-style: dashed; }
-      .card h3 { font-family: var(--font-ui); font-size: 23px; letter-spacing: -0.03em; }
+      .card h3 { font-family: var(--font-display); font-size: 23px; letter-spacing: -0.03em; }
       .card ul { line-height: 1.7; }
       .compare { margin-top: 40px; }
       .facts { gap: 40px; }
@@ -1602,7 +1651,10 @@
       }
       @media (max-width: 620px) {
         body { padding-left: 16px; padding-right: 16px; }
+        /* Both, together: `--nav-height` is what `scroll-padding-top` is computed from, so a bar
+           that shrinks here without saying so would leave every anchor landing 12px too low. */
         .site-nav { min-height: 64px; gap: 8px; }
+        :root { --nav-height: 64px; }
         .nav-brand { font-size: 20px; }
         .nav-links { display: none; }
         .site-nav .prefs { margin-left: auto; gap: 0; }
