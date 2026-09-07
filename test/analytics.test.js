@@ -302,3 +302,57 @@ describe('the events worth having', () => {
     page.close();
   });
 });
+
+/**
+ * T10 — consent that can be taken back.
+ *
+ * The banner asked once and stored EITHER answer, deliberately, so it would not nag. What that
+ * left was no second door: a visitor who allowed and changed their mind, or who declined and later
+ * wanted to help, had one route — clearing site data for the domain. Consent that cannot be
+ * withdrawn as easily as it was given is not consent, and this page sells into five EU markets.
+ *
+ * The control is in the footer, is a `<button>` because it changes state here and navigates
+ * nowhere, and is hidden until the script runs: with no JavaScript nothing is measured and nothing
+ * is stored, so a control for withdrawing a consent that was never taken would be theatre.
+ */
+describe('an answer already given can be taken back (T10)', () => {
+  const reopenOf = (page) => page.document.getElementById('consent-reopen');
+
+  it('offers nothing to withdraw while the question is still open', () => {
+    // The bar itself is on screen asking. A second control saying "change your answer" would point
+    // at a question nobody has answered yet.
+    const page = render();
+    expect(reopenOf(page).hidden, 'the reopen control is offered before the banner is answered').toBe(true);
+    page.close();
+  });
+
+  for (const answer of ['granted', 'denied']) {
+    it(`offers it to a visitor who already answered "${answer}"`, () => {
+      const page = render({ stored: answer });
+      expect(reopenOf(page).hidden, `no way back from "${answer}"`).toBe(false);
+      page.close();
+    });
+  }
+
+  it('appears the moment the banner is answered, without a reload', () => {
+    const page = render();
+    page.click(page.document.getElementById('consent-accept'));
+    expect(reopenOf(page).hidden).toBe(false);
+    page.close();
+  });
+
+  it('re-asks rather than re-deciding, and denies while the question is open again', () => {
+    const page = render({ stored: 'granted' });
+    page.click(reopenOf(page));
+
+    // The stored answer is CLEARED, not flipped: reopening asks the question again, and
+    // pre-deciding it either way would be answering on the visitor's behalf.
+    expect(page.stored(), 'the previous answer survived reopening').toBeUndefined();
+    expect(page.banner().hidden, 'the banner did not come back').toBe(false);
+    // And the signals go back to denied for the rest of this page view. A grant must be re-given
+    // while the question is open, never assumed from the answer being reconsidered.
+    const updates = page.commands().filter(([kind, target]) => kind === 'consent' && target === 'update');
+    expect(updates.at(-1)?.[2]).toEqual({ analytics_storage: 'denied' });
+    page.close();
+  });
+});

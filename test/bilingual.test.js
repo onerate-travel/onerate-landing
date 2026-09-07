@@ -235,9 +235,48 @@ describe('the outbound links', () => {
     select.value = 'ro';
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     const links = [...dom.window.document.querySelectorAll('a')].map((a) => a.getAttribute('href'));
-    expect(links).toContain('https://app.onerate.travel');
-    expect(links).toContain('https://docs.onerate.travel');
+    expect(links.some((h) => h && h.startsWith('https://app.onerate.travel'))).toBe(true);
+    expect(links.some((h) => h && h.startsWith('https://docs.onerate.travel'))).toBe(true);
     expect(links).toContain('mailto:hello@onerate.travel');
+    dom.window.close();
+  });
+
+  /**
+   * T25 — the language a visitor chose here travels with them.
+   *
+   * The portal and the docs are different origins, so the `onerate.lang` this page writes is not
+   * the key either of them reads. R3.4.4 proposed sharing the storage key; storage does not cross
+   * an origin, so the choice has to ride the LINK.
+   *
+   * Two mechanisms, because the destinations are built differently: the portal is one app that
+   * reads `?lang` at boot, and the docs are a static site whose language IS the path.
+   */
+  it('hands the chosen language to the portal and the docs', () => {
+    const dom = new JSDOM(PAGE, { runScripts: 'dangerously' });
+    const select = dom.window.document.getElementById('lang');
+    select.value = 'ro';
+    select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    const href = (sel) => dom.window.document.querySelector(sel)?.getAttribute('href');
+
+    expect(href('[data-portal-link]')).toBe('https://app.onerate.travel?lang=ro');
+    expect(href('[data-docs-link]')).toBe('https://docs.onerate.travel/ro/');
+    dom.window.close();
+  });
+
+  it('sends English to the portal with no parameter at all', () => {
+    // `en` is the portal's own default, so a parameter saying so decides nothing and would sit in
+    // the address bar until the app stripped it. The quietest correct link is the plain one.
+    const dom = new JSDOM(PAGE, { runScripts: 'dangerously' });
+    const select = dom.window.document.getElementById('lang');
+    select.value = 'en';
+    select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    expect(
+      dom.window.document.querySelector('[data-portal-link]')?.getAttribute('href')
+    ).toBe('https://app.onerate.travel');
+    // The docs still need the path — their default is not implied by an absent segment.
+    expect(dom.window.document.querySelector('[data-docs-link]')?.getAttribute('href')).toBe(
+      'https://docs.onerate.travel/en/'
+    );
     dom.window.close();
   });
 });

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "The OneRate promo page served at onerate.travel",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "test": "vitest run",

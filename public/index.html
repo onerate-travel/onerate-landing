@@ -1477,6 +1477,30 @@
       }
       .foot + .foot { margin-top: var(--space-4); }
       .foot a { color: var(--muted); }
+      /*
+       * T10 — the consent control. Its own class rather than `.foot`, because the two `.foot`
+       * paragraphs are the two ways to reach a HUMAN and `design.test.js` counts them as such;
+       * a third one that opens a banner would quietly change what that assertion means.
+       *
+       * Styled as the quiet link it is: a <button> for what it does, a link for how it reads.
+       * `touch-action: manipulation` and a visible `:focus-visible` for the same reasons G3.7 gave
+       * for every other target in the product.
+       */
+      .foot-consent { margin-top: var(--space-4); }
+      .foot-link {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: var(--muted);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .foot-link:hover { color: var(--fg); }
+      .foot-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
       /* Product-led landing: generous type, a quiet device frame, and a dark scroll chapter. */
       /**
        * G7.4 — an anchor lands BELOW the sticky header, and the gap is derived from it.
@@ -1796,10 +1820,10 @@
             data-i18n="ctaRequest"
             >Request access</a
           >
-          <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs"
+          <a class="cta ghost" data-docs-link href="https://docs.onerate.travel" data-i18n="ctaDocs"
             >Read the docs</a
           >
-          <a class="cta ghost" href="https://app.onerate.travel" data-i18n="ctaPortal"
+          <a class="cta ghost" data-portal-link href="https://app.onerate.travel" data-i18n="ctaPortal"
             >Sign in to the portal →</a
           >
         </div>
@@ -2654,7 +2678,7 @@
             data-i18n="ctaRequest"
             >Request access</a
           >
-          <a class="cta ghost" href="https://docs.onerate.travel" data-i18n="ctaDocs"
+          <a class="cta ghost" data-docs-link href="https://docs.onerate.travel" data-i18n="ctaDocs"
             >Read the docs</a
           >
         </div>
@@ -2681,6 +2705,20 @@
       <p class="foot">
         <span data-i18n="customerQuestions">Already using OneRate?</span>
         <a href="https://support.onerate.travel" data-i18n="ctaSupport">Get support in the portal</a>
+      </p>
+      <!--
+        T10 — the way back to a consent answer already given.
+        Consent that cannot be withdrawn as easily as it was given is not consent, and until this
+        existed the only route was clearing site data for the domain: the banner asked once, stored
+        either answer deliberately (so it would not nag), and offered no second door.
+        A <button>, not a link, because it changes state on this page and navigates nowhere. Hidden
+        until the script runs — with no JavaScript there is no gtag, nothing is measured, nothing is
+        stored, and a control for withdrawing a consent that was never taken is theatre.
+      -->
+      <p class="foot-consent">
+        <button type="button" class="foot-link" id="consent-reopen" data-i18n="consentReopen" hidden>
+          Cookies &amp; analytics
+        </button>
       </p>
     </footer>
 
@@ -2869,6 +2907,7 @@
               'the seven languages and which sections are worth keeping. Nothing is stored on your ' +
               'device unless you allow it.',
             consentAccept: 'Allow',
+            consentReopen: 'Cookies & analytics',
             consentDecline: 'No thanks'
           },
           tr: {
@@ -3009,6 +3048,7 @@
               'hangilerinin ve hangi bölümlerin işe yaradığını görebiliyoruz. Siz izin vermedikçe ' +
               'cihazınızda hiçbir şey saklanmaz.',
             consentAccept: 'İzin ver',
+            consentReopen: 'Çerezler ve analitik',
             consentDecline: 'Hayır, teşekkürler'
           },
           bg: {
@@ -3150,6 +3190,7 @@
               'от седемте езика и кои раздели си струват. Нищо не се съхранява на вашето устройство, ' +
               'освен ако не разрешите.',
             consentAccept: 'Разрешавам',
+            consentReopen: 'Бисквитки и анализ',
             consentDecline: 'Не, благодаря'
           },
           hu: {
@@ -3291,6 +3332,7 @@
               'lássuk, a hét nyelv és az egyes szakaszok közül melyik éri meg. Az eszközén semmi nem ' +
               'tárolódik, amíg nem engedélyezi.',
             consentAccept: 'Engedélyezem',
+            consentReopen: 'Sütik és analitika',
             consentDecline: 'Köszönöm, nem'
           },
           it: {
@@ -3440,6 +3482,7 @@
               'sette lingue e quali sezioni valgono la pena. Nulla viene memorizzato sul tuo ' +
               'dispositivo se non lo consenti.',
             consentAccept: 'Consenti',
+            consentReopen: 'Cookie e analisi',
             consentDecline: 'No, grazie'
           },
           pl: {
@@ -3582,6 +3625,7 @@
               'które z siedmiu języków i które sekcje są tego warte. Nic nie zostanie zapisane na Twoim ' +
               'urządzeniu, dopóki nie wyrazisz zgody.',
             consentAccept: 'Zezwalam',
+            consentReopen: 'Pliki cookie i analityka',
             consentDecline: 'Nie, dziękuję'
           },
           ro: {
@@ -3730,6 +3774,7 @@
               'dintre cele șapte limbi și care secțiuni merită. Nimic nu este stocat pe dispozitivul ' +
               'dumneavoastră dacă nu permiteți.',
             consentAccept: 'Permite',
+            consentReopen: 'Cookie-uri și analiză',
             consentDecline: 'Nu, mulțumesc'
           },
         };
@@ -3747,6 +3792,10 @@
         var reveal = document.getElementById('reveal');
         var shot = document.getElementById('shot');
         var STORAGE_KEY = 'onerate.lang';
+        // T25 — the two other origins, named once. The hrefs in the markup are the same values;
+        // these are what `setLang` rebuilds them from.
+        var PORTAL_URL = 'https://app.onerate.travel';
+        var DOCS_URL = 'https://docs.onerate.travel';
         var THEME_KEY = 'onerate.theme';
         // Read once in the head as a literal, before this script exists — see the GA block there.
         var CONSENT_KEY = 'onerate.consent';
@@ -3787,6 +3836,30 @@
             encodeURIComponent(copy.requestBody);
           var mails = document.querySelectorAll('[data-mail-template]');
           for (var k = 0; k < mails.length; k++) mails[k].setAttribute('href', mail);
+
+          // T25 — the language travels with the visitor.
+          //
+          // The portal and the docs are different ORIGINS, so the `onerate.lang` key this page
+          // writes is not the key they read: a visitor who read every word here in Polish arrived
+          // at a portal that had never heard of them and guessed from the browser. R3.4.4 proposed
+          // sharing the storage key, which cannot work for exactly that reason — the handover has
+          // to be in the LINK.
+          //
+          // Two different mechanisms because the two destinations are built differently. The
+          // portal is one app that reads `?lang` at boot (`onerate-web/src/i18n.ts`, which then
+          // spends the parameter and removes it). The docs are a static site whose language IS the
+          // path, so the locale goes in the path and a query string would mean nothing there.
+          //
+          // Rewritten on every language change rather than at click time, so the address a visitor
+          // sees in the status bar, copies, or opens in a new tab is the one they would have got.
+          var portals = document.querySelectorAll('[data-portal-link]');
+          for (var p = 0; p < portals.length; p++) {
+            portals[p].setAttribute('href', PORTAL_URL + (lang === 'en' ? '' : '?lang=' + lang));
+          }
+          var docs = document.querySelectorAll('[data-docs-link]');
+          for (var d = 0; d < docs.length; d++) {
+            docs[d].setAttribute('href', DOCS_URL + '/' + lang + '/');
+          }
         }
 
         // ---- what gets counted ----------------------------------------------------------------
@@ -4018,6 +4091,9 @@
             } catch (ignored) {}
             banner.hidden = true;
             document.documentElement.style.setProperty('--consent-height', '0px');
+            // T10 — and the door back is now visible, for whichever answer was just given.
+            var reopenControl = document.getElementById('consent-reopen');
+            if (reopenControl) reopenControl.hidden = false;
           };
 
           document.getElementById('consent-accept').addEventListener('click', function () {
@@ -4030,6 +4106,31 @@
           document.getElementById('consent-decline').addEventListener('click', function () {
             closeBanner('denied');
           });
+
+          // T10 — ask again, on request. Shown only once the script is running, and only when an
+          // answer is already stored: before that the bar itself is on screen asking, and a second
+          // control saying "change your answer" would be pointing at a question still open.
+          var reopen = document.getElementById('consent-reopen');
+          if (reopen) {
+            if (answered === 'granted' || answered === 'denied') reopen.hidden = false;
+            reopen.addEventListener('click', function () {
+              // The stored answer is CLEARED rather than flipped: reopening asks the question
+              // again, and pre-deciding it would be answering on the visitor's behalf. Signals go
+              // back to denied for the rest of this page view — a grant must be re-given, never
+              // assumed while the question is open.
+              try {
+                localStorage.removeItem(CONSENT_KEY);
+              } catch (ignored) {}
+              gtag('consent', 'update', { analytics_storage: 'denied' });
+              reopen.hidden = true;
+              banner.hidden = false;
+              document.documentElement.style.setProperty(
+                '--consent-height',
+                banner.offsetHeight + 'px'
+              );
+              banner.scrollIntoView({ block: 'nearest' });
+            });
+          }
 
           if (answered !== 'granted' && answered !== 'denied') {
             banner.hidden = false;
