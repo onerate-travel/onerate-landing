@@ -1,10 +1,13 @@
 name: Deploy
 
 # A push to `main` publishes onerate.travel, after the full gate. That is the only automatic path.
-# The `staging` branch is NOT wired to a trigger even though it exists: onerate-app is the one repo
-# where staging and main are worked in parallel, and a promo page with one live surface does not
-# need a standing second environment — staging here is a rehearsal you ask for, not a branch you
-# live on.
+# There is NO `staging` branch, and staging is a rehearsal you ask for rather than a branch you live
+# on: onerate-app is the one repository where staging and main are worked in parallel, and a promo
+# page with one live surface does not need a standing second environment.
+#
+# One existed until 2026-09-07, wired to nothing. This comment already said so — and a branch that
+# a pipeline ignores is worse than no branch, because it invites someone to push to it and believe
+# they have deployed. Deleted; it held nothing main did not.
 #
 # `inputs.environment || 'production'` is how the two triggers meet, and it is written that way
 # rather than tested against `github.event_name`: on a push the `inputs` context is empty, so the
