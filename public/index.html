@@ -2740,10 +2740,20 @@
       aria-label="Analytics consent"
       hidden
     >
+      <!--
+        T10 — the copy names BOTH measurements, and says what is stored when the answer is no.
+        The version this replaced said "Nothing is stored on your device unless you allow it",
+        which was not true: declining writes the refusal to `localStorage` so the bar does not come
+        back, and the language and theme pickers store their own choices either way. It also named
+        only Google Analytics, while Cloudflare Web Analytics is injected into every response by
+        Pages and counts the visit whether or not the question is ever answered. A consent notice
+        is the last place a convenient sentence should outrank a true one.
+      -->
       <p data-i18n="consentBody">
-        We would like to count visits to this page with Google Analytics, so we can see which of
-        the seven languages and which sections are worth keeping. Nothing is stored on your device
-        unless you allow it.
+        We count visits to this page so we can see which of the seven languages and which sections
+        are worth keeping. Cloudflare measures page views either way and sets no cookies; Google
+        Analytics runs only if you allow it. Whichever you choose, your answer is kept on this
+        device — along with the language and theme you picked — so we do not ask again.
       </p>
       <div class="consent-actions">
         <button type="button" class="cta" id="consent-accept" data-i18n="consentAccept">
@@ -2903,9 +2913,7 @@
             ctaSupport: 'Get support in the portal',
             consentRegion: 'Analytics consent',
             consentBody:
-              'We would like to count visits to this page with Google Analytics, so we can see which of ' +
-              'the seven languages and which sections are worth keeping. Nothing is stored on your ' +
-              'device unless you allow it.',
+              'We count visits to this page so we can see which of the seven languages and which sections are worth keeping. Cloudflare measures page views either way and sets no cookies; Google Analytics runs only if you allow it. Whichever you choose, your answer is kept on this device — along with the language and theme you picked — so we do not ask again.',
             consentAccept: 'Allow',
             consentReopen: 'Cookies & analytics',
             consentDecline: 'No thanks'
@@ -3044,9 +3052,7 @@
             ctaSupport: 'Portaldan destek alın',
             consentRegion: 'Analitik izni',
             consentBody:
-              'Bu sayfanın ziyaretlerini Google Analytics ile saymak istiyoruz; böylece yedi dilden ' +
-              'hangilerinin ve hangi bölümlerin işe yaradığını görebiliyoruz. Siz izin vermedikçe ' +
-              'cihazınızda hiçbir şey saklanmaz.',
+              'Bu sayfanın ziyaretlerini sayıyoruz; böylece yedi dilden hangilerinin ve hangi bölümlerin işe yaradığını görüyoruz. Cloudflare sayfa görüntülemelerini her hâlükârda ölçüyor ve çerez kullanmıyor; Google Analytics ise yalnızca siz izin verirseniz çalışıyor. Hangi cevabı verirseniz verin, cevabınız — seçtiğiniz dil ve tema ile birlikte — bu cihazda saklanır ki tekrar sormayalım.',
             consentAccept: 'İzin ver',
             consentReopen: 'Çerezler ve analitik',
             consentDecline: 'Hayır, teşekkürler'
@@ -3186,9 +3192,7 @@
             ctaSupport: 'Получете поддръжка в портала',
             consentRegion: 'Съгласие за анализ',
             consentBody:
-              'Бихме искали да броим посещенията на тази страница с Google Analytics, за да виждаме кои ' +
-              'от седемте езика и кои раздели си струват. Нищо не се съхранява на вашето устройство, ' +
-              'освен ако не разрешите.',
+              'Броим посещенията на тази страница, за да виждаме кои от седемте езика и кои раздели си струват. Cloudflare измерва прегледите на страници във всеки случай и не използва бисквитки; Google Analytics работи само ако разрешите. Каквото и да изберете, отговорът ви се пази на това устройство — заедно с избрания език и тема — за да не питаме отново.',
             consentAccept: 'Разрешавам',
             consentReopen: 'Бисквитки и анализ',
             consentDecline: 'Не, благодаря'
@@ -3328,9 +3332,7 @@
             ctaSupport: 'Kérjen támogatást a portálon',
             consentRegion: 'Analitikai hozzájárulás',
             consentBody:
-              'Szeretnénk megszámolni az oldal látogatásait a Google Analytics segítségével, hogy ' +
-              'lássuk, a hét nyelv és az egyes szakaszok közül melyik éri meg. Az eszközén semmi nem ' +
-              'tárolódik, amíg nem engedélyezi.',
+              'Megszámoljuk az oldal látogatásait, hogy lássuk, a hét nyelv és a szakaszok közül melyik éri meg. A Cloudflare mindenképpen méri az oldalmegtekintéseket, és nem használ sütit; a Google Analytics csak akkor fut, ha engedélyezi. Bármit válaszol, a válaszát ezen az eszközön tároljuk — a választott nyelvvel és témával együtt —, hogy ne kérdezzük újra.',
             consentAccept: 'Engedélyezem',
             consentReopen: 'Sütik és analitika',
             consentDecline: 'Köszönöm, nem'
@@ -3478,9 +3480,7 @@
             ctaSupport: 'Ottieni assistenza nel portale',
             consentRegion: 'Consenso alle statistiche',
             consentBody:
-              'Vorremmo contare le visite a questa pagina con Google Analytics, per capire quali delle ' +
-              'sette lingue e quali sezioni valgono la pena. Nulla viene memorizzato sul tuo ' +
-              'dispositivo se non lo consenti.',
+              'Contiamo le visite a questa pagina per capire quali delle sette lingue e quali sezioni vale la pena tenere. Cloudflare misura le visualizzazioni in ogni caso e non usa cookie; Google Analytics funziona solo se acconsenti. Qualunque cosa scegli, la tua risposta resta su questo dispositivo — insieme alla lingua e al tema scelti — per non chiedertelo di nuovo.',
             consentAccept: 'Consenti',
             consentReopen: 'Cookie e analisi',
             consentDecline: 'No, grazie'
@@ -3621,9 +3621,7 @@
             ctaSupport: 'Uzyskaj wsparcie w portalu',
             consentRegion: 'Zgoda na analitykę',
             consentBody:
-              'Chcielibyśmy liczyć wizyty na tej stronie za pomocą Google Analytics, aby zobaczyć, ' +
-              'które z siedmiu języków i które sekcje są tego warte. Nic nie zostanie zapisane na Twoim ' +
-              'urządzeniu, dopóki nie wyrazisz zgody.',
+              'Liczymy wizyty na tej stronie, aby zobaczyć, które z siedmiu języków i które sekcje są warte utrzymania. Cloudflare mierzy odsłony niezależnie od zgody i nie używa plików cookie; Google Analytics działa tylko za zgodą. Niezależnie od wyboru odpowiedź zostaje na tym urządzeniu — razem z wybranym językiem i motywem — abyśmy nie pytali ponownie.',
             consentAccept: 'Zezwalam',
             consentReopen: 'Pliki cookie i analityka',
             consentDecline: 'Nie, dziękuję'
@@ -3770,9 +3768,7 @@
             ctaSupport: 'Obțineți asistență în portal',
             consentRegion: 'Consimțământ pentru analize',
             consentBody:
-              'Am dori să numărăm vizitele pe această pagină cu Google Analytics, ca să vedem care ' +
-              'dintre cele șapte limbi și care secțiuni merită. Nimic nu este stocat pe dispozitivul ' +
-              'dumneavoastră dacă nu permiteți.',
+              'Numărăm vizitele pe această pagină ca să vedem care dintre cele șapte limbi și care secțiuni merită păstrate. Cloudflare măsoară vizualizările în orice caz și nu folosește cookie-uri; Google Analytics rulează doar dacă accepți. Orice ai alege, răspunsul rămâne pe acest dispozitiv — împreună cu limba și tema alese — ca să nu te mai întrebăm.',
             consentAccept: 'Permite',
             consentReopen: 'Cookie-uri și analiză',
             consentDecline: 'Nu, mulțumesc'
