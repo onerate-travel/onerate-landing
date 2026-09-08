@@ -73,6 +73,22 @@ const LOCALES = [...STATIC.querySelectorAll('#lang option')].map((option) => opt
  * page renders one English sentence in the middle of six Polish ones, looks complete, and passes
  * every other test. That is exactly what a reviewer's eye skips.
  */
+/**
+ * The words a language genuinely borrows, which this test cannot tell from a forgotten one.
+ *
+ * Kept deliberately tiny and per-key, because the exemption is the dangerous part: a locale-wide
+ * skip would hide the exact defect the file exists to catch. Each entry has to be a word that is
+ * the NORMAL one in that language, not merely an acceptable one — if a native reader would expect
+ * the native term, the fix is the copy, not this list.
+ *
+ * `privacy` in Italian: the loanword is what Italian sites use, and what a reader looks for in a
+ * footer. "Riservatezza" is a real word and would satisfy this test while making the link harder
+ * to find, which is a guard changing the product for the guard's benefit.
+ */
+const SAME_WORD = {
+  it: ['privacyTitle', 'privacyLink'],
+};
+
 describe('every string is translated into every language', () => {
   it('has keys and locales to check', () => {
     // Never vacuous: if the markup stopped carrying `data-i18n`, or the switcher stopped carrying
@@ -93,7 +109,9 @@ describe('every string is translated into every language', () => {
     if (locale === 'en') return;
     // Left-behind English is the whole failure this test exists for, so it is asserted rather than
     // inferred from the key being present.
-    const untranslated = KEYS.filter((key) => copy[key] === english[key]);
+    const untranslated = KEYS.filter(
+      (key) => copy[key] === english[key] && !(SAME_WORD[locale] ?? []).includes(key),
+    );
     expect(untranslated, `${locale} still shows the English text for these keys`).toEqual([]);
   });
 });

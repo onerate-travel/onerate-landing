@@ -2683,6 +2683,76 @@
           >
         </div>
       </section>
+
+      <!--
+        The privacy notice.
+
+        A section rather than a second page, and that is a structural fact about this site rather
+        than a shortcut: everything here is one `index.html`, and the seven languages live in the
+        `TEXT` table below. A standalone `privacy.html` would mean a second copy of the stylesheet
+        and a second copy of the language machinery, which is two more places for the notice and
+        the page to drift apart.
+
+        Every factual claim below was MEASURED on the deployed page (2026-09-08), not assumed:
+        before the banner is answered there are no cookies at all and `localStorage` is empty; the
+        `_ga` and `_ga_SZWZR8FV08` cookies appear only after Allow is pressed. A privacy notice that
+        describes the code rather than the deployment is the kind that is wrong without anyone
+        noticing.
+      -->
+      <section id="privacy" aria-labelledby="privacy-title">
+        <h2 data-reveal id="privacy-title" data-i18n="privacyTitle">Privacy</h2>
+        <p class="lede" data-reveal data-i18n="privacyLede">
+          This site and the OneRate portal are run by OneRate Travel. Anything on this page, or any
+          question about what we hold about you, goes to hello@onerate.travel.
+        </p>
+        <!--
+          `.facts` — the two-column grid the security section uses, and reused rather than given a
+          class of its own. A `.sec-list` invented here would have been a class with no rule behind
+          it: the list would have rendered as browser-default bullets in a single column, which is
+          the one failure that still looks like a page.
+        -->
+        <ul class="facts">
+          <li data-reveal data-i18n="privacyPage">
+            <strong>This page.</strong> Cloudflare counts page views for us. It sets no cookies,
+            writes nothing to your browser, and does not log query strings — it runs whether or not
+            you answer the banner. Google Analytics is the one the banner asks about: until you
+            press Allow it is switched off and stores nothing, and if you press Allow it sets two
+            cookies (_ga and _ga_SZWZR8FV08) to tell repeat visits apart. We never turn on its
+            advertising signals.
+          </li>
+          <li data-reveal data-i18n="privacyStored">
+            <strong>What is kept on your device.</strong> Three values, in your browser's own
+            storage and never sent anywhere: your answer to the banner, so we do not ask again; the
+            language you chose; and the light or dark setting you chose. Clearing site data for this
+            domain removes all three, and the Cookies &amp; analytics link in the footer reopens the
+            question at any time.
+          </li>
+          <li data-reveal data-i18n="privacyPortal">
+            <strong>The portal.</strong> Signing in at app.onerate.travel is different, because
+            there is an account. We hold your name, your email address, which agency you belong to,
+            and a record of what was done in the account. A sign-in also sets a session cookie,
+            which is what keeps you signed in and cannot be declined without declining the service.
+            The human-verification check on the sign-in screen sends your IP address and some
+            browser signals to Cloudflare, and exists to stop stolen passwords being tried against
+            the portal in bulk.
+          </li>
+          <li data-reveal data-i18n="privacyProcessors">
+            <strong>Who else sees it.</strong> Cloudflare, which serves this site and the portal and
+            provides the measurement and the verification check; and Google, if you allowed Google
+            Analytics. Both are United States companies and both may process the data outside your
+            country. We sell nothing to anyone and run no advertising.
+          </li>
+          <li data-reveal data-i18n="privacyRights">
+            <strong>What you can ask for.</strong> A copy of what we hold, a correction, a deletion,
+            or that we stop. Write to hello@onerate.travel and we will answer. You can withdraw
+            analytics consent at any time from the footer, without giving a reason and as easily as
+            you gave it, and you can complain to your country's data protection authority.
+          </li>
+        </ul>
+        <p class="foot" data-reveal data-i18n="privacyUpdated" style="margin-top: var(--space-5)">
+          Last updated 8 September 2026.
+        </p>
+      </section>
     </main>
 
     <!--
@@ -2716,6 +2786,13 @@
         stored, and a control for withdrawing a consent that was never taken is theatre.
       -->
       <p class="foot-consent">
+        <!--
+          The privacy notice is a LINK and always visible; the consent control beside it is a
+          button and appears only once an answer exists. The difference is not styling: one is a
+          document you can read before deciding anything, the other changes state on this page. A
+          notice that only appeared after you had already answered would be the wrong way round.
+        -->
+        <a class="foot-link" href="#privacy" data-i18n="privacyLink">Privacy</a>
         <button type="button" class="foot-link" id="consent-reopen" data-i18n="consentReopen" hidden>
           Cookies &amp; analytics
         </button>
@@ -2756,6 +2833,12 @@
         device — along with the language and theme you picked — so we do not ask again.
       </p>
       <div class="consent-actions">
+        <!--
+          The link comes FIRST in the source order, before either answer. Consent is only informed
+          if what is being consented to can be read, and a reader who tabs into this bar should
+          reach the explanation before the button that decides.
+        -->
+        <a class="foot-link" href="#privacy" data-i18n="privacyLink">Privacy</a>
         <button type="button" class="cta" id="consent-accept" data-i18n="consentAccept">
           Allow
         </button>
@@ -2911,6 +2994,24 @@
             questions: 'Questions?',
             customerQuestions: 'Already using OneRate?',
             ctaSupport: 'Get support in the portal',
+            privacyLink:
+              'Privacy',
+            privacyTitle:
+              'Privacy',
+            privacyLede:
+              'This site and the OneRate portal are run by OneRate Travel. Anything on this page, or any question about what we hold about you, goes to hello@onerate.travel.',
+            privacyPage:
+              'This page. Cloudflare counts page views for us. It sets no cookies, writes nothing to your browser, and does not log query strings — it runs whether or not you answer the banner. Google Analytics is the one the banner asks about: until you press Allow it is switched off and stores nothing, and if you press Allow it sets two cookies (_ga and _ga_SZWZR8FV08) to tell repeat visits apart. We never turn on its advertising signals.',
+            privacyStored:
+              'What is kept on your device. Three values, in your browser\'s own storage and never sent anywhere: your answer to the banner, so we do not ask again; the language you chose; and the light or dark setting you chose. Clearing site data for this domain removes all three, and the Cookies & analytics link in the footer reopens the question at any time.',
+            privacyPortal:
+              'The portal. Signing in at app.onerate.travel is different, because there is an account. We hold your name, your email address, which agency you belong to, and a record of what was done in the account. A sign-in also sets a session cookie, which is what keeps you signed in and cannot be declined without declining the service. The human-verification check on the sign-in screen sends your IP address and some browser signals to Cloudflare, and exists to stop stolen passwords being tried against the portal in bulk.',
+            privacyProcessors:
+              'Who else sees it. Cloudflare, which serves this site and the portal and provides the measurement and the verification check; and Google, if you allowed Google Analytics. Both are United States companies and both may process the data outside your country. We sell nothing to anyone and run no advertising.',
+            privacyRights:
+              'What you can ask for. A copy of what we hold, a correction, a deletion, or that we stop. Write to hello@onerate.travel and we will answer. You can withdraw analytics consent at any time from the footer, without giving a reason and as easily as you gave it, and you can complain to your country\'s data protection authority.',
+            privacyUpdated:
+              'Last updated 8 September 2026.',
             consentRegion: 'Analytics consent',
             consentBody:
               'We count visits to this page so we can see which of the seven languages and which sections are worth keeping. Cloudflare measures page views either way and sets no cookies; Google Analytics runs only if you allow it. Whichever you choose, your answer is kept on this device — along with the language and theme you picked — so we do not ask again.',
@@ -3050,6 +3151,24 @@
             questions: 'Sorular için:',
             customerQuestions: 'OneRate kullanıyor musunuz?',
             ctaSupport: 'Portaldan destek alın',
+            privacyLink:
+              'Gizlilik',
+            privacyTitle:
+              'Gizlilik',
+            privacyLede:
+              'Bu siteyi ve OneRate portalını OneRate Travel işletiyor. Bu sayfadaki her konu ve hakkınızda ne tuttuğumuza dair her soru hello@onerate.travel adresine gider.',
+            privacyPage:
+              'Bu sayfa. Cloudflare bizim için sayfa görüntülemelerini sayıyor. Çerez koymuyor, tarayıcınıza hiçbir şey yazmıyor ve sorgu dizelerini kaydetmiyor — banner\'ı cevaplasanız da cevaplamasanız da çalışıyor. Banner\'ın sorduğu Google Analytics: siz "İzin ver" demeden kapalıdır ve hiçbir şey saklamaz, izin verirseniz tekrar ziyaretleri ayırt etmek için iki çerez koyar (_ga ve _ga_SZWZR8FV08). Reklam sinyallerini hiçbir zaman açmıyoruz.',
+            privacyStored:
+              'Cihazınızda kalanlar. Tarayıcınızın kendi deposunda üç değer, hiçbir yere gönderilmiyor: banner\'a verdiğiniz cevap (tekrar sormayalım diye), seçtiğiniz dil ve seçtiğiniz açık/koyu tema. Bu alan adı için site verilerini temizlemek üçünü de siler; alt bilgideki "Çerezler ve analitik" bağlantısı soruyu istediğiniz zaman yeniden açar.',
+            privacyPortal:
+              'Portal. app.onerate.travel adresinde giriş yapmak farklıdır, çünkü orada bir hesap vardır. Adınızı, e-posta adresinizi, hangi acenteye bağlı olduğunuzu ve hesapta ne yapıldığının kaydını tutarız. Giriş ayrıca bir oturum çerezi koyar; sizi giriş yapmış tutan şey odur ve hizmeti reddetmeden reddedilemez. Giriş ekranındaki insan doğrulaması IP adresinizi ve bazı tarayıcı sinyallerini Cloudflare\'e gönderir; amacı çalınmış parolaların portalda toplu olarak denenmesini engellemektir.',
+            privacyProcessors:
+              'Başka kim görüyor. Bu siteyi ve portalı sunan, ölçümü ve doğrulama kontrolünü sağlayan Cloudflare; ve Google Analytics\'e izin verdiyseniz Google. İkisi de Amerika Birleşik Devletleri şirketidir ve veriyi ülkenizin dışında işleyebilir. Kimseye hiçbir şey satmıyoruz ve reklam yayınlamıyoruz.',
+            privacyRights:
+              'Neyi talep edebilirsiniz. Tuttuğumuzun bir kopyasını, düzeltilmesini, silinmesini ya da durmamızı. hello@onerate.travel adresine yazın, cevaplayacağız. Analitik iznini alt bilgiden istediğiniz zaman, sebep göstermeden ve verdiğiniz kadar kolay geri çekebilirsiniz; ayrıca ülkenizin veri koruma otoritesine şikâyette bulunabilirsiniz.',
+            privacyUpdated:
+              'Son güncelleme: 8 Eylül 2026.',
             consentRegion: 'Analitik izni',
             consentBody:
               'Bu sayfanın ziyaretlerini sayıyoruz; böylece yedi dilden hangilerinin ve hangi bölümlerin işe yaradığını görüyoruz. Cloudflare sayfa görüntülemelerini her hâlükârda ölçüyor ve çerez kullanmıyor; Google Analytics ise yalnızca siz izin verirseniz çalışıyor. Hangi cevabı verirseniz verin, cevabınız — seçtiğiniz dil ve tema ile birlikte — bu cihazda saklanır ki tekrar sormayalım.',
@@ -3190,6 +3309,24 @@
             questions: 'Въпроси?',
             customerQuestions: 'Вече използвате OneRate?',
             ctaSupport: 'Получете поддръжка в портала',
+            privacyLink:
+              'Поверителност',
+            privacyTitle:
+              'Поверителност',
+            privacyLede:
+              'Този сайт и порталът на OneRate се управляват от OneRate Travel. Всичко по тази страница и всеки въпрос какво съхраняваме за вас отива на hello@onerate.travel.',
+            privacyPage:
+              'Тази страница. Cloudflare брои прегледите на страници вместо нас. Не поставя бисквитки, не записва нищо в браузъра ви и не регистрира заявките в адреса — работи независимо дали отговаряте на лентата. Google Analytics е този, за който пита лентата: докато не натиснете „Разрешавам“, той е изключен и не съхранява нищо, а ако разрешите, поставя две бисквитки (_ga и _ga_SZWZR8FV08), за да различава повторните посещения. Никога не включваме рекламните му сигнали.',
+            privacyStored:
+              'Какво остава на устройството ви. Три стойности в собственото хранилище на браузъра, които не се изпращат никъде: отговорът ви на лентата, за да не питаме отново; избраният език; и избраната светла или тъмна тема. Изчистването на данните за този домейн премахва и трите, а връзката „Бисквитки и анализ“ в долния колонтитул отваря въпроса отново по всяко време.',
+            privacyPortal:
+              'Порталът. Влизането в app.onerate.travel е различно, защото там има профил. Съхраняваме името ви, имейл адреса ви, към коя агенция принадлежите и запис какво е правено в профила. Влизането поставя и сесийна бисквитка — тя ви държи вписани и не може да бъде отказана, без да се откажете от услугата. Проверката за човек на екрана за вход изпраща вашия IP адрес и някои сигнали от браузъра към Cloudflare и съществува, за да спре масовото изпробване на откраднати пароли.',
+            privacyProcessors:
+              'Кой друг го вижда. Cloudflare, който обслужва този сайт и портала и предоставя измерването и проверката; и Google, ако сте разрешили Google Analytics. И двете са компании от Съединените щати и може да обработват данните извън вашата страна. Не продаваме нищо на никого и не показваме реклами.',
+            privacyRights:
+              'Какво можете да поискате. Копие от това, което съхраняваме, поправка, изтриване или да спрем. Пишете на hello@onerate.travel и ще отговорим. Можете да оттеглите съгласието за анализ по всяко време от долния колонтитул, без да посочвате причина и толкова лесно, колкото сте го дали, и можете да подадете жалба до органа за защита на данните във вашата страна.',
+            privacyUpdated:
+              'Последна актуализация: 8 септември 2026 г.',
             consentRegion: 'Съгласие за анализ',
             consentBody:
               'Броим посещенията на тази страница, за да виждаме кои от седемте езика и кои раздели си струват. Cloudflare измерва прегледите на страници във всеки случай и не използва бисквитки; Google Analytics работи само ако разрешите. Каквото и да изберете, отговорът ви се пази на това устройство — заедно с избрания език и тема — за да не питаме отново.',
@@ -3330,6 +3467,24 @@
             questions: 'Kérdésed van?',
             customerQuestions: 'Már használja a OneRate-et?',
             ctaSupport: 'Kérjen támogatást a portálon',
+            privacyLink:
+              'Adatvédelem',
+            privacyTitle:
+              'Adatvédelem',
+            privacyLede:
+              'Ezt az oldalt és a OneRate portált a OneRate Travel üzemelteti. Bármi, ami ezen az oldalon szerepel, és minden kérdés arról, mit tárolunk önről, a hello@onerate.travel címre megy.',
+            privacyPage:
+              'Ez az oldal. A Cloudflare számolja helyettünk az oldalmegtekintéseket. Nem használ sütit, semmit nem ír a böngészőjébe, és nem naplózza a címben szereplő paramétereket — akkor is fut, ha nem válaszol a sávra. A sáv a Google Analyticsről kérdez: amíg nem nyomja meg az Engedélyezést, ki van kapcsolva és semmit nem tárol; ha engedélyezi, két sütit tesz le (_ga és _ga_SZWZR8FV08), hogy megkülönböztesse az ismételt látogatásokat. A hirdetési jelzéseit soha nem kapcsoljuk be.',
+            privacyStored:
+              'Mi marad az eszközén. Három érték a böngésző saját tárolójában, amelyek sehová nem kerülnek el: a sávra adott válasza, hogy ne kérdezzünk újra; a választott nyelv; és a választott világos vagy sötét beállítás. A domain adatainak törlése mind a hármat eltávolítja, a lábléc „Sütik és elemzés” hivatkozása pedig bármikor újranyitja a kérdést.',
+            privacyPortal:
+              'A portál. Az app.onerate.travel címen való bejelentkezés más, mert ott van fiók. Tároljuk a nevét, az e-mail-címét, azt, hogy melyik irodához tartozik, és azt, mi történt a fiókban. A bejelentkezés munkamenet-sütit is elhelyez: ez tartja bejelentkezve, és nem utasítható vissza a szolgáltatás visszautasítása nélkül. A bejelentkezési képernyő emberi ellenőrzése elküldi az IP-címét és néhány böngészőjelzést a Cloudflare-nek, és azért van, hogy megakadályozza az ellopott jelszavak tömeges kipróbálását.',
+            privacyProcessors:
+              'Ki látja még. A Cloudflare, amely ezt az oldalt és a portált kiszolgálja, és a mérést meg az ellenőrzést adja; valamint a Google, ha engedélyezte a Google Analyticsot. Mindkettő egyesült államokbeli cég, és az adatokat az ön országán kívül is feldolgozhatják. Semmit nem adunk el senkinek, és nem futtatunk hirdetést.',
+            privacyRights:
+              'Mit kérhet. Másolatot arról, amit tárolunk, helyesbítést, törlést, vagy azt, hogy hagyjuk abba. Írjon a hello@onerate.travel címre, és válaszolunk. Az elemzési hozzájárulást bármikor visszavonhatja a láblécből, indokolás nélkül és ugyanolyan egyszerűen, ahogy megadta, és panaszt tehet országa adatvédelmi hatóságánál.',
+            privacyUpdated:
+              'Utoljára frissítve: 2026. szeptember 8.',
             consentRegion: 'Analitikai hozzájárulás',
             consentBody:
               'Megszámoljuk az oldal látogatásait, hogy lássuk, a hét nyelv és a szakaszok közül melyik éri meg. A Cloudflare mindenképpen méri az oldalmegtekintéseket, és nem használ sütit; a Google Analytics csak akkor fut, ha engedélyezi. Bármit válaszol, a válaszát ezen az eszközön tároljuk — a választott nyelvvel és témával együtt —, hogy ne kérdezzük újra.',
@@ -3478,6 +3633,24 @@
             questions: 'Domande?',
             customerQuestions: 'Usi già OneRate?',
             ctaSupport: 'Ottieni assistenza nel portale',
+            privacyLink:
+              'Privacy',
+            privacyTitle:
+              'Privacy',
+            privacyLede:
+              'Questo sito e il portale OneRate sono gestiti da OneRate Travel. Qualsiasi cosa riguardi questa pagina, o qualsiasi domanda su ciò che conserviamo su di te, va a hello@onerate.travel.',
+            privacyPage:
+              'Questa pagina. Cloudflare conta le visualizzazioni per noi. Non usa cookie, non scrive nulla nel tuo browser e non registra i parametri nell\'indirizzo — funziona che tu risponda o no alla barra. Google Analytics è quello di cui parla la barra: finché non premi Consenti resta spento e non memorizza nulla; se acconsenti imposta due cookie (_ga e _ga_SZWZR8FV08) per distinguere le visite ripetute. Non attiviamo mai i suoi segnali pubblicitari.',
+            privacyStored:
+              'Cosa resta sul tuo dispositivo. Tre valori nella memoria del browser, che non vengono inviati da nessuna parte: la tua risposta alla barra, per non chiedertelo di nuovo; la lingua che hai scelto; e l\'impostazione chiara o scura che hai scelto. Cancellare i dati del sito per questo dominio li rimuove tutti e tre, e il link “Cookie e analisi” nel piè di pagina riapre la domanda in qualsiasi momento.',
+            privacyPortal:
+              'Il portale. Accedere su app.onerate.travel è diverso, perché c\'è un account. Conserviamo il tuo nome, il tuo indirizzo email, l\'agenzia a cui appartieni e un registro di ciò che è stato fatto nell\'account. L\'accesso imposta anche un cookie di sessione: è ciò che ti tiene connesso e non può essere rifiutato senza rifiutare il servizio. La verifica umana nella schermata di accesso invia il tuo indirizzo IP e alcuni segnali del browser a Cloudflare, e serve a impedire che password rubate vengano provate in massa sul portale.',
+            privacyProcessors:
+              'Chi altro lo vede. Cloudflare, che serve questo sito e il portale e fornisce la misurazione e la verifica; e Google, se hai acconsentito a Google Analytics. Entrambe sono società statunitensi e possono trattare i dati fuori dal tuo paese. Non vendiamo nulla a nessuno e non facciamo pubblicità.',
+            privacyRights:
+              'Cosa puoi chiedere. Una copia di ciò che conserviamo, una correzione, una cancellazione, o che ci fermiamo. Scrivi a hello@onerate.travel e ti risponderemo. Puoi revocare il consenso all\'analisi in qualsiasi momento dal piè di pagina, senza motivare e con la stessa facilità con cui l\'hai dato, e puoi presentare reclamo all\'autorità per la protezione dei dati del tuo paese.',
+            privacyUpdated:
+              'Ultimo aggiornamento: 8 settembre 2026.',
             consentRegion: 'Consenso alle statistiche',
             consentBody:
               'Contiamo le visite a questa pagina per capire quali delle sette lingue e quali sezioni vale la pena tenere. Cloudflare misura le visualizzazioni in ogni caso e non usa cookie; Google Analytics funziona solo se acconsenti. Qualunque cosa scegli, la tua risposta resta su questo dispositivo — insieme alla lingua e al tema scelti — per non chiedertelo di nuovo.',
@@ -3619,6 +3792,24 @@
             questions: 'Pytania?',
             customerQuestions: 'Korzystają już Państwo z OneRate?',
             ctaSupport: 'Uzyskaj wsparcie w portalu',
+            privacyLink:
+              'Prywatność',
+            privacyTitle:
+              'Prywatność',
+            privacyLede:
+              'Tę stronę i portal OneRate prowadzi OneRate Travel. Wszystko, co dotyczy tej strony, oraz każde pytanie o to, co o Tobie przechowujemy, trafia na hello@onerate.travel.',
+            privacyPage:
+              'Ta strona. Cloudflare liczy dla nas odsłony. Nie ustawia plików cookie, nic nie zapisuje w przeglądarce i nie rejestruje parametrów z adresu — działa niezależnie od tego, czy odpowiesz na pasek. Pasek pyta o Google Analytics: dopóki nie naciśniesz „Zezwalam”, jest wyłączony i nic nie przechowuje, a po wyrażeniu zgody ustawia dwa pliki cookie (_ga i _ga_SZWZR8FV08), aby odróżnić powtórne wizyty. Nigdy nie włączamy jego sygnałów reklamowych.',
+            privacyStored:
+              'Co zostaje na Twoim urządzeniu. Trzy wartości we własnej pamięci przeglądarki, nigdzie nie wysyłane: Twoja odpowiedź na pasek, żebyśmy nie pytali ponownie; wybrany język; oraz wybrane ustawienie jasne lub ciemne. Wyczyszczenie danych witryny dla tej domeny usuwa wszystkie trzy, a link „Pliki cookie i analityka” w stopce w każdej chwili otwiera pytanie ponownie.',
+            privacyPortal:
+              'Portal. Logowanie w app.onerate.travel jest inne, bo istnieje tam konto. Przechowujemy Twoje imię i nazwisko, adres e-mail, przynależność do biura oraz zapis tego, co w koncie zrobiono. Logowanie ustawia też plik cookie sesji — to on utrzymuje Cię zalogowanym i nie da się go odrzucić bez rezygnacji z usługi. Weryfikacja człowieka na ekranie logowania wysyła Twój adres IP i część sygnałów przeglądarki do Cloudflare i służy powstrzymaniu masowego testowania skradzionych haseł.',
+            privacyProcessors:
+              'Kto jeszcze to widzi. Cloudflare, który obsługuje tę stronę i portal oraz dostarcza pomiar i weryfikację; oraz Google, jeśli wyraziłeś zgodę na Google Analytics. Obie są spółkami ze Stanów Zjednoczonych i mogą przetwarzać dane poza Twoim krajem. Nikomu niczego nie sprzedajemy i nie prowadzimy reklam.',
+            privacyRights:
+              'O co możesz poprosić. O kopię tego, co przechowujemy, o sprostowanie, o usunięcie albo o to, żebyśmy przestali. Napisz na hello@onerate.travel, a odpowiemy. Zgodę na analitykę możesz wycofać w każdej chwili ze stopki, bez podawania powodu i równie łatwo, jak jej udzieliłeś, a także złożyć skargę do organu ochrony danych w swoim kraju.',
+            privacyUpdated:
+              'Ostatnia aktualizacja: 8 września 2026.',
             consentRegion: 'Zgoda na analitykę',
             consentBody:
               'Liczymy wizyty na tej stronie, aby zobaczyć, które z siedmiu języków i które sekcje są warte utrzymania. Cloudflare mierzy odsłony niezależnie od zgody i nie używa plików cookie; Google Analytics działa tylko za zgodą. Niezależnie od wyboru odpowiedź zostaje na tym urządzeniu — razem z wybranym językiem i motywem — abyśmy nie pytali ponownie.',
@@ -3766,6 +3957,24 @@
             questions: 'Întrebări?',
             customerQuestions: 'Folosiți deja OneRate?',
             ctaSupport: 'Obțineți asistență în portal',
+            privacyLink:
+              'Confidențialitate',
+            privacyTitle:
+              'Confidențialitate',
+            privacyLede:
+              'Acest site și portalul OneRate sunt administrate de OneRate Travel. Orice ține de această pagină și orice întrebare despre ce păstrăm despre tine ajunge la hello@onerate.travel.',
+            privacyPage:
+              'Această pagină. Cloudflare numără vizualizările pentru noi. Nu pune cookie-uri, nu scrie nimic în browserul tău și nu înregistrează parametrii din adresă — funcționează indiferent dacă răspunzi sau nu la bară. Bara întreabă despre Google Analytics: până apeși Permite este oprit și nu stochează nimic, iar dacă accepți pune două cookie-uri (_ga și _ga_SZWZR8FV08) ca să deosebească vizitele repetate. Nu îi activăm niciodată semnalele publicitare.',
+            privacyStored:
+              'Ce rămâne pe dispozitivul tău. Trei valori în memoria proprie a browserului, care nu pleacă nicăieri: răspunsul tău la bară, ca să nu te mai întrebăm; limba aleasă; și setarea luminoasă sau întunecată aleasă. Ștergerea datelor site-ului pentru acest domeniu le elimină pe toate trei, iar linkul „Cookie-uri și analiză” din subsol redeschide întrebarea oricând.',
+            privacyPortal:
+              'Portalul. Autentificarea pe app.onerate.travel este diferită, pentru că există un cont. Păstrăm numele tău, adresa de e-mail, agenția din care faci parte și o evidență a ce s-a făcut în cont. Autentificarea pune și un cookie de sesiune — el te ține conectat și nu poate fi refuzat fără a refuza serviciul. Verificarea umană de pe ecranul de autentificare trimite adresa ta IP și câteva semnale de browser către Cloudflare și există pentru a opri încercarea în masă a parolelor furate.',
+            privacyProcessors:
+              'Cine îl mai vede. Cloudflare, care servește acest site și portalul și oferă măsurarea și verificarea; și Google, dacă ai permis Google Analytics. Ambele sunt companii din Statele Unite și pot prelucra datele în afara țării tale. Nu vindem nimic nimănui și nu difuzăm reclame.',
+            privacyRights:
+              'Ce poți cere. O copie a ceea ce păstrăm, o corectare, o ștergere sau să ne oprim. Scrie la hello@onerate.travel și îți răspundem. Poți retrage consimțământul pentru analiză oricând din subsol, fără să motivezi și la fel de ușor cum l-ai dat, și poți depune plângere la autoritatea de protecție a datelor din țara ta.',
+            privacyUpdated:
+              'Ultima actualizare: 8 septembrie 2026.',
             consentRegion: 'Consimțământ pentru analize',
             consentBody:
               'Numărăm vizitele pe această pagină ca să vedem care dintre cele șapte limbi și care secțiuni merită păstrate. Cloudflare măsoară vizualizările în orice caz și nu folosește cookie-uri; Google Analytics rulează doar dacă accepți. Orice ai alege, răspunsul rămâne pe acest dispozitiv — împreună cu limba și tema alese — ca să nu te mai întrebăm.',
