@@ -2711,9 +2711,15 @@
           it: the list would have rendered as browser-default bullets in a single column, which is
           the one failure that still looks like a page.
         -->
+      <!--
+        No inline markup inside these <li>s, and that is a constraint rather than a style choice:
+        `setLang` writes `textContent`, so a <strong> here would be destroyed by the first language
+        switch — which happens on every load. The lead-in is the opening words of the sentence, the
+        same shape the security list above uses.
+      -->
         <ul class="facts">
           <li data-reveal data-i18n="privacyPage">
-            <strong>This page.</strong> Cloudflare counts page views for us. It sets no cookies,
+            This page. Cloudflare counts page views for us. It sets no cookies,
             writes nothing to your browser, and does not log query strings — it runs whether or not
             you answer the banner. Google Analytics is the one the banner asks about: until you
             press Allow it is switched off and stores nothing, and if you press Allow it sets two
@@ -2721,14 +2727,14 @@
             advertising signals.
           </li>
           <li data-reveal data-i18n="privacyStored">
-            <strong>What is kept on your device.</strong> Three values, in your browser's own
+            What is kept on your device. Three values, in your browser's own
             storage and never sent anywhere: your answer to the banner, so we do not ask again; the
             language you chose; and the light or dark setting you chose. Clearing site data for this
             domain removes all three, and the Cookies &amp; analytics link in the footer reopens the
             question at any time.
           </li>
           <li data-reveal data-i18n="privacyPortal">
-            <strong>The portal.</strong> Signing in at app.onerate.travel is different, because
+            The portal. Signing in at app.onerate.travel is different, because
             there is an account. We hold your name, your email address, which agency you belong to,
             and a record of what was done in the account. A sign-in also sets a session cookie,
             which is what keeps you signed in and cannot be declined without declining the service.
@@ -2737,13 +2743,13 @@
             the portal in bulk.
           </li>
           <li data-reveal data-i18n="privacyProcessors">
-            <strong>Who else sees it.</strong> Cloudflare, which serves this site and the portal and
+            Who else sees it. Cloudflare, which serves this site and the portal and
             provides the measurement and the verification check; and Google, if you allowed Google
             Analytics. Both are United States companies and both may process the data outside your
             country. We sell nothing to anyone and run no advertising.
           </li>
           <li data-reveal data-i18n="privacyRights">
-            <strong>What you can ask for.</strong> A copy of what we hold, a correction, a deletion,
+            What you can ask for. A copy of what we hold, a correction, a deletion,
             or that we stop. Write to hello@onerate.travel and we will answer. You can withdraw
             analytics consent at any time from the footer, without giving a reason and as easily as
             you gave it, and you can complain to your country's data protection authority.
